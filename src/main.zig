@@ -1,12 +1,5 @@
 export executable "tetris";
 
-// Zig features needed to make this example work:
-// * f32 literals.
-// * c_int
-// * Including C header files.
-// * Global struct initializers.
-// * Here document or string concatenation.
-
 #c_include("epoxy/gl.h");
 #c_include("epoxy/glx.h");
 #c_include("GLFW/glfw3.h");
