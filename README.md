@@ -7,5 +7,4 @@ A simple tetris clone written in
 
 Once these features are implemented in Zig, this example can work:
 
- * `c_int` data type.
  * Ability to include C header files directly from Zig source.
