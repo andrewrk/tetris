@@ -1,10 +1,10 @@
 export executable "tetris";
 
-#c_include("epoxy/gl.h");
-#c_include("epoxy/glx.h");
-#c_include("GLFW/glfw3.h");
-#c_include("stdlib.h");
-#c_include("stdio.h");
+//#c_include("epoxy/gl.h");
+//#c_include("epoxy/glx.h");
+//#c_include("GLFW/glfw3.h");
+//#c_include("stdlib.h");
+//#c_include("stdio.h");
 
 struct Vertex {
     x: f32,
@@ -20,7 +20,7 @@ const vertices = []Vertex {
     Vertex { .x =  0.0, .y =  0.6, .r = 0.0, .g = 0.0, .b = 1.0 },
 };
 
-const vertex_shader_text: []u8 =
+const vertex_shader_text =
 "uniform mat4 MVP;\n" ++
 "attribute vec3 vCol;\n" ++
 "attribute vec2 vPos;\n" ++
@@ -31,24 +31,24 @@ const vertex_shader_text: []u8 =
 "    color = vCol;\n" ++
 "}\n";
 
-const fragment_shader_text: []u8 =
+const fragment_shader_text =
 "varying vec3 color;\n" ++
 "void main()\n" ++
 "{\n" ++
 "    gl_FragColor = vec4(color, 1.0);\n" ++
 "}\n";
 
-export fn error_callback(error: c_int, description: &const u8) => {
-    fprintf(stderr, "Error: %s\n", description);
+export fn error_callback(err: c_int, description: &const u8) {
+    fprintf(stderr, c"Error: %s\n", description);
 }
 
-export fn key_callback(window: &GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) => {
+export fn key_callback(window: &GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     }
 }
 
-pub fn main(args: [][]u8) i32 => {
+export fn main(argc: c_int, argv: &&u8) -> c_int {
     glfwSetErrorCallback(error_callback);
 
     if (!glfwInit())
@@ -57,7 +57,7 @@ pub fn main(args: [][]u8) i32 => {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-    var window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
+    var window = glfwCreateWindow(640, 480, c"Simple example", null, null);
     if (!window) {
         glfwTerminate();
         return -1;
@@ -76,11 +76,11 @@ pub fn main(args: [][]u8) i32 => {
     glBufferData(GL_ARRAY_BUFFER, @sizeof(Vertex) * vertices.len, vertices, GL_STATIC_DRAW);
 
     vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex_shader, 1, &vertex_shader_text, NULL);
+    glShaderSource(vertex_shader, 1, &vertex_shader_text.ptr, &vertex_shader_text.len);
     glCompileShader(vertex_shader);
 
     fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_shader, 1, &fragment_shader_text, NULL);
+    glShaderSource(fragment_shader, 1, &fragment_shader_text.ptr, &fragment_shader_text.len);
     glCompileShader(fragment_shader);
 
     var program = glCreateProgram();
@@ -88,9 +88,9 @@ pub fn main(args: [][]u8) i32 => {
     glAttachShader(program, fragment_shader);
     glLinkProgram(program);
 
-    var mvp_location = glGetUniformLocation(program, "MVP");
-    var vpos_location = glGetAttribLocation(program, "vPos");
-    var vcol_location = glGetAttribLocation(program, "vCol");
+    var mvp_location = glGetUniformLocation(program, c"MVP");
+    var vpos_location = glGetAttribLocation(program, c"vPos");
+    var vcol_location = glGetAttribLocation(program, c"vCol");
 
     glEnableVertexAttribArray(vpos_location);
     glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE,
