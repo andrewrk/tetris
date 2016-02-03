@@ -5,43 +5,24 @@ export executable "tetris";
 
 import "math3d.zig";
 import "libc.zig";
+import "all_shaders.zig";
+import "static_geometry.zig";
+import "debug_gl.zig";
 
-struct Vertex {
-    x: f32,
-    y: f32,
-    r: f32,
-    g: f32,
-    b: f32,
+struct Tetris {
+    window: &GLFWwindow,
+    shaders: AllShaders,
+    static_geometry: StaticGeometry,
+    projection: Mat4x4,
 }
 
-const vertices = []Vertex {
-    Vertex { .x = -0.6, .y = -0.4, .r = 1.0, .g = 0.0, .b = 0.0 },
-    Vertex { .x =  0.6, .y = -0.4, .r = 0.0, .g = 1.0, .b = 0.0 },
-    Vertex { .x =  0.0, .y =  0.6, .r = 0.0, .g = 0.0, .b = 1.0 },
-};
-
-const vertex_shader_text =
-"uniform mat4 MVP;\n" ++
-"attribute vec3 vCol;\n" ++
-"attribute vec2 vPos;\n" ++
-"varying vec3 color;\n" ++
-"void main()\n" ++
-"{\n" ++
-"    gl_Position = MVP * vec4(vPos, 0.0, 1.0);\n" ++
-"    color = vCol;\n" ++
-"}\n";
-
-const fragment_shader_text =
-"varying vec3 color;\n" ++
-"void main()\n" ++
-"{\n" ++
-"    gl_FragColor = vec4(color, 1.0);\n" ++
-"}\n";
-
+// TODO avoid having to make this function export
 export fn tetris_error_callback(err: c_int, description: ?&const u8) {
     fprintf(stderr, c"Error: %s\n", description);
+    abort();
 }
 
+// TODO avoid having to make this function export
 export fn tetris_key_callback(window: ?&GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GL_TRUE);
@@ -49,83 +30,99 @@ export fn tetris_key_callback(window: ?&GLFWwindow, key: c_int, scancode: c_int,
 }
 
 export fn main(argc: c_int, argv: &&u8) -> c_int {
+    // TODO this crashes the compiler:
+    // const gl_debug_on = if (@compile_var("is_release")) GL_FALSE else GL_TRUE;
+
     glfwSetErrorCallback(tetris_error_callback);
 
-    if (glfwInit() == GL_FALSE)
-        return -1;
+    if (glfwInit() == GL_FALSE) {
+        fprintf(stderr, c"GLFW init failure\n");
+        abort();
+    }
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    const gl_debug_on : c_int = if (@compile_var("is_release")) GL_FALSE else GL_TRUE; // TODO move to const
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, gl_debug_on);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_DEPTH_BITS, 0);
+    glfwWindowHint(GLFW_STENCIL_BITS, 8);
+    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-    var window = glfwCreateWindow(640, 480, c"Tetris", null, null) ?? {
+    var window = glfwCreateWindow(800, 450, c"Tetris", null, null) ?? {
         glfwTerminate();
         return -1;
     };
 
     glfwSetKeyCallback(window, tetris_key_callback);
-
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 
-    // NOTE: OpenGL error checks have been omitted for brevity
+    // create and bind exactly one vertex array per context and use
+    // glVertexAttribPointer etc every frame.
+    var vertex_array_object : GLuint = undefined;
+    glGenVertexArrays(1, &vertex_array_object);
+    glBindVertexArray(vertex_array_object);
 
-    var vertex_buffer : GLuint = undefined;
-    glGenBuffers(1, &vertex_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-    glBufferData(GL_ARRAY_BUFFER, @sizeof(Vertex) * vertices.len, (&const c_void)(vertices.ptr), GL_STATIC_DRAW);
+    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    const vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    const vertex_shader_text_ptr : ?&const GLchar = vertex_shader_text.ptr;
-    const vertex_shader_text_len = GLint(vertex_shader_text.len);
-    glShaderSource(vertex_shader, 1, &vertex_shader_text_ptr, &vertex_shader_text_len);
-    glCompileShader(vertex_shader);
+    var width: c_int = undefined;
+    var height: c_int = undefined;
+    glfwGetFramebufferSize(window, &width, &height);
+    if (width < 800 || height < 450) unreachable{};
+    const projection = mat4x4_ortho(0.0, f32(width), f32(height), 0.0);
+    glViewport(0, 0, width, height);
 
-    const fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    const fragment_shader_text_ptr : ?&const GLchar = fragment_shader_text.ptr;
-    const fragment_shader_text_len = GLint(fragment_shader_text.len);
-    glShaderSource(fragment_shader, 1, &fragment_shader_text_ptr, &fragment_shader_text_len);
-    glCompileShader(fragment_shader);
+    var t = Tetris {
+        .window = window,
+        .shaders = create_all_shaders(),
+        .static_geometry = create_static_geometry(),
+        .projection = projection,
+    };
+    glfwSetWindowUserPointer(window, (&c_void)(&t));
 
-    var program = glCreateProgram();
-    glAttachShader(program, vertex_shader);
-    glAttachShader(program, fragment_shader);
-    glLinkProgram(program);
-
-    const mvp_location = glGetUniformLocation(program, c"MVP");
-    const vpos_location = glGetAttribLocation(program, c"vPos");
-    const vcol_location = glGetAttribLocation(program, c"vCol");
-
-    glEnableVertexAttribArray(GLuint(vpos_location));
-    glVertexAttribPointer(GLuint(vpos_location), 2, GL_FLOAT, GL_FALSE,
-                          @sizeof(f32) * 5, null);
-    glEnableVertexAttribArray(GLuint(vcol_location));
-    glVertexAttribPointer(GLuint(vcol_location), 3, GL_FLOAT, GL_FALSE,
-                          @sizeof(f32) * 5, (&const c_void)(isize(@sizeof(f32) * 2)));
+    assert_no_gl_error();
 
     while (glfwWindowShouldClose(window) == GL_FALSE) {
-        var width: c_int = undefined;
-        var height: c_int = undefined;
-        glfwGetFramebufferSize(window, &width, &height);
-        const ratio = f32(width) / f32(height);
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 
-        glViewport(0, 0, width, height);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        const model = mat4x4_identity().rotate(f32(glfwGetTime()), vec3_new(0.0, 0.0, 1.0));
-        //const projection = mat4x4_ortho(0.0, f32(width), f32(height), 0.0);
-        const projection = mat4x4_ortho(0.0, 1.0, 0.0, 1.0);
-        const mvp = projection.mult(model);
-
-        glUseProgram(program);
-        glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (&const GLfloat)(mvp.data.ptr));
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        const blue = vec4(0.0, 0.0, 1.0, 1.0);
+        const scale = fabsf(sinf(f32(glfwGetTime())));
+        fill_rect(t, blue, 100.0, scale * 100.0, 50.0, 50.0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    glfwDestroyWindow(window);
+    t.shaders.destroy();
+    t.static_geometry.destroy();
+    glDeleteVertexArrays(1, &vertex_array_object);
 
+    assert_no_gl_error();
+
+    glfwDestroyWindow(window);
     glfwTerminate();
     return 0;
+}
+
+fn fill_rect_mvp(t: Tetris, color: Vec4, mvp: Mat4x4) {
+    t.shaders.primitive.bind();
+    t.shaders.primitive.set_uniform_vec4(t.shaders.primitive_uniform_color, color);
+    t.shaders.primitive.set_uniform_mat4x4(t.shaders.primitive_uniform_mvp, mvp);
+
+    glBindBuffer(GL_ARRAY_BUFFER, t.static_geometry.rect_2d_vertex_buffer);
+    glEnableVertexAttribArray(GLuint(t.shaders.primitive_attrib_position));
+    glVertexAttribPointer(GLuint(t.shaders.primitive_attrib_position), 3, GL_FLOAT, GL_FALSE, 0, null);
+
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
+fn fill_rect(t: Tetris, color: Vec4, x: f32, y: f32, w: f32, h: f32) {
+    const model = mat4x4_identity.translate(x, y, 0.0).scale(w, h, 0.0);
+    const mvp = t.projection.mult(model);
+    fill_rect_mvp(t, color, mvp);
 }

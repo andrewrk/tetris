@@ -5,5 +5,17 @@ A simple tetris clone written in
 
 ## Status
 
-Currently a "Hello World" OpenGL application with a spinning triangle, but
-it's written in zig!
+ * Glitchy blue box, trying to figure out basic orthographic projection and
+   matrix multiplication.
+
+## Dependencies
+
+ * [Zig compiler](https://github.com/andrewrk/zig) - use the debug build.
+ * [libepoxy](https://github.com/anholt/libepoxy)
+ * [GLFW](http://www.glfw.org/)
+
+## Building and Running
+
+ 0. Install the dependencies.
+ 0. `zig build src/main.zig`
+ 0. `./tetris`
