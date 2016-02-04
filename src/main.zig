@@ -22,6 +22,7 @@ struct Tetris {
     delay_left: f64,
     grid: [grid_height][grid_width]Cell,
     piece_drop_count: i32,
+    next_piece: &Piece,
     cur_piece: &Piece,
     cur_piece_x: i32,
     cur_piece_y: i32,
@@ -129,6 +130,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
         .piece_delay = init_piece_delay,
         .delay_left = init_piece_delay,
         .piece_drop_count = 0,
+        .next_piece = undefined,
         .cur_piece = undefined,
         .cur_piece_x = undefined,
         .cur_piece_y = undefined,
@@ -138,6 +140,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
         .grid = undefined,
     };
     init_empty_grid(&t);
+    populate_next_piece(&t);
     drop_new_piece(&t);
 
     glfwSetWindowUserPointer(window, (&c_void)(&t));
@@ -156,7 +159,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
 
         next_frame(&t, elapsed);
 
-        draw(t);
+        draw(&t);
         glfwSwapBuffers(window);
 
         glfwPollEvents();
@@ -173,7 +176,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
     return 0;
 }
 
-fn fill_rect_mvp(t: Tetris, color: Vec4, mvp: Mat4x4) {
+fn fill_rect_mvp(t: &Tetris, color: Vec4, mvp: Mat4x4) {
     t.shaders.primitive.bind();
     t.shaders.primitive.set_uniform_vec4(t.shaders.primitive_uniform_color, color);
     t.shaders.primitive.set_uniform_mat4x4(t.shaders.primitive_uniform_mvp, mvp);
@@ -185,7 +188,7 @@ fn fill_rect_mvp(t: Tetris, color: Vec4, mvp: Mat4x4) {
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
-fn fill_rect(t: Tetris, color: Vec4, x: f32, y: f32, w: f32, h: f32) {
+fn fill_rect(t: &Tetris, color: Vec4, x: f32, y: f32, w: f32, h: f32) {
     const model = mat4x4_identity.translate(x, y, 0.0).scale(w, h, 0.0);
     const mvp = t.projection.mult(model);
     fill_rect_mvp(t, color, mvp);
@@ -198,21 +201,26 @@ fn get_random_seed() -> %u32 {
     return seed;
 }
 
-fn draw(t: Tetris) {
+fn draw(t: &Tetris) {
     fill_rect(t, board_color, board_left, board_top, board_width, board_height);
     fill_rect(t, board_color, next_piece_left, next_piece_top, next_piece_width, next_piece_height);
 
-    for (row, t.cur_piece.layout[t.cur_piece_rot], y) {
-        for (cell, row, x) {
-            const abs_x = t.cur_piece_x + x;
-            const abs_y = t.cur_piece_y + y;
-            if (abs_x >= 0 && abs_y >= 0 && abs_x < grid_width && abs_y < grid_height) {
-                const left = f32(board_left + cell_size * abs_x);
-                const top = f32(board_top + cell_size * abs_y);
-                if (cell) {
-                    fill_rect(t, t.cur_piece.color, left, top, cell_size, cell_size);
-                }
-            }
+    const abs_x = board_left + t.cur_piece_x * cell_size;
+    const abs_y = board_top + t.cur_piece_y * cell_size;
+    draw_piece(t, t.cur_piece, abs_x, abs_y, t.cur_piece_rot);
+
+    draw_piece(t, t.next_piece, next_piece_left + margin_size, next_piece_top + margin_size, 0);
+
+}
+
+fn draw_piece(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: i32) {
+    for (row, piece.layout[rot], y) {
+        for (is_filled, row, x) {
+            if (!is_filled) continue;
+            const abs_x = f32(left + x * cell_size);
+            const abs_y = f32(top + y * cell_size);
+
+            fill_rect(t, piece.color, abs_x, abs_y, cell_size, cell_size);
         }
     }
 }
@@ -221,23 +229,76 @@ fn next_frame(t: &Tetris, elapsed: f64) {
     t.delay_left -= elapsed;
 
     if (t.delay_left <= 0) {
-        // fall
+        cur_piece_fall(t);
+
         t.delay_left = t.piece_delay;
     }
 
+}
+
+fn cur_piece_fall(t: &Tetris) {
+    // if it would hit something, make it stop instead
+    if (piece_would_collide(t, t.cur_piece, t.cur_piece_x, t.cur_piece_y + 1, t.cur_piece_rot)) {
+        lock_piece(t);
+        drop_new_piece(t);
+    } else {
+        t.cur_piece_y += 1;
+    }
+}
+
+fn lock_piece(t: &Tetris) {
+    for (row, t.cur_piece.layout[t.cur_piece_rot], y) {
+        for (is_filled, row, x) {
+            if (!is_filled) {
+                continue;
+            }
+            const abs_x = t.cur_piece_x + x;
+            const abs_y = t.cur_piece_y + y;
+            if (abs_x >= 0 && abs_y >= 0 && abs_x < grid_width && abs_y < grid_height) {
+                t.grid[abs_y][abs_x] = Cell.Color(t.cur_piece.color);
+            }
+        }
+    }
+}
+
+fn piece_would_collide(t: &Tetris, piece: &Piece, grid_x: i32, grid_y: i32, rot: i32) -> bool {
+    for (row, piece.layout[rot], y) {
+        for (is_filled, row, x) {
+            if (!is_filled) {
+                continue;
+            }
+            const abs_x = grid_x + x;
+            const abs_y = grid_y + y;
+            if (abs_x >= 0 && abs_y >= 0 && abs_x < grid_width && abs_y < grid_height) {
+                const filled = t.grid[abs_y][abs_x] != Cell.Empty;
+                if (filled) {
+                    return true;
+                }
+            } else {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+fn populate_next_piece(t: &Tetris) {
+    // TODO type generics so this doesn't have to be a u64
+    // TODO oops. super clumsy signedness casting here with rand_range and index operator
+    const index = t.rand.range_u64(0, u64(pieces.len));
+    t.next_piece = &pieces[isize(index)];
 }
 
 fn drop_new_piece(t: &Tetris) {
     t.delay_left = t.piece_delay;
     t.piece_drop_count += 1;
 
-    // TODO type generics so this doesn't have to be a u64
-    // TODO oops. super clumsy signedness casting here with rand_range and index operator
-    const index = t.rand.range_u64(0, u64(pieces.len));
-    t.cur_piece = &pieces[isize(index)];
+    t.cur_piece = t.next_piece;
     t.cur_piece_x = 4;
     t.cur_piece_y = 0;
     t.cur_piece_rot = 0;
+
+    populate_next_piece(t);
 }
 
 fn init_empty_grid(t: &Tetris) {

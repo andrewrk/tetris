@@ -3,9 +3,11 @@
 A simple tetris clone written in
 [zig programming language](https://github.com/andrewrk/zig).
 
+![](http://i.imgur.com/cl3OmS8.png)
+
 ## Status
 
- * Drawing a single blue rectangle with the OpenGL programmable pipeline.
+ * Getting there. One more day of hacking and it will probably be playable.
 
 ## Dependencies
 
