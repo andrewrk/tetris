@@ -1,2 +1,5 @@
 /tetris
 /tetris.o
+/test_runner_libc.o
+/test.o
+/test

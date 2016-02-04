@@ -114,6 +114,18 @@ pub struct Mat4x4 {
             },
         }
     }
+
+    pub fn transpose(m: Mat4x4) -> Mat4x4 {
+        Mat4x4 {
+            .data = [][4]f32 {
+                []f32{m.data[0][0], m.data[1][0], m.data[2][0], m.data[3][0]},
+                []f32{m.data[0][1], m.data[1][1], m.data[2][1], m.data[3][1]},
+                []f32{m.data[0][2], m.data[1][2], m.data[2][2], m.data[3][2]},
+                []f32{m.data[0][3], m.data[1][3], m.data[2][3], m.data[3][3]},
+            },
+        }
+    }
+
 }
 
 pub const mat4x4_identity = Mat4x4 {
@@ -158,6 +170,21 @@ pub struct Vec3 {
         v.data[1] * other.data[1] +
         v.data[2] * other.data[2]
     }
+
+    pub fn length(v: Vec3) -> f32 {
+        sqrtf(v.dot(v))
+    }
+
+    /// returns the cross product
+    pub fn cross(v: Vec3, other: Vec3) -> Vec3 {
+        Vec3 {
+            .data = []f32 {
+                v.data[1] * other.data[2] - other.data[1] * v.data[2],
+                v.data[2] * other.data[0] - other.data[2] * v.data[0],
+                v.data[0] * other.data[1] - other.data[0] * v.data[1],
+            },
+        }
+    }
 }
 
 
@@ -175,4 +202,150 @@ pub fn vec4(a: f32, b: f32, c: f32, d: f32) -> Vec4 {
     Vec4 {
         .data = []f32 { a, b, c, d, },
     }
+}
+
+
+#attribute("test")
+fn test_scale() {
+    const m = Mat4x4 {
+        .data = [][4]f32 {
+            []f32{0.840188, 0.911647, 0.277775, 0.364784},
+            []f32{0.394383, 0.197551, 0.55397, 0.513401},
+            []f32{0.783099, 0.335223, 0.477397, 0.95223},
+            []f32{0.79844, 0.76823, 0.628871, 0.916195},
+        },
+    };
+    const expected = Mat4x4 {
+        .data = [][4]f32 {
+            []f32{0.118973, 0.653922, 0.176585, 0.364784},
+            []f32{0.0558456, 0.141703, 0.352165, 0.513401},
+            []f32{0.110889, 0.240454, 0.303487, 0.95223},
+            []f32{0.113061, 0.551049, 0.399781, 0.916195},
+        },
+    };
+    const answer = m.scale(0.141603, 0.717297, 0.635712);
+    assert_matrix_eq(answer, expected);
+}
+
+#attribute("test")
+fn test_translate() {
+    const m = Mat4x4 {
+        .data = [][4]f32 {
+            []f32{0.840188, 0.911647, 0.277775, 0.364784},
+            []f32{0.394383, 0.197551, 0.55397, 0.513401},
+            []f32{0.783099, 0.335223, 0.477397, 0.95223},
+            []f32{0.79844, 0.76823, 0.628871, 1.0},
+        },
+    };
+    const expected = Mat4x4 {
+        .data = [][4]f32 {
+            []f32{0.840188, 0.911647, 0.277775, 1.31426},
+            []f32{0.394383, 0.197551, 0.55397, 1.06311},
+            []f32{0.783099, 0.335223, 0.477397, 1.60706},
+            []f32{0.79844, 0.76823, 0.628871, 1.0},
+        },
+    };
+    const answer = m.translate(0.141603, 0.717297, 0.635712);
+    assert_matrix_eq(answer, expected);
+}
+
+#attribute("test")
+fn test_ortho() {
+    const m = mat4x4_ortho(0.840188, 0.394383, 0.783099, 0.79844);
+
+    const expected = Mat4x4 {
+        .data = [][4]f32 {
+            []f32{-4.48627, 0.0, 0.0, 2.76931},
+            []f32{0.0, 130.371, 0.0, -103.094},
+            []f32{0.0, 0.0, -1.0, 0.0},
+            []f32{0.0, 0.0, 0.0, 1.0},
+        },
+    };
+
+    assert_matrix_eq(m, expected);
+}
+
+fn assert_f_eq(left: f32, right: f32) {
+    const diff = fabsf(left - right);
+    const within_range = diff < 0.01;
+    if (!within_range) unreachable{};
+}
+
+fn assert_matrix_eq(left: Mat4x4, right: Mat4x4) {
+    assert_f_eq(left.data[0][0], right.data[0][0]);
+    assert_f_eq(left.data[0][1], right.data[0][1]);
+    assert_f_eq(left.data[0][2], right.data[0][2]);
+    assert_f_eq(left.data[0][3], right.data[0][3]);
+
+    assert_f_eq(left.data[1][0], right.data[1][0]);
+    assert_f_eq(left.data[1][1], right.data[1][1]);
+    assert_f_eq(left.data[1][2], right.data[1][2]);
+    assert_f_eq(left.data[1][3], right.data[1][3]);
+
+    assert_f_eq(left.data[2][0], right.data[2][0]);
+    assert_f_eq(left.data[2][1], right.data[2][1]);
+    assert_f_eq(left.data[2][2], right.data[2][2]);
+    assert_f_eq(left.data[2][3], right.data[2][3]);
+
+    assert_f_eq(left.data[3][0], right.data[3][0]);
+    assert_f_eq(left.data[3][1], right.data[3][1]);
+    assert_f_eq(left.data[3][2], right.data[3][2]);
+    assert_f_eq(left.data[3][3], right.data[3][3]);
+}
+
+#attribute("test")
+fn test_mult() {
+    const m1 = Mat4x4 {
+        .data = [][4]f32 {
+            []f32{0.635712 , 0.717297, 0.141603, 0.606969 },
+            []f32{0.0163006, 0.242887, 0.137232, 0.804177 },
+            []f32{0.156679 , 0.400944, 0.12979 , 0.108809 },
+            []f32{0.998924 , 0.218257, 0.512932, 0.839112 },
+        },
+    };
+    const m2 = Mat4x4 {
+        .data = [][4]f32 {
+            []f32{0.840188 , 0.394383, 0.783099, 0.79844  },
+            []f32{0.911647 , 0.197551, 0.335223, 0.76823  },
+            []f32{0.277775 , 0.55397 , 0.477397, 0.628871 },
+            []f32{0.364784 , 0.513401, 0.95223 , 0.916195 },
+        },
+    };
+    const answer = Mat4x4 {
+        .data = [][4]f32 {
+            []f32{1.44879 , 0.782479, 1.38385 , 1.70378 },
+            []f32{0.566593, 0.543299, 0.925461, 1.02269 },
+            []f32{0.572904, 0.268761, 0.422673, 0.614428},
+            []f32{1.48683 , 1.15203 , 1.89932 , 2.05661 },
+        },
+    };
+    const tmp = m1.mult(m2);
+    assert_matrix_eq(tmp, answer);
+}
+
+#attribute("test")
+fn test_rotate() {
+    const m1 = Mat4x4 {
+        .data = [][4]f32 {
+            []f32{0.840188, 0.911647, 0.277775, 0.364784},
+            []f32{0.394383, 0.197551, 0.55397, 0.513401},
+            []f32{0.783099, 0.335223, 0.477397, 0.95223},
+            []f32{0.79844, 0.76823, 0.628871, 0.916195},
+        },
+    };
+    const angle = 0.635712;
+
+    const axis = vec3(0.606969, 0.141603, 0.717297);
+
+    const expected = Mat4x4 {
+        .data = [][4]f32 {
+            []f32{1.17015, 0.488019, 0.0821911, 0.364784},
+            []f32{0.444151, 0.212659, 0.508874, 0.513401},
+            []f32{0.851739, 0.126319, 0.460555, 0.95223},
+            []f32{1.06829, 0.530801, 0.447396, 0.916195},
+        },
+    };
+
+    const actual = m1.rotate(angle, axis);
+    assert_matrix_eq(actual, expected);
 }
