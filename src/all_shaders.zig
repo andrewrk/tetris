@@ -91,7 +91,7 @@ in vec3 VertexPosition;
 uniform mat4 MVP;
 
 void main(void) {
-    gl_Position = MVP * vec4(VertexPosition, 1.0);
+    gl_Position = vec4(VertexPosition, 1.0) * MVP;
 }", "
 #version 150 core
 

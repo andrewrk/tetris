@@ -5,8 +5,7 @@ A simple tetris clone written in
 
 ## Status
 
- * Glitchy blue box, trying to figure out basic orthographic projection and
-   matrix multiplication.
+ * Drawing a single blue rectangle with the OpenGL programmable pipeline.
 
 ## Dependencies
 
