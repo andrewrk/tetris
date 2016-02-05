@@ -185,6 +185,16 @@ pub struct Vec3 {
             },
         }
     }
+
+    pub fn add(v: Vec3, other: Vec3) -> Vec3 {
+        Vec3 {
+            .data = []f32 {
+                v.data[0] + other.data[0],
+                v.data[1] + other.data[1],
+                v.data[2] + other.data[2],
+            },
+        }
+    }
 }
 
 

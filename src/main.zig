@@ -28,6 +28,8 @@ struct Tetris {
     cur_piece_rot: i32,
     score: i32,
     game_over: bool,
+    particles: [max_particle_count]Particle,
+    next_particle_index: i32,
 }
 
 enum Cell {
@@ -35,6 +37,21 @@ enum Cell {
     Color: Vec4,
 }
 
+struct Particle {
+    // TODO make this a maybe
+    used: bool,
+    color: Vec4,
+    pos: Vec3,
+    vel: Vec3,
+    axis: Vec3,
+    scale_w: f32,
+    scale_h: f32,
+    angle: f32,
+    angle_vel: f32,
+}
+
+const PI = 3.14159265358979;
+const max_particle_count = 500;
 const margin_size = 10;
 const grid_width = 10;
 const grid_height = 20;
@@ -80,6 +97,7 @@ export fn tetris_key_callback(window: ?&GLFWwindow, key: c_int, scancode: c_int,
         GLFW_KEY_RIGHT => user_move_cur_piece(t, 1),
         GLFW_KEY_UP => user_rotate_cur_piece(t, 1),
         GLFW_KEY_R => restart_game(t),
+        GLFW_KEY_E => user_explode_cur_piece(t),
         else => {},
     }
 }
@@ -158,6 +176,8 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
         .grid = undefined,
         .score = undefined,
         .game_over = undefined,
+        .particles = undefined,
+        .next_particle_index = undefined,
     };
     restart_game(&t);
 
@@ -212,6 +232,25 @@ fn fill_rect(t: &Tetris, color: Vec4, x: f32, y: f32, w: f32, h: f32) {
     fill_rect_mvp(t, color, mvp);
 }
 
+fn draw_particle(t: &Tetris, p: Particle) {
+    const model = mat4x4_identity
+        .translate_by_vec(p.pos)
+        .rotate(p.angle, p.axis)
+        .scale(p.scale_w, p.scale_h, 0.0);
+
+    const mvp = t.projection.mult(model);
+
+    t.shaders.primitive.bind();
+    t.shaders.primitive.set_uniform_vec4(t.shaders.primitive_uniform_color, p.color);
+    t.shaders.primitive.set_uniform_mat4x4(t.shaders.primitive_uniform_mvp, mvp);
+
+    glBindBuffer(GL_ARRAY_BUFFER, t.static_geometry.triangle_2d_vertex_buffer);
+    glEnableVertexAttribArray(GLuint(t.shaders.primitive_attrib_position));
+    glVertexAttribPointer(GLuint(t.shaders.primitive_attrib_position), 3, GL_FLOAT, GL_FALSE, 0, null);
+
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 3);
+}
+
 fn get_random_seed() -> %u32 {
     var seed : u32 = undefined;
     const seed_bytes = (&u8)(&seed)[0...4];
@@ -242,6 +281,12 @@ fn draw(t: &Tetris) {
         }
     }
 
+    for (particle, t.particles) {
+        if (particle.used) {
+            draw_particle(t, particle);
+        }
+    }
+
 }
 
 fn draw_piece(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: i32) {
@@ -257,6 +302,21 @@ fn draw_piece(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: i32) {
 }
 
 fn next_frame(t: &Tetris, elapsed: f64) {
+    // TODO for loop with ref
+    // TODO maybe unwrap with ref:  if (var *particle ?= t.particles[i]) {
+    for (_, t.particles, i) {
+        const p = &t.particles[i];
+        if (!p.used) continue;
+        p.pos = p.pos.add(p.vel);
+        p.vel = p.vel.add(vec3(0, 0.08, 0));
+
+        p.angle += p.angle_vel;
+
+        if (p.pos.data[1] > f32(window_height) + 10.0) {
+            p.used = false;
+        }
+    }
+
     if (!t.game_over) {
         t.delay_left -= elapsed;
 
@@ -309,11 +369,27 @@ fn user_rotate_cur_piece(t: &Tetris, rot: i8) {
     t.cur_piece_rot = new_rot;
 }
 
+fn user_explode_cur_piece(t: &Tetris) {
+    for (row, t.cur_piece.layout[t.cur_piece_rot], y) {
+        for (is_filled, row, x) {
+            if (!is_filled) {
+                continue;
+            }
+            const center_x = f32(board_left + (t.cur_piece_x + x) * cell_size) + f32(cell_size) / 2.0;
+            const center_y = f32(board_top + (t.cur_piece_y + y) * cell_size) + f32(cell_size) / 2.0;
+            add_explosion(t, t.cur_piece.color, center_x, center_y);
+        }
+    }
+
+    drop_new_piece(t);
+}
+
 fn restart_game(t: &Tetris) {
     t.piece_delay = init_piece_delay;
     t.delay_left = init_piece_delay;
     t.score = 0;
 
+    clear_particles(t);
     init_empty_grid(t);
     populate_next_piece(t);
     drop_new_piece(t);
@@ -331,6 +407,26 @@ fn lock_piece(t: &Tetris) {
             const abs_y = t.cur_piece_y + y;
             if (abs_x >= 0 && abs_y >= 0 && abs_x < grid_width && abs_y < grid_height) {
                 t.grid[abs_y][abs_x] = Cell.Color(t.cur_piece.color);
+            }
+        }
+    }
+
+    // find lines once and spawn explosions
+    for (row, t.grid, y) {
+        var all_filled = true;
+        for (cell, t.grid[y]) {
+            const filled = switch (cell) { Empty => false, else => true, };
+            if (!filled) {
+                all_filled = false;
+                break;
+            }
+        }
+        if (all_filled) {
+            for (cell, t.grid[y], x) {
+                const color = switch (cell) { Empty => continue, Color => |c| c,};
+                const center_x = f32(board_left + x * cell_size) + f32(cell_size) / 2.0;
+                const center_y = f32(board_top + y * cell_size) + f32(cell_size) / 2.0;
+                add_explosion(t, color, center_x, center_y);
             }
         }
     }
@@ -354,6 +450,9 @@ fn lock_piece(t: &Tetris) {
             y -= 1;
         }
     }
+
+    const score_per_rows_deleted = []i32 { 0, 10, 30, 50, 70};
+    t.score += score_per_rows_deleted[rows_deleted];
 }
 
 fn delete_row(t: &Tetris, del_index: i32) {
@@ -424,4 +523,53 @@ fn init_empty_grid(t: &Tetris) {
     for (row, t.grid, y) {
         t.grid[y] = empty_row;
     }
+}
+
+fn clear_particles(t: &Tetris) {
+    // TODO for loop range
+    // TODO this crashes compiler, when t.particles is not maybe: t.particles[i] = null;
+    for (particle, t.particles, i) {
+        t.particles[i].used = false;
+    }
+    t.next_particle_index = 0;
+}
+
+fn get_next_particle_index(t: &Tetris) -> i32 {
+    const result = t.next_particle_index;
+    t.next_particle_index = (t.next_particle_index + 1) % max_particle_count;
+    return result;
+}
+
+fn add_explosion(t: &Tetris, color: Vec4, center_x: f32, center_y: f32) {
+    const particle_count = 12;
+    const particle_size = f32(cell_size) / 3.0;
+    // TODO for loop range
+    var i: i32 = 0;
+    while (i < particle_count) {
+        const off_x = t.rand.float32() * f32(cell_size) / 2.0;
+        const off_y = t.rand.float32() * f32(cell_size) / 2.0;
+        const pos = vec3(center_x + off_x, center_y + off_y, 0.0);
+        t.particles[get_next_particle_index(t)] = create_particle(t, color, particle_size, pos);
+        i += 1;
+    }
+}
+
+fn create_particle(t: &Tetris, color: Vec4, size: f32, pos: Vec3) -> Particle {
+    var p: Particle = undefined;
+
+    p.angle_vel = t.rand.float32() * 0.1 - 0.05;
+    p.angle = t.rand.float32() * 2.0 * PI;
+    p.axis = vec3(0.0, 0.0, 1.0);
+    p.scale_w = size * (0.8 + t.rand.float32() * 0.4);
+    p.scale_h = size * (0.8 + t.rand.float32() * 0.4);
+    p.color = color;
+    p.pos = pos;
+
+    const vel_x = t.rand.float32() * 0.8 - 0.4;
+    const vel_y = -(1.0 + t.rand.float32() * 1.0);
+    p.vel = vec3(vel_x, vel_y, 0.0);
+
+    p.used = true;
+
+    return p;
 }
