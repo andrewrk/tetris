@@ -211,6 +211,19 @@ fn draw(t: &Tetris) {
 
     draw_piece(t, t.next_piece, next_piece_left + margin_size, next_piece_top + margin_size, 0);
 
+    for (row, t.grid, y) {
+        for (cell, row, x) {
+            switch (cell) {
+                Color => |color| {
+                    const cell_left = board_left + i32(x) * cell_size;
+                    const cell_top = board_top + i32(y) * cell_size;
+                    fill_rect(t, color, f32(cell_left), f32(cell_top), cell_size, cell_size);
+                },
+                else => {},
+            }
+        }
+    }
+
 }
 
 fn draw_piece(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: i32) {
@@ -261,17 +274,23 @@ fn lock_piece(t: &Tetris) {
     }
 }
 
+fn cell_empty(t: &Tetris, x: i32, y: i32) -> bool {
+    switch (t.grid[y][x]) {
+        Empty => true,
+        else => false,
+    }
+}
+
 fn piece_would_collide(t: &Tetris, piece: &Piece, grid_x: i32, grid_y: i32, rot: i32) -> bool {
     for (row, piece.layout[rot], y) {
         for (is_filled, row, x) {
             if (!is_filled) {
                 continue;
             }
-            const abs_x = grid_x + x;
-            const abs_y = grid_y + y;
+            const abs_x = grid_x + i32(x);
+            const abs_y = grid_y + i32(y);
             if (abs_x >= 0 && abs_y >= 0 && abs_x < grid_width && abs_y < grid_height) {
-                const filled = t.grid[abs_y][abs_x] != Cell.Empty;
-                if (filled) {
+                if (!cell_empty(t, abs_x, abs_y)) {
                     return true;
                 }
             } else {
