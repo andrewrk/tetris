@@ -71,6 +71,7 @@ export fn tetris_key_callback(window: ?&GLFWwindow, key: c_int, scancode: c_int,
         GLFW_KEY_DOWN => {cur_piece_fall(t);},
         GLFW_KEY_LEFT => move_cur_piece(t, -1),
         GLFW_KEY_RIGHT => move_cur_piece(t, 1),
+        GLFW_KEY_UP => rotate_cur_piece(t, 1),
         else => {},
     }
 }
@@ -278,6 +279,14 @@ fn move_cur_piece(t: &Tetris, dir: i8) {
         return;
     }
     t.cur_piece_x += dir;
+}
+
+fn rotate_cur_piece(t: &Tetris, rot: i8) {
+    const new_rot = (t.cur_piece_rot + rot) % 4;
+    if (piece_would_collide(t, t.cur_piece, t.cur_piece_x, t.cur_piece_y, new_rot)) {
+        return;
+    }
+    t.cur_piece_rot = new_rot;
 }
 
 fn lock_piece(t: &Tetris) {
