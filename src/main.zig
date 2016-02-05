@@ -27,6 +27,7 @@ struct Tetris {
     cur_piece_y: i32,
     cur_piece_rot: i32,
     score: i32,
+    game_over: bool,
 }
 
 enum Cell {
@@ -73,11 +74,11 @@ export fn tetris_key_callback(window: ?&GLFWwindow, key: c_int, scancode: c_int,
 
     switch (key) {
         GLFW_KEY_ESCAPE => glfwSetWindowShouldClose(window, GL_TRUE),
-        GLFW_KEY_SPACE => drop_cur_piece(t),
-        GLFW_KEY_DOWN => {cur_piece_fall(t);},
-        GLFW_KEY_LEFT => move_cur_piece(t, -1),
-        GLFW_KEY_RIGHT => move_cur_piece(t, 1),
-        GLFW_KEY_UP => rotate_cur_piece(t, 1),
+        GLFW_KEY_SPACE => user_drop_cur_piece(t),
+        GLFW_KEY_DOWN => user_cur_piece_fall(t),
+        GLFW_KEY_LEFT => user_move_cur_piece(t, -1),
+        GLFW_KEY_RIGHT => user_move_cur_piece(t, 1),
+        GLFW_KEY_UP => user_rotate_cur_piece(t, 1),
         GLFW_KEY_R => restart_game(t),
         else => {},
     }
@@ -156,6 +157,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
         // then do: .grid =  [][grid_width]Cell{[1]Cell{Cell.Empty} * grid_width} * grid_height
         .grid = undefined,
         .score = undefined,
+        .game_over = undefined,
     };
     restart_game(&t);
 
@@ -255,14 +257,20 @@ fn draw_piece(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: i32) {
 }
 
 fn next_frame(t: &Tetris, elapsed: f64) {
-    t.delay_left -= elapsed;
+    if (!t.game_over) {
+        t.delay_left -= elapsed;
 
-    if (t.delay_left <= 0) {
-        cur_piece_fall(t);
+        if (t.delay_left <= 0) {
+            cur_piece_fall(t);
 
-        t.delay_left = t.piece_delay;
+            t.delay_left = t.piece_delay;
+        }
     }
+}
 
+fn user_cur_piece_fall(t: &Tetris) {
+    if (t.game_over) return;
+    cur_piece_fall(t);
 }
 
 fn cur_piece_fall(t: &Tetris) -> bool {
@@ -277,20 +285,23 @@ fn cur_piece_fall(t: &Tetris) -> bool {
     }
 }
 
-fn drop_cur_piece(t: &Tetris) {
+fn user_drop_cur_piece(t: &Tetris) {
+    if (t.game_over) return;
     while (!cur_piece_fall(t)) {
         t.score += 1;
     }
 }
 
-fn move_cur_piece(t: &Tetris, dir: i8) {
+fn user_move_cur_piece(t: &Tetris, dir: i8) {
+    if (t.game_over) return;
     if (piece_would_collide(t, t.cur_piece, t.cur_piece_x + dir, t.cur_piece_y, t.cur_piece_rot)) {
         return;
     }
     t.cur_piece_x += dir;
 }
 
-fn rotate_cur_piece(t: &Tetris, rot: i8) {
+fn user_rotate_cur_piece(t: &Tetris, rot: i8) {
+    if (t.game_over) return;
     const new_rot = (t.cur_piece_rot + rot) % 4;
     if (piece_would_collide(t, t.cur_piece, t.cur_piece_x, t.cur_piece_y, new_rot)) {
         return;
@@ -389,12 +400,21 @@ fn populate_next_piece(t: &Tetris) {
 }
 
 fn drop_new_piece(t: &Tetris) {
+    const start_x = 4;
+    const start_y = -1;
+    const start_rot = 0;
+    if (piece_would_collide(t, t.next_piece, start_x, start_y, start_rot)) {
+        t.game_over = true;
+        return;
+    }
+
+
     t.delay_left = t.piece_delay;
 
     t.cur_piece = t.next_piece;
-    t.cur_piece_x = 4;
-    t.cur_piece_y = -2;
-    t.cur_piece_rot = 0;
+    t.cur_piece_x = start_x;
+    t.cur_piece_y = start_y;
+    t.cur_piece_rot = start_rot;
 
     populate_next_piece(t);
 }
