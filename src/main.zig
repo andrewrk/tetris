@@ -293,7 +293,7 @@ fn piece_would_collide(t: &Tetris, piece: &Piece, grid_x: i32, grid_y: i32, rot:
                 if (!cell_empty(t, abs_x, abs_y)) {
                     return true;
                 }
-            } else {
+            } else if (abs_y >= 0) {
                 return true;
             }
         }
@@ -314,7 +314,7 @@ fn drop_new_piece(t: &Tetris) {
 
     t.cur_piece = t.next_piece;
     t.cur_piece_x = 4;
-    t.cur_piece_y = 0;
+    t.cur_piece_y = -4;
     t.cur_piece_rot = 0;
 
     populate_next_piece(t);
