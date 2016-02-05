@@ -21,7 +21,6 @@ struct Tetris {
     piece_delay: f64,
     delay_left: f64,
     grid: [grid_height][grid_width]Cell,
-    piece_drop_count: i32,
     next_piece: &Piece,
     cur_piece: &Piece,
     cur_piece_x: i32,
@@ -52,7 +51,7 @@ const window_height = board_top + board_height + margin_size;
 
 const board_color = Vec4 { .data = []f32 {72.0/255.0, 72.0/255.0, 72.0/255.0, 1.0}};
 
-const init_piece_delay = 0.25;
+const init_piece_delay = 0.5;
 
 // TODO use * syntax when it is supported to create this
 const empty_row = []Cell{
@@ -79,6 +78,7 @@ export fn tetris_key_callback(window: ?&GLFWwindow, key: c_int, scancode: c_int,
         GLFW_KEY_LEFT => move_cur_piece(t, -1),
         GLFW_KEY_RIGHT => move_cur_piece(t, 1),
         GLFW_KEY_UP => rotate_cur_piece(t, 1),
+        GLFW_KEY_R => restart_game(t),
         else => {},
     }
 }
@@ -143,9 +143,10 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
         .static_geometry = create_static_geometry(),
         .projection = projection,
         .rand = rand_new(rand_seed),
-        .piece_delay = init_piece_delay,
-        .delay_left = init_piece_delay,
-        .piece_drop_count = 0,
+
+        // populated by restart_game
+        .piece_delay = undefined,
+        .delay_left = undefined,
         .next_piece = undefined,
         .cur_piece = undefined,
         .cur_piece_x = undefined,
@@ -154,11 +155,9 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
         // TODO support the * operator for initializing constant arrays
         // then do: .grid =  [][grid_width]Cell{[1]Cell{Cell.Empty} * grid_width} * grid_height
         .grid = undefined,
-        .score = 0,
+        .score = undefined,
     };
-    init_empty_grid(&t);
-    populate_next_piece(&t);
-    drop_new_piece(&t);
+    restart_game(&t);
 
     glfwSetWindowUserPointer(window, (&c_void)(&t));
 
@@ -299,6 +298,16 @@ fn rotate_cur_piece(t: &Tetris, rot: i8) {
     t.cur_piece_rot = new_rot;
 }
 
+fn restart_game(t: &Tetris) {
+    t.piece_delay = init_piece_delay;
+    t.delay_left = init_piece_delay;
+    t.score = 0;
+
+    init_empty_grid(t);
+    populate_next_piece(t);
+    drop_new_piece(t);
+}
+
 fn lock_piece(t: &Tetris) {
     t.score += 1;
 
@@ -381,7 +390,6 @@ fn populate_next_piece(t: &Tetris) {
 
 fn drop_new_piece(t: &Tetris) {
     t.delay_left = t.piece_delay;
-    t.piece_drop_count += 1;
 
     t.cur_piece = t.next_piece;
     t.cur_piece_x = 4;
