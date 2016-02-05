@@ -27,6 +27,7 @@ struct Tetris {
     cur_piece_x: i32,
     cur_piece_y: i32,
     cur_piece_rot: i32,
+    score: i32,
 }
 
 enum Cell {
@@ -52,6 +53,12 @@ const window_height = board_top + board_height + margin_size;
 const board_color = Vec4 { .data = []f32 {72.0/255.0, 72.0/255.0, 72.0/255.0, 1.0}};
 
 const init_piece_delay = 0.25;
+
+// TODO use * syntax when it is supported to create this
+const empty_row = []Cell{
+    Cell.Empty, Cell.Empty, Cell.Empty, Cell.Empty, Cell.Empty,
+    Cell.Empty, Cell.Empty, Cell.Empty, Cell.Empty, Cell.Empty,
+};
 
 
 // TODO avoid having to make this function export
@@ -144,9 +151,10 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
         .cur_piece_x = undefined,
         .cur_piece_y = undefined,
         .cur_piece_rot = undefined,
-        // TODO support the * operator for initilizing constant arrays
-        // then do: .grid =  ([1]Cell{Cell.Empty} * grid_width) * grid_height
+        // TODO support the * operator for initializing constant arrays
+        // then do: .grid =  [][grid_width]Cell{[1]Cell{Cell.Empty} * grid_width} * grid_height
         .grid = undefined,
+        .score = 0,
     };
     init_empty_grid(&t);
     populate_next_piece(&t);
@@ -271,7 +279,9 @@ fn cur_piece_fall(t: &Tetris) -> bool {
 }
 
 fn drop_cur_piece(t: &Tetris) {
-    while (!cur_piece_fall(t)) {}
+    while (!cur_piece_fall(t)) {
+        t.score += 1;
+    }
 }
 
 fn move_cur_piece(t: &Tetris, dir: i8) {
@@ -290,6 +300,8 @@ fn rotate_cur_piece(t: &Tetris, rot: i8) {
 }
 
 fn lock_piece(t: &Tetris) {
+    t.score += 1;
+
     for (row, t.cur_piece.layout[t.cur_piece_rot], y) {
         for (is_filled, row, x) {
             if (!is_filled) {
@@ -302,6 +314,35 @@ fn lock_piece(t: &Tetris) {
             }
         }
     }
+
+    // test for line
+    var rows_deleted: i32 = 0;
+    var y: i32 = grid_height - 1;
+    while (y >= 0) {
+        var all_filled: bool = true;
+        for (cell, t.grid[y]) {
+            const filled = switch (cell) { Empty => false, else => true, };
+            if (!filled) {
+                all_filled = false;
+                break;
+            }
+        }
+        if (all_filled) {
+            rows_deleted += 1;
+            delete_row(t, y);
+        } else {
+            y -= 1;
+        }
+    }
+}
+
+fn delete_row(t: &Tetris, del_index: i32) {
+    var y: i32 = del_index;
+    while (y >= 1) {
+        t.grid[y] = t.grid[y - 1];
+        y -= 1;
+    }
+    t.grid[y] = empty_row;
 }
 
 fn cell_empty(t: &Tetris, x: i32, y: i32) -> bool {
@@ -351,10 +392,8 @@ fn drop_new_piece(t: &Tetris) {
 }
 
 fn init_empty_grid(t: &Tetris) {
-    // TODO for loop over array with pointer
+    // TODO for loop range
     for (row, t.grid, y) {
-        for (cell, row, x) {
-            row[x] = Cell.Empty;
-        }
+        t.grid[y] = empty_row;
     }
 }
