@@ -3,11 +3,15 @@
 A simple tetris clone written in
 [zig programming language](https://github.com/andrewrk/zig).
 
-![](http://i.imgur.com/cl3OmS8.png)
+![](http://i.imgur.com/Z7y4WeY.png)
 
 ## Status
 
- * Getting there. One more day of hacking and it will probably be playable.
+ * Playable game. Missing features:
+   - Speed up over time
+   - Display score
+   - Display ghost of where piece would drop
+   - Sound effects and music
 
 ## Dependencies
 
