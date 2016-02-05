@@ -62,8 +62,16 @@ export fn tetris_error_callback(err: c_int, description: ?&const u8) {
 
 // TODO avoid having to make this function export
 export fn tetris_key_callback(window: ?&GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, GL_TRUE);
+    if (action != GLFW_PRESS) return;
+    const t = (&Tetris)(??glfwGetWindowUserPointer(window));
+
+    switch (key) {
+        GLFW_KEY_ESCAPE => glfwSetWindowShouldClose(window, GL_TRUE),
+        GLFW_KEY_SPACE => drop_cur_piece(t),
+        GLFW_KEY_DOWN => {cur_piece_fall(t);},
+        GLFW_KEY_LEFT => move_cur_piece(t, -1),
+        GLFW_KEY_RIGHT => move_cur_piece(t, 1),
+        else => {},
     }
 }
 
@@ -249,14 +257,27 @@ fn next_frame(t: &Tetris, elapsed: f64) {
 
 }
 
-fn cur_piece_fall(t: &Tetris) {
+fn cur_piece_fall(t: &Tetris) -> bool {
     // if it would hit something, make it stop instead
     if (piece_would_collide(t, t.cur_piece, t.cur_piece_x, t.cur_piece_y + 1, t.cur_piece_rot)) {
         lock_piece(t);
         drop_new_piece(t);
+        return true;
     } else {
         t.cur_piece_y += 1;
+        return false;
     }
+}
+
+fn drop_cur_piece(t: &Tetris) {
+    while (!cur_piece_fall(t)) {}
+}
+
+fn move_cur_piece(t: &Tetris, dir: i8) {
+    if (piece_would_collide(t, t.cur_piece, t.cur_piece_x + dir, t.cur_piece_y, t.cur_piece_rot)) {
+        return;
+    }
+    t.cur_piece_x += dir;
 }
 
 fn lock_piece(t: &Tetris) {
@@ -314,7 +335,7 @@ fn drop_new_piece(t: &Tetris) {
 
     t.cur_piece = t.next_piece;
     t.cur_piece_x = 4;
-    t.cur_piece_y = -4;
+    t.cur_piece_y = -2;
     t.cur_piece_rot = 0;
 
     populate_next_piece(t);
