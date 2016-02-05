@@ -308,7 +308,7 @@ fn next_frame(t: &Tetris, elapsed: f64) {
         const p = &t.particles[i];
         if (!p.used) continue;
         p.pos = p.pos.add(p.vel);
-        p.vel = p.vel.add(vec3(0, 0.08, 0));
+        p.vel = p.vel.add(vec3(0, 0.14, 0)); // gravity
 
         p.angle += p.angle_vel;
 
@@ -565,8 +565,8 @@ fn create_particle(t: &Tetris, color: Vec4, size: f32, pos: Vec3) -> Particle {
     p.color = color;
     p.pos = pos;
 
-    const vel_x = t.rand.float32() * 0.8 - 0.4;
-    const vel_y = -(1.0 + t.rand.float32() * 1.0);
+    const vel_x = t.rand.float32() * 2.0 - 1.0;
+    const vel_y = -(2.0 + t.rand.float32() * 1.0);
     p.vel = vec3(vel_x, vel_y, 0.0);
 
     p.used = true;
