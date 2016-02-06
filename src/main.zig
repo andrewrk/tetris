@@ -268,8 +268,8 @@ fn draw(t: &Tetris) {
 
     draw_piece(t, t.next_piece, next_piece_left + margin_size, next_piece_top + margin_size, 0);
 
-    for (row, t.grid, y) {
-        for (cell, row, x) {
+    for (t.grid) |row, y| {
+        for (row) |cell, x| {
             switch (cell) {
                 Color => |color| {
                     const cell_left = board_left + i32(x) * cell_size;
@@ -281,7 +281,7 @@ fn draw(t: &Tetris) {
         }
     }
 
-    for (particle, t.particles) {
+    for (t.particles) |particle| {
         if (particle.used) {
             draw_particle(t, particle);
         }
@@ -290,8 +290,8 @@ fn draw(t: &Tetris) {
 }
 
 fn draw_piece(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: i32) {
-    for (row, piece.layout[rot], y) {
-        for (is_filled, row, x) {
+    for (piece.layout[rot]) |row, y| {
+        for (row) |is_filled, x| {
             if (!is_filled) continue;
             const abs_x = f32(left + x * cell_size);
             const abs_y = f32(top + y * cell_size);
@@ -304,7 +304,7 @@ fn draw_piece(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: i32) {
 fn next_frame(t: &Tetris, elapsed: f64) {
     // TODO for loop with ref
     // TODO maybe unwrap with ref:  if (var *particle ?= t.particles[i]) {
-    for (_, t.particles, i) {
+    for (t.particles) |_, i| {
         const p = &t.particles[i];
         if (!p.used) continue;
         p.pos = p.pos.add(p.vel);
@@ -370,8 +370,8 @@ fn user_rotate_cur_piece(t: &Tetris, rot: i8) {
 }
 
 fn user_explode_cur_piece(t: &Tetris) {
-    for (row, t.cur_piece.layout[t.cur_piece_rot], y) {
-        for (is_filled, row, x) {
+    for (t.cur_piece.layout[t.cur_piece_rot]) |row, y| {
+        for (row) |is_filled, x| {
             if (!is_filled) {
                 continue;
             }
@@ -398,8 +398,8 @@ fn restart_game(t: &Tetris) {
 fn lock_piece(t: &Tetris) {
     t.score += 1;
 
-    for (row, t.cur_piece.layout[t.cur_piece_rot], y) {
-        for (is_filled, row, x) {
+    for (t.cur_piece.layout[t.cur_piece_rot]) |row, y| {
+        for (row) |is_filled, x| {
             if (!is_filled) {
                 continue;
             }
@@ -412,9 +412,9 @@ fn lock_piece(t: &Tetris) {
     }
 
     // find lines once and spawn explosions
-    for (row, t.grid, y) {
+    for (t.grid) |row, y| {
         var all_filled = true;
-        for (cell, t.grid[y]) {
+        for (t.grid[y]) |cell| {
             const filled = switch (cell) { Empty => false, else => true, };
             if (!filled) {
                 all_filled = false;
@@ -422,7 +422,7 @@ fn lock_piece(t: &Tetris) {
             }
         }
         if (all_filled) {
-            for (cell, t.grid[y], x) {
+            for (t.grid[y]) |cell, x| {
                 const color = switch (cell) { Empty => continue, Color => |c| c,};
                 const center_x = f32(board_left + x * cell_size) + f32(cell_size) / 2.0;
                 const center_y = f32(board_top + y * cell_size) + f32(cell_size) / 2.0;
@@ -436,7 +436,7 @@ fn lock_piece(t: &Tetris) {
     var y: i32 = grid_height - 1;
     while (y >= 0) {
         var all_filled: bool = true;
-        for (cell, t.grid[y]) {
+        for (t.grid[y]) |cell| {
             const filled = switch (cell) { Empty => false, else => true, };
             if (!filled) {
                 all_filled = false;
@@ -472,8 +472,8 @@ fn cell_empty(t: &Tetris, x: i32, y: i32) -> bool {
 }
 
 fn piece_would_collide(t: &Tetris, piece: &Piece, grid_x: i32, grid_y: i32, rot: i32) -> bool {
-    for (row, piece.layout[rot], y) {
-        for (is_filled, row, x) {
+    for (piece.layout[rot]) |row, y| {
+        for (row) |is_filled, x| {
             if (!is_filled) {
                 continue;
             }
@@ -520,7 +520,7 @@ fn drop_new_piece(t: &Tetris) {
 
 fn init_empty_grid(t: &Tetris) {
     // TODO for loop range
-    for (row, t.grid, y) {
+    for (t.grid) |row, y| {
         t.grid[y] = empty_row;
     }
 }
@@ -528,7 +528,7 @@ fn init_empty_grid(t: &Tetris) {
 fn clear_particles(t: &Tetris) {
     // TODO for loop range
     // TODO this crashes compiler, when t.particles is not maybe: t.particles[i] = null;
-    for (particle, t.particles, i) {
+    for (t.particles) |particle, i| {
         t.particles[i].used = false;
     }
     t.next_particle_index = 0;
