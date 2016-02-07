@@ -41,6 +41,7 @@ struct Tetris {
     screen_shake_elapsed: f64,
     level: i32,
     time_till_next_level: f64,
+    piece_pool: [pieces.len]i32,
 
     particles: [max_particle_count]Particle,
     falling_blocks: [max_falling_block_count]Particle,
@@ -314,9 +315,9 @@ fn draw(t: &Tetris) {
         draw_piece(t, t.cur_piece, abs_x, abs_y, t.cur_piece_rot);
 
         const ghost_color = vec4(
-            t.cur_piece.color.data[0], 
-            t.cur_piece.color.data[1], 
-            t.cur_piece.color.data[2], 
+            t.cur_piece.color.data[0],
+            t.cur_piece.color.data[1],
+            t.cur_piece.color.data[2],
             0.2);
         draw_piece_with_color(t, t.cur_piece, abs_x, t.ghost_y, t.cur_piece_rot, ghost_color);
     }
@@ -596,12 +597,22 @@ fn restart_game(t: &Tetris) {
     t.level = 1;
     t.time_till_next_level = time_per_level;
 
+    // TODO support the * operator for initializing constant arrays
+    reset_piece_pool(t);
+
     clear_particles(t);
     // TODO support the * operator for initializing constant arrays
     // then do: .grid =  [][grid_width]Cell{[1]Cell{Cell.Empty} * grid_width} * grid_height
     init_empty_grid(t);
     populate_next_piece(t);
     drop_new_piece(t);
+}
+
+fn reset_piece_pool(t: &Tetris) {
+    // TODO for (t.piece_pool) |*piece|
+    for (t.piece_pool) |_, i| {
+        t.piece_pool[i] = 1;
+    }
 }
 
 fn lock_piece(t: &Tetris) {
@@ -715,10 +726,35 @@ fn piece_would_collide(t: &Tetris, piece: &Piece, grid_x: i32, grid_y: i32, rot:
 }
 
 fn populate_next_piece(t: &Tetris) {
+    // Let's turn Gambler's Fallacy into Gambler's Accurate Model of Reality.
+    var upper_bound: i32 = 0;
+    for (t.piece_pool) |count| {
+        if (count == 0) unreachable{};
+        upper_bound += count;
+    }
+
     // TODO type generics so this doesn't have to be a u64
-    // TODO oops. super clumsy signedness casting here with rand_range and index operator
-    const index = t.rand.range_u64(0, u64(pieces.len));
-    t.next_piece = &pieces[isize(index)];
+    const rand_val = i32(t.rand.range_u64(0, u64(upper_bound)));
+    var this_piece_upper_bound: i32 = 0;
+    var any_zero = false;
+    for (t.piece_pool) |count, piece_index| {
+        this_piece_upper_bound += count;
+        if (rand_val < this_piece_upper_bound) {
+            t.next_piece = &pieces[piece_index];
+            t.piece_pool[piece_index] -= 1;
+            if (count <= 1) {
+                any_zero = true;
+            }
+            break;
+        }
+    }
+
+    // if any of the pieces are 0, add 1 to all of them
+    if (any_zero) {
+        for (t.piece_pool) |_, i| {
+            t.piece_pool[i] += 1;
+        }
+    }
 }
 
 fn do_game_over(t: &Tetris) {
