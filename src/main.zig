@@ -34,6 +34,10 @@ struct Tetris {
     next_falling_block_index: i32,
     font: Spritesheet,
     ghost_y: i32,
+    framebuffer_width: c_int,
+    framebuffer_height: c_int,
+    screen_shake_timeout: f64,
+    screen_shake_elapsed: f64,
 
     particles: [max_particle_count]Particle,
     falling_blocks: [max_falling_block_count]Particle,
@@ -117,7 +121,6 @@ export fn tetris_key_callback(window: ?&GLFWwindow, key: c_int, scancode: c_int,
         GLFW_KEY_RIGHT => user_move_cur_piece(t, 1),
         GLFW_KEY_UP => user_rotate_cur_piece(t, 1),
         GLFW_KEY_R => restart_game(t),
-        GLFW_KEY_E => user_explode_cur_piece(t),
         else => {},
     }
 }
@@ -162,24 +165,16 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
     glBindVertexArray(vertex_array_object);
     defer glDeleteVertexArrays(1, &vertex_array_object);
 
-    glClearColor(0.0, 0.0, 0.0, 1.0);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    var width: c_int = undefined;
-    var height: c_int = undefined;
-    glfwGetFramebufferSize(window, &width, &height);
-    if (width < window_width || height < window_height) unreachable{};
-    const projection = mat4x4_ortho(0.0, f32(width), f32(height), 0.0);
-    glViewport(0, 0, width, height);
-
     const rand_seed = get_random_seed() %% {
         fprintf(stderr, c"unable to get random seed\n");
         abort();
     };
 
     var t : Tetris = undefined;
+
+    glfwGetFramebufferSize(window, &t.framebuffer_width, &t.framebuffer_height);
+    if (t.framebuffer_width < window_width || t.framebuffer_height < window_height) unreachable{};
+
     t.window = window;
 
     t.shaders = create_all_shaders();
@@ -194,11 +189,17 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
     };
     defer t.font.deinit();
 
-    t.projection = projection;
+    reset_projection(&t);
     t.rand = rand_new(rand_seed);
 
     restart_game(&t);
 
+    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    glViewport(0, 0, t.framebuffer_width, t.framebuffer_height);
     glfwSetWindowUserPointer(window, (&c_void)(&t));
 
     assert_no_gl_error();
@@ -429,6 +430,19 @@ fn next_frame(t: &Tetris, elapsed: f64) {
 
         compute_ghost(t);
     }
+
+    if (t.screen_shake_elapsed < t.screen_shake_timeout) {
+        t.screen_shake_elapsed += elapsed;
+        if (t.screen_shake_elapsed >= t.screen_shake_timeout) {
+            reset_projection(t);
+        } else {
+            const rate = 8; // oscillations per sec
+            const amplitude = 4; // pixels
+            const offset = f32(amplitude * sin(2 * PI * t.screen_shake_elapsed * rate));
+            t.projection = mat4x4_ortho(0.0, f32(t.framebuffer_width),
+                f32(t.framebuffer_height) + offset, offset);
+        }
+    }
 }
 
 fn compute_ghost(t: &Tetris) {
@@ -480,26 +494,13 @@ fn user_rotate_cur_piece(t: &Tetris, rot: i8) {
     t.cur_piece_rot = new_rot;
 }
 
-fn user_explode_cur_piece(t: &Tetris) {
-    for (t.cur_piece.layout[t.cur_piece_rot]) |row, y| {
-        for (row) |is_filled, x| {
-            if (!is_filled) {
-                continue;
-            }
-            const center_x = f32(board_left + (t.cur_piece_x + x) * cell_size) + f32(cell_size) / 2.0;
-            const center_y = f32(board_top + (t.cur_piece_y + y) * cell_size) + f32(cell_size) / 2.0;
-            add_explosion(t, t.cur_piece.color, center_x, center_y);
-        }
-    }
-
-    drop_new_piece(t);
-}
-
 fn restart_game(t: &Tetris) {
     t.piece_delay = init_piece_delay;
     t.delay_left = init_piece_delay;
     t.score = 0;
     t.game_over = false;
+    t.screen_shake_elapsed = 0.0;
+    t.screen_shake_timeout = 0.0;
 
     clear_particles(t);
     // TODO support the * operator for initializing constant arrays
@@ -567,6 +568,20 @@ fn lock_piece(t: &Tetris) {
 
     const score_per_rows_deleted = []c_int { 0, 10, 30, 50, 70};
     t.score += score_per_rows_deleted[rows_deleted];
+
+    if (rows_deleted > 0) {
+        activate_screen_shake(t, 0.04);
+    }
+}
+
+
+fn reset_projection(t: &Tetris) {
+    t.projection = mat4x4_ortho(0.0, f32(t.framebuffer_width), f32(t.framebuffer_height), 0.0);
+}
+
+fn activate_screen_shake(t: &Tetris, duration: f64) {
+    t.screen_shake_elapsed = 0.0;
+    t.screen_shake_timeout = duration;
 }
 
 fn delete_row(t: &Tetris, del_index: i32) {

@@ -10,7 +10,6 @@ A simple tetris clone written in
  * Playable game. Missing features:
    - Speed up over time
    - Sound effects and music
-   - Screen shake when you break a line
 
 ## Dependencies
 
