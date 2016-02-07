@@ -33,6 +33,7 @@ struct Tetris {
     next_particle_index: i32,
     next_falling_block_index: i32,
     font: Spritesheet,
+    ghost_y: i32,
 
     particles: [max_particle_count]Particle,
     falling_blocks: [max_falling_block_count]Particle,
@@ -295,6 +296,13 @@ fn draw(t: &Tetris) {
         const abs_x = board_left + t.cur_piece_x * cell_size;
         const abs_y = board_top + t.cur_piece_y * cell_size;
         draw_piece(t, t.cur_piece, abs_x, abs_y, t.cur_piece_rot);
+
+        const ghost_color = vec4(
+            t.cur_piece.color.data[0], 
+            t.cur_piece.color.data[1], 
+            t.cur_piece.color.data[2], 
+            0.2);
+        draw_piece_with_color(t, t.cur_piece, abs_x, t.ghost_y, t.cur_piece_rot, ghost_color);
     }
 
     draw_piece(t, t.next_piece, next_piece_left + margin_size, next_piece_top + margin_size, 0);
@@ -362,13 +370,17 @@ fn draw_text(t: &Tetris, text: []u8, left: i32, top: i32, size: f32) {
 }
 
 fn draw_piece(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: i32) {
+    draw_piece_with_color(t, piece, left, top, rot, piece.color);
+}
+
+fn draw_piece_with_color(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: i32, color: Vec4) {
     for (piece.layout[rot]) |row, y| {
         for (row) |is_filled, x| {
             if (!is_filled) continue;
             const abs_x = f32(left + x * cell_size);
             const abs_y = f32(top + y * cell_size);
 
-            fill_rect(t, piece.color, abs_x, abs_y, cell_size, cell_size);
+            fill_rect(t, color, abs_x, abs_y, cell_size, cell_size);
         }
     }
 }
@@ -414,7 +426,17 @@ fn next_frame(t: &Tetris, elapsed: f64) {
 
             t.delay_left = t.piece_delay;
         }
+
+        compute_ghost(t);
     }
+}
+
+fn compute_ghost(t: &Tetris) {
+    var off_y : i32 = 1;
+    while (!piece_would_collide(t, t.cur_piece, t.cur_piece_x, t.cur_piece_y + off_y, t.cur_piece_rot)) {
+        off_y += 1;
+    }
+    t.ghost_y = board_top + cell_size * (t.cur_piece_y + off_y - 1);
 }
 
 fn user_cur_piece_fall(t: &Tetris) {

@@ -9,8 +9,8 @@ A simple tetris clone written in
 
  * Playable game. Missing features:
    - Speed up over time
-   - Display ghost of where piece would drop
    - Sound effects and music
+   - Screen shake when you break a line
 
 ## Dependencies
 
