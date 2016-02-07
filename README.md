@@ -17,6 +17,7 @@ A simple tetris clone written in
  * Shift - Rotate piece counter clockwise.
  * Space - Drop piece immediately.
  * R - Start new game.
+ * P - Pause and unpause game.
  * Escape - Quit.
 
 ## Dependencies

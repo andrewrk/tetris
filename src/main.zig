@@ -42,6 +42,7 @@ struct Tetris {
     level: i32,
     time_till_next_level: f64,
     piece_pool: [pieces.len]i32,
+    is_paused: bool,
 
     particles: [max_particle_count]Particle,
     falling_blocks: [max_falling_block_count]Particle,
@@ -135,7 +136,7 @@ export fn tetris_key_callback(window: ?&GLFWwindow, key: c_int, scancode: c_int,
         GLFW_KEY_LEFT_SHIFT,
         GLFW_KEY_RIGHT_SHIFT => user_rotate_cur_piece(t, -1),
         GLFW_KEY_R => restart_game(t),
-        GLFW_KEY_E => level_up(t),
+        GLFW_KEY_P => user_toggle_pause(t),
         else => {},
     }
 }
@@ -297,6 +298,13 @@ fn get_random_seed() -> %u32 {
     return seed;
 }
 
+fn draw_centered_text(t: &Tetris, text: []u8) {
+    const label_width = font_char_width * i32(text.len);
+    const draw_left = board_left + board_width / 2 - label_width / 2;
+    const draw_top = board_top + board_height / 2 - font_char_height / 2;
+    draw_text(t, text, draw_left, draw_top, 1.0);
+}
+
 fn draw(t: &Tetris) {
     fill_rect(t, board_color, board_left, board_top, board_width, board_height);
     fill_rect(t, board_color, next_piece_left, next_piece_top, next_piece_width, next_piece_height);
@@ -304,11 +312,9 @@ fn draw(t: &Tetris) {
     fill_rect(t, board_color, level_display_left, level_display_top, level_display_width, level_display_height);
 
     if (t.game_over) {
-        const game_over_text = "GAME OVER";
-        const label_width = font_char_width * i32(game_over_text.len);
-        const draw_left = board_left + board_width / 2 - label_width / 2;
-        const draw_top = board_top + board_height / 2 - font_char_height / 2;
-        draw_text(t, game_over_text, draw_left, draw_top, 1.0);
+        draw_centered_text(t, "GAME OVER");
+    } else if (t.is_paused) {
+        draw_centered_text(t, "PAUSED");
     } else {
         const abs_x = board_left + t.cur_piece_x * cell_size;
         const abs_y = board_top + t.cur_piece_y * cell_size;
@@ -320,11 +326,9 @@ fn draw(t: &Tetris) {
             t.cur_piece.color.data[2],
             0.2);
         draw_piece_with_color(t, t.cur_piece, abs_x, t.ghost_y, t.cur_piece_rot, ghost_color);
-    }
 
-    draw_piece(t, t.next_piece, next_piece_left + margin_size, next_piece_top + margin_size, 0);
+        draw_piece(t, t.next_piece, next_piece_left + margin_size, next_piece_top + margin_size, 0);
 
-    if (!t.game_over) {
         for (t.grid) |row, y| {
             for (row) |cell, x| {
                 switch (cell) {
@@ -419,6 +423,8 @@ fn draw_piece_with_color(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: i3
 }
 
 fn next_frame(t: &Tetris, elapsed: f64) {
+    if (t.is_paused) return;
+
     // TODO for loop with ref
     // TODO maybe unwrap with ref:  if (var *particle ?= t.particles[i]) {
     for (t.falling_blocks) |_, i| {
@@ -475,7 +481,7 @@ fn next_frame(t: &Tetris, elapsed: f64) {
         } else {
             const rate = 8; // oscillations per sec
             const amplitude = 4; // pixels
-            const offset = f32(amplitude * sin(2 * PI * t.screen_shake_elapsed * rate));
+            const offset = f32(amplitude * -sin(2 * PI * t.screen_shake_elapsed * rate));
             t.projection = mat4x4_ortho(0.0, f32(t.framebuffer_width),
                 f32(t.framebuffer_height) + offset, offset);
         }
@@ -547,7 +553,7 @@ fn compute_ghost(t: &Tetris) {
 }
 
 fn user_cur_piece_fall(t: &Tetris) {
-    if (t.game_over) return;
+    if (t.game_over || t.is_paused) return;
     cur_piece_fall(t);
 }
 
@@ -564,14 +570,14 @@ fn cur_piece_fall(t: &Tetris) -> bool {
 }
 
 fn user_drop_cur_piece(t: &Tetris) {
-    if (t.game_over) return;
+    if (t.game_over || t.is_paused) return;
     while (!cur_piece_fall(t)) {
         t.score += 1;
     }
 }
 
 fn user_move_cur_piece(t: &Tetris, dir: i8) {
-    if (t.game_over) return;
+    if (t.game_over || t.is_paused) return;
     if (piece_would_collide(t, t.cur_piece, t.cur_piece_x + dir, t.cur_piece_y, t.cur_piece_rot)) {
         return;
     }
@@ -579,12 +585,18 @@ fn user_move_cur_piece(t: &Tetris, dir: i8) {
 }
 
 fn user_rotate_cur_piece(t: &Tetris, rot: i8) {
-    if (t.game_over) return;
+    if (t.game_over || t.is_paused) return;
     const new_rot = (t.cur_piece_rot + rot + 4) % 4;
     if (piece_would_collide(t, t.cur_piece, t.cur_piece_x, t.cur_piece_y, new_rot)) {
         return;
     }
     t.cur_piece_rot = new_rot;
+}
+
+fn user_toggle_pause(t: &Tetris) {
+    if (t.game_over) return;
+
+    t.is_paused = !t.is_paused;
 }
 
 fn restart_game(t: &Tetris) {
@@ -596,6 +608,7 @@ fn restart_game(t: &Tetris) {
     t.screen_shake_timeout = 0.0;
     t.level = 1;
     t.time_till_next_level = time_per_level;
+    t.is_paused = false;
 
     // TODO support the * operator for initializing constant arrays
     reset_piece_pool(t);
