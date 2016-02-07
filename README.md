@@ -8,7 +8,7 @@ A simple tetris clone written in
 ## Status
 
  * Playable game. Missing features:
-   - Speed up over time
+   - Turn Gambler's Fallacy into Gambler's Accurate Model of Reality
    - Sound effects and music
 
 ## Controls

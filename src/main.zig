@@ -38,6 +38,8 @@ struct Tetris {
     framebuffer_height: c_int,
     screen_shake_timeout: f64,
     screen_shake_elapsed: f64,
+    level: i32,
+    time_till_next_level: f64,
 
     particles: [max_particle_count]Particle,
     falling_blocks: [max_falling_block_count]Particle,
@@ -83,17 +85,25 @@ const score_height = next_piece_height;
 const score_left = next_piece_left;
 const score_top = next_piece_top - margin_size - score_height;
 
+const level_display_width = next_piece_width;
+const level_display_height = next_piece_height;
+const level_display_left = next_piece_left;
+const level_display_top = score_top - margin_size - level_display_height;
+
 const window_width = next_piece_left + next_piece_width + margin_size;
 const window_height = board_top + board_height + margin_size;
 
 const board_color = Vec4 { .data = []f32 {72.0/255.0, 72.0/255.0, 72.0/255.0, 1.0}};
 
 const init_piece_delay = 0.5;
+const min_piece_delay = 0.05;
+const level_delay_increment = 0.05;
 
 const font_char_width = 18;
 const font_char_height = 32;
 
 const gravity = 0.14;
+const time_per_level = 60.0;
 
 // TODO use * syntax when it is supported to create this
 const empty_row = []Cell{
@@ -123,6 +133,7 @@ export fn tetris_key_callback(window: ?&GLFWwindow, key: c_int, scancode: c_int,
         GLFW_KEY_LEFT_SHIFT,
         GLFW_KEY_RIGHT_SHIFT => user_rotate_cur_piece(t, -1),
         GLFW_KEY_R => restart_game(t),
+        GLFW_KEY_E => level_up(t),
         else => {},
     }
 }
@@ -288,6 +299,7 @@ fn draw(t: &Tetris) {
     fill_rect(t, board_color, board_left, board_top, board_width, board_height);
     fill_rect(t, board_color, next_piece_left, next_piece_top, next_piece_width, next_piece_height);
     fill_rect(t, board_color, score_left, score_top, score_width, score_height);
+    fill_rect(t, board_color, level_display_left, level_display_top, level_display_width, level_display_height);
 
     if (t.game_over) {
         const game_over_text = "GAME OVER";
@@ -340,6 +352,22 @@ fn draw(t: &Tetris) {
         draw_text(t, score_text,
             score_left + score_width / 2 - score_label_width / 2,
             score_top + score_height / 2, 1.0);
+    }
+    {
+        const text = "LEVEL:";
+        const text_width = font_char_width * i32(text.len);
+        draw_text(t, text,
+            level_display_left + level_display_width / 2 - text_width / 2,
+            level_display_top + margin_size, 1.0);
+    }
+    {
+        var text_buf: [20]u8 = undefined;
+        const len = sprintf(&text_buf[0], c"%d", t.level);
+        const text = text_buf[0...len];
+        const text_width = font_char_width * i32(text.len);
+        draw_text(t, text,
+            level_display_left + level_display_width / 2 - text_width / 2,
+            level_display_top + level_display_height / 2, 1.0);
     }
 
     for (t.falling_blocks) |particle| {
@@ -430,6 +458,11 @@ fn next_frame(t: &Tetris, elapsed: f64) {
             t.delay_left = t.piece_delay;
         }
 
+        t.time_till_next_level -= elapsed;
+        if (t.time_till_next_level <= 0.0) {
+            level_up(t);
+        }
+
         compute_ghost(t);
     }
 
@@ -444,6 +477,62 @@ fn next_frame(t: &Tetris, elapsed: f64) {
             t.projection = mat4x4_ortho(0.0, f32(t.framebuffer_width),
                 f32(t.framebuffer_height) + offset, offset);
         }
+    }
+}
+
+fn level_up(t: &Tetris) {
+    t.level += 1;
+    t.time_till_next_level = time_per_level;
+
+    const new_piece_delay = t.piece_delay - level_delay_increment;
+    t.piece_delay = if (new_piece_delay >= min_piece_delay) new_piece_delay else min_piece_delay;
+
+    activate_screen_shake(t, 0.08);
+
+    const max_lines_to_fill = 4;
+    const proposed_lines_to_fill = ((t.level + 2) / 3);
+    const lines_to_fill = if (proposed_lines_to_fill > max_lines_to_fill) {
+        max_lines_to_fill
+    } else {
+        proposed_lines_to_fill
+    };
+
+    // TODO for with range
+    var i : i32 = 0;
+    while (i < lines_to_fill) {
+        insert_garbage_row_at_bottom(t);
+        i += 1;
+    }
+}
+
+fn insert_garbage_row_at_bottom(t: &Tetris) {
+    // move everything up to make room at the bottom
+    // TODO for with range
+    var y : i32 = 1;
+    while (y < t.grid.len) {
+        t.grid[y - 1] = t.grid[y];
+        y += 1;
+    }
+
+    // populate bottom row with garbage and make sure it fills at least
+    // one and leaves at least one empty
+    while (true) {
+        var all_empty = true;
+        var all_filled = true;
+        const bottom_y = grid_height - 1;
+        for (t.grid[bottom_y]) |_, x| {
+            const filled = t.rand.boolean();
+            if (filled) {
+                // TODO type generics so this doesn't have to be a u64
+                const index = t.rand.range_u64(0, u64(pieces.len));
+                t.grid[bottom_y][x] = Cell.Color(pieces[isize(index)].color);
+                all_empty = false;
+            } else {
+                t.grid[bottom_y][x] = Cell.Empty;
+                all_filled = false;
+            }
+        }
+        if (!all_empty && !all_filled) break;
     }
 }
 
@@ -503,6 +592,8 @@ fn restart_game(t: &Tetris) {
     t.game_over = false;
     t.screen_shake_elapsed = 0.0;
     t.screen_shake_timeout = 0.0;
+    t.level = 1;
+    t.time_till_next_level = time_per_level;
 
     clear_particles(t);
     // TODO support the * operator for initializing constant arrays
