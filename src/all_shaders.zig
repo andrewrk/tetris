@@ -8,8 +8,15 @@ pub struct AllShaders {
     primitive_uniform_mvp: GLint,
     primitive_uniform_color: GLint,
 
+    texture: ShaderProgram,
+    texture_attrib_tex_coord: GLint,
+    texture_attrib_position: GLint,
+    texture_uniform_mvp: GLint,
+    texture_uniform_tex: GLint,
+
     pub fn destroy(as: &AllShaders) {
         as.primitive.destroy();
+        as.texture.destroy();
     }
 }
 
@@ -106,6 +113,49 @@ void main(void) {
     as.primitive_attrib_position = as.primitive.attrib_location(c"VertexPosition");
     as.primitive_uniform_mvp = as.primitive.uniform_location(c"MVP");
     as.primitive_uniform_color = as.primitive.uniform_location(c"Color");
+
+
+
+    as.texture = create_shader("
+#version 150 core
+
+in vec3 VertexPosition;
+in vec2 TexCoord;
+
+out vec2 FragTexCoord;
+
+uniform mat4 MVP;
+
+void main(void)
+{
+    FragTexCoord = TexCoord;
+    gl_Position = vec4(VertexPosition, 1.0) * MVP;
+}
+    ", "
+#version 150 core
+
+in vec2 FragTexCoord;
+out vec4 FragColor;
+
+uniform sampler2D Tex;
+
+void main(void)
+{
+    FragColor = texture(Tex, FragTexCoord);
+}
+    ", null);
+
+    as.primitive_attrib_position = as.primitive.attrib_location(c"VertexPosition");
+    as.primitive_uniform_mvp = as.primitive.uniform_location(c"MVP");
+    as.primitive_uniform_color = as.primitive.uniform_location(c"Color");
+
+
+    as.texture_attrib_tex_coord = as.texture.attrib_location(c"TexCoord");
+    as.texture_attrib_position = as.texture.attrib_location(c"VertexPosition");
+    as.texture_uniform_mvp = as.texture.uniform_location(c"MVP");
+    as.texture_uniform_tex = as.texture.uniform_location(c"Tex");
+
+
 
     assert_no_gl_error();
 

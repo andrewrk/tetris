@@ -12,6 +12,7 @@ A simple tetris clone written in
    - Display score
    - Display ghost of where piece would drop
    - Sound effects and music
+   - Game over animation
 
 ## Dependencies
 

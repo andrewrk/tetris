@@ -1,6 +1,7 @@
 #link("c")
 #link("glfw")
 #link("epoxy")
+#link("png")
 export executable "tetris";
 
 import "math3d.zig";
@@ -11,6 +12,7 @@ import "debug_gl.zig";
 import "rand.zig";
 import "os.zig";
 import "pieces.zig";
+import "spritesheet.zig";
 
 struct Tetris {
     window: &GLFWwindow,
@@ -26,10 +28,11 @@ struct Tetris {
     cur_piece_x: i32,
     cur_piece_y: i32,
     cur_piece_rot: i32,
-    score: i32,
+    score: c_int,
     game_over: bool,
     particles: [max_particle_count]Particle,
     next_particle_index: i32,
+    digits: Spritesheet,
 }
 
 enum Cell {
@@ -60,16 +63,25 @@ const board_width = grid_width * cell_size;
 const board_height = grid_height * cell_size;
 const board_left = margin_size;
 const board_top = margin_size;
+
 const next_piece_width = margin_size + 4 * cell_size + margin_size;
 const next_piece_height = next_piece_width;
 const next_piece_left = board_left + board_width + margin_size;
 const next_piece_top = board_top + board_height - next_piece_height;
+
+const score_width = next_piece_width;
+const score_height = next_piece_height;
+const score_left = next_piece_left;
+const score_top = next_piece_top - margin_size - score_height;
+
 const window_width = next_piece_left + next_piece_width + margin_size;
 const window_height = board_top + board_height + margin_size;
 
 const board_color = Vec4 { .data = []f32 {72.0/255.0, 72.0/255.0, 72.0/255.0, 1.0}};
 
 const init_piece_delay = 0.5;
+
+const digit_width = 7;
 
 // TODO use * syntax when it is supported to create this
 const empty_row = []Cell{
@@ -113,6 +125,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
         fprintf(stderr, c"GLFW init failure\n");
         abort();
     }
+    defer glfwTerminate();
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
@@ -128,6 +141,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
         fprintf(stderr, c"unable to create window\n");
         abort();
     };
+    defer glfwDestroyWindow(window);
 
     glfwSetKeyCallback(window, tetris_key_callback);
     glfwMakeContextCurrent(window);
@@ -138,6 +152,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
     var vertex_array_object : GLuint = undefined;
     glGenVertexArrays(1, &vertex_array_object);
     glBindVertexArray(vertex_array_object);
+    defer glDeleteVertexArrays(1, &vertex_array_object);
 
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glEnable(GL_BLEND);
@@ -147,7 +162,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
     var width: c_int = undefined;
     var height: c_int = undefined;
     glfwGetFramebufferSize(window, &width, &height);
-    if (width < window_width || window_height < 450) unreachable{};
+    if (width < window_width || height < window_height) unreachable{};
     const projection = mat4x4_ortho(0.0, f32(width), f32(height), 0.0);
     glViewport(0, 0, width, height);
 
@@ -156,29 +171,25 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
         abort();
     };
 
-    var t = Tetris {
-        .window = window,
-        .shaders = create_all_shaders(),
-        .static_geometry = create_static_geometry(),
-        .projection = projection,
-        .rand = rand_new(rand_seed),
+    var t : Tetris = undefined;
+    t.window = window;
 
-        // populated by restart_game
-        .piece_delay = undefined,
-        .delay_left = undefined,
-        .next_piece = undefined,
-        .cur_piece = undefined,
-        .cur_piece_x = undefined,
-        .cur_piece_y = undefined,
-        .cur_piece_rot = undefined,
-        // TODO support the * operator for initializing constant arrays
-        // then do: .grid =  [][grid_width]Cell{[1]Cell{Cell.Empty} * grid_width} * grid_height
-        .grid = undefined,
-        .score = undefined,
-        .game_over = undefined,
-        .particles = undefined,
-        .next_particle_index = undefined,
+    t.shaders = create_all_shaders();
+    defer t.shaders.destroy();
+
+    t.static_geometry = create_static_geometry();
+    defer t.static_geometry.destroy();
+
+    t.digits = spritesheet_init(c"assets/digits7x10.png", digit_width, 10) %% {
+        fprintf(stderr, c"unable to read assets\n");
+        abort();
     };
+    defer t.digits.deinit();
+    if (t.digits.count != 10) unreachable{};
+
+    t.projection = projection;
+    t.rand = rand_new(rand_seed);
+
     restart_game(&t);
 
     glfwSetWindowUserPointer(window, (&c_void)(&t));
@@ -203,14 +214,8 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
         glfwPollEvents();
     }
 
-    t.shaders.destroy();
-    t.static_geometry.destroy();
-    glDeleteVertexArrays(1, &vertex_array_object);
-
     assert_no_gl_error();
 
-    glfwDestroyWindow(window);
-    glfwTerminate();
     return 0;
 }
 
@@ -261,6 +266,7 @@ fn get_random_seed() -> %u32 {
 fn draw(t: &Tetris) {
     fill_rect(t, board_color, board_left, board_top, board_width, board_height);
     fill_rect(t, board_color, next_piece_left, next_piece_top, next_piece_width, next_piece_height);
+    fill_rect(t, board_color, score_left, score_top, score_width, score_height);
 
     const abs_x = board_left + t.cur_piece_x * cell_size;
     const abs_y = board_top + t.cur_piece_y * cell_size;
@@ -287,6 +293,26 @@ fn draw(t: &Tetris) {
         }
     }
 
+    var score_text: [20]u8 = undefined;
+    const len = sprintf(&score_text[0], c"%d", t.score);
+    draw_text(t, score_text[0...len], score_left, score_top, 2.0);
+
+}
+
+fn draw_text(t: &Tetris, text: []u8, left: i32, top: i32, size: f32) {
+    for (text) |c, i| {
+        if (c >= '0' && c <= '9') {
+            const digit = c - '0';
+            const char_left = f32(left) + f32(i * digit_width) * size;
+            const model = mat4x4_identity.translate(char_left, f32(top), 0.0).scale(size, size, 0.0);
+            const mvp = t.projection.mult(model);
+
+            // TODO u8 should implicitly cast to i32
+            t.digits.draw(t.shaders, i32(digit), mvp);
+        } else {
+            unreachable{};
+        }
+    }
 }
 
 fn draw_piece(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: i32) {
@@ -388,8 +414,11 @@ fn restart_game(t: &Tetris) {
     t.piece_delay = init_piece_delay;
     t.delay_left = init_piece_delay;
     t.score = 0;
+    t.game_over = false;
 
     clear_particles(t);
+    // TODO support the * operator for initializing constant arrays
+    // then do: .grid =  [][grid_width]Cell{[1]Cell{Cell.Empty} * grid_width} * grid_height
     init_empty_grid(t);
     populate_next_piece(t);
     drop_new_piece(t);
@@ -451,7 +480,7 @@ fn lock_piece(t: &Tetris) {
         }
     }
 
-    const score_per_rows_deleted = []i32 { 0, 10, 30, 50, 70};
+    const score_per_rows_deleted = []c_int { 0, 10, 30, 50, 70};
     t.score += score_per_rows_deleted[rows_deleted];
 }
 
