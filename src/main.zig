@@ -30,9 +30,12 @@ struct Tetris {
     cur_piece_rot: i32,
     score: c_int,
     game_over: bool,
-    particles: [max_particle_count]Particle,
     next_particle_index: i32,
+    next_falling_block_index: i32,
     font: Spritesheet,
+
+    particles: [max_particle_count]Particle,
+    falling_blocks: [max_falling_block_count]Particle,
 }
 
 enum Cell {
@@ -55,6 +58,7 @@ struct Particle {
 
 const PI = 3.14159265358979;
 const max_particle_count = 500;
+const max_falling_block_count = grid_width * grid_height;
 const margin_size = 10;
 const grid_width = 10;
 const grid_height = 20;
@@ -83,6 +87,8 @@ const init_piece_delay = 0.5;
 
 const font_char_width = 18;
 const font_char_height = 32;
+
+const gravity = 0.14;
 
 // TODO use * syntax when it is supported to create this
 const empty_row = []Cell{
@@ -256,6 +262,17 @@ fn draw_particle(t: &Tetris, p: Particle) {
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 3);
 }
 
+fn draw_falling_block(t: &Tetris, p: Particle) {
+    const model = mat4x4_identity
+        .translate_by_vec(p.pos)
+        .rotate(p.angle, p.axis)
+        .scale(p.scale_w, p.scale_h, 0.0);
+
+    const mvp = t.projection.mult(model);
+
+    fill_rect_mvp(t, p.color, mvp);
+}
+
 fn get_random_seed() -> %u32 {
     var seed : u32 = undefined;
     const seed_bytes = (&u8)(&seed)[0...4];
@@ -282,22 +299,18 @@ fn draw(t: &Tetris) {
 
     draw_piece(t, t.next_piece, next_piece_left + margin_size, next_piece_top + margin_size, 0);
 
-    for (t.grid) |row, y| {
-        for (row) |cell, x| {
-            switch (cell) {
-                Color => |color| {
-                    const cell_left = board_left + i32(x) * cell_size;
-                    const cell_top = board_top + i32(y) * cell_size;
-                    fill_rect(t, color, f32(cell_left), f32(cell_top), cell_size, cell_size);
-                },
-                else => {},
+    if (!t.game_over) {
+        for (t.grid) |row, y| {
+            for (row) |cell, x| {
+                switch (cell) {
+                    Color => |color| {
+                        const cell_left = board_left + i32(x) * cell_size;
+                        const cell_top = board_top + i32(y) * cell_size;
+                        fill_rect(t, color, f32(cell_left), f32(cell_top), cell_size, cell_size);
+                    },
+                    else => {},
+                }
             }
-        }
-    }
-
-    for (t.particles) |particle| {
-        if (particle.used) {
-            draw_particle(t, particle);
         }
     }
 
@@ -317,6 +330,19 @@ fn draw(t: &Tetris) {
             score_left + score_width / 2 - score_label_width / 2,
             score_top + score_height / 2, 1.0);
     }
+
+    for (t.falling_blocks) |particle| {
+        if (particle.used) {
+            draw_falling_block(t, particle);
+        }
+    }
+
+    for (t.particles) |particle| {
+        if (particle.used) {
+            draw_particle(t, particle);
+        }
+    }
+
 
 }
 
@@ -350,11 +376,28 @@ fn draw_piece(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: i32) {
 fn next_frame(t: &Tetris, elapsed: f64) {
     // TODO for loop with ref
     // TODO maybe unwrap with ref:  if (var *particle ?= t.particles[i]) {
+    for (t.falling_blocks) |_, i| {
+        const p = &t.falling_blocks[i];
+
+        if (!p.used) continue;
+        p.pos = p.pos.add(p.vel);
+        p.vel = p.vel.add(vec3(0, gravity, 0));
+
+        p.angle += p.angle_vel;
+
+        if (p.pos.data[1] + cell_size >= board_top + board_height) {
+            add_explosion(t, p.color, p.pos.data[0], p.pos.data[1]);
+            p.used = false;
+        }
+    }
+
+    // TODO for loop with ref
+    // TODO maybe unwrap with ref:  if (var *particle ?= t.particles[i]) {
     for (t.particles) |_, i| {
         const p = &t.particles[i];
         if (!p.used) continue;
         p.pos = p.pos.add(p.vel);
-        p.vel = p.vel.add(vec3(0, 0.14, 0)); // gravity
+        p.vel = p.vel.add(vec3(0, gravity, 0));
 
         p.angle += p.angle_vel;
 
@@ -547,12 +590,27 @@ fn populate_next_piece(t: &Tetris) {
     t.next_piece = &pieces[isize(index)];
 }
 
+fn do_game_over(t: &Tetris) {
+    t.game_over = true;
+
+    // turn every piece into a falling object
+    for (t.grid) |row, y| {
+        for (row) |cell, x| {
+            const color = switch (cell) { Empty => continue, Color => |c| c,};
+            const left = f32(board_left + x * cell_size);
+            const top = f32(board_top + y * cell_size);
+            t.falling_blocks[get_next_falling_block_index(t)] = create_block_particle(t,
+                color, vec3(left, top, 0.0));
+        }
+    }
+}
+
 fn drop_new_piece(t: &Tetris) {
     const start_x = 4;
     const start_y = -1;
     const start_rot = 0;
     if (piece_would_collide(t, t.next_piece, start_x, start_y, start_rot)) {
-        t.game_over = true;
+        do_game_over(t);
         return;
     }
 
@@ -577,15 +635,26 @@ fn init_empty_grid(t: &Tetris) {
 fn clear_particles(t: &Tetris) {
     // TODO for loop range
     // TODO this crashes compiler, when t.particles is not maybe: t.particles[i] = null;
-    for (t.particles) |particle, i| {
+    for (t.particles) |_, i| {
         t.particles[i].used = false;
     }
     t.next_particle_index = 0;
+
+    for (t.falling_blocks) |_, i| {
+        t.falling_blocks[i].used = false;
+    }
+    t.next_falling_block_index = 0;
 }
 
 fn get_next_particle_index(t: &Tetris) -> i32 {
     const result = t.next_particle_index;
     t.next_particle_index = (t.next_particle_index + 1) % max_particle_count;
+    return result;
+}
+
+fn get_next_falling_block_index(t: &Tetris) -> i32 {
+    const result = t.next_falling_block_index;
+    t.next_falling_block_index = (t.next_falling_block_index + 1) % max_falling_block_count;
     return result;
 }
 
@@ -616,6 +685,26 @@ fn create_particle(t: &Tetris, color: Vec4, size: f32, pos: Vec3) -> Particle {
 
     const vel_x = t.rand.float32() * 2.0 - 1.0;
     const vel_y = -(2.0 + t.rand.float32() * 1.0);
+    p.vel = vec3(vel_x, vel_y, 0.0);
+
+    p.used = true;
+
+    return p;
+}
+
+fn create_block_particle(t: &Tetris, color: Vec4, pos: Vec3) -> Particle {
+    var p: Particle = undefined;
+
+    p.angle_vel = t.rand.float32() * 0.05 - 0.025;
+    p.angle = 0;
+    p.axis = vec3(0.0, 0.0, 1.0);
+    p.scale_w = cell_size;
+    p.scale_h = cell_size;
+    p.color = color;
+    p.pos = pos;
+
+    const vel_x = t.rand.float32() * 0.5 - 0.25;
+    const vel_y = -t.rand.float32() * 0.5;
     p.vel = vec3(vel_x, vel_y, 0.0);
 
     p.used = true;

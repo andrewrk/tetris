@@ -11,7 +11,6 @@ A simple tetris clone written in
    - Speed up over time
    - Display ghost of where piece would drop
    - Sound effects and music
-   - Game over animation
 
 ## Dependencies
 
