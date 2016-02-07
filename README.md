@@ -3,13 +3,12 @@
 A simple tetris clone written in
 [zig programming language](https://github.com/andrewrk/zig).
 
-![](http://i.imgur.com/Z7y4WeY.png)
+![](http://i.imgur.com/yowEnE2.png)
 
 ## Status
 
  * Playable game. Missing features:
    - Speed up over time
-   - Display score
    - Display ghost of where piece would drop
    - Sound effects and music
    - Game over animation
@@ -19,6 +18,7 @@ A simple tetris clone written in
  * [Zig compiler](https://github.com/andrewrk/zig) - use the debug build.
  * [libepoxy](https://github.com/anholt/libepoxy)
  * [GLFW](http://www.glfw.org/)
+ * [libpng](http://www.libpng.org/pub/png/libpng.html)
 
 ## Building and Running
 

@@ -32,7 +32,7 @@ struct Tetris {
     game_over: bool,
     particles: [max_particle_count]Particle,
     next_particle_index: i32,
-    digits: Spritesheet,
+    font: Spritesheet,
 }
 
 enum Cell {
@@ -81,7 +81,8 @@ const board_color = Vec4 { .data = []f32 {72.0/255.0, 72.0/255.0, 72.0/255.0, 1.
 
 const init_piece_delay = 0.5;
 
-const digit_width = 7;
+const font_char_width = 18;
+const font_char_height = 32;
 
 // TODO use * syntax when it is supported to create this
 const empty_row = []Cell{
@@ -180,12 +181,11 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
     t.static_geometry = create_static_geometry();
     defer t.static_geometry.destroy();
 
-    t.digits = spritesheet_init(c"assets/digits7x10.png", digit_width, 10) %% {
+    t.font = spritesheet_init(c"assets/font.png", font_char_width, font_char_height) %% {
         fprintf(stderr, c"unable to read assets\n");
         abort();
     };
-    defer t.digits.deinit();
-    if (t.digits.count != 10) unreachable{};
+    defer t.font.deinit();
 
     t.projection = projection;
     t.rand = rand_new(rand_seed);
@@ -295,20 +295,20 @@ fn draw(t: &Tetris) {
 
     var score_text: [20]u8 = undefined;
     const len = sprintf(&score_text[0], c"%d", t.score);
-    draw_text(t, score_text[0...len], score_left, score_top, 2.0);
+    draw_text(t, "SCORE:", score_left + margin_size, score_top + margin_size, 1.0);
+    draw_text(t, score_text[0...len], score_left + margin_size, score_top + score_height / 2, 1.0);
 
 }
 
 fn draw_text(t: &Tetris, text: []u8, left: i32, top: i32, size: f32) {
     for (text) |c, i| {
-        if (c >= '0' && c <= '9') {
-            const digit = c - '0';
-            const char_left = f32(left) + f32(i * digit_width) * size;
+        if (c <= '~') {
+            const char_left = f32(left) + f32(i * font_char_width) * size;
             const model = mat4x4_identity.translate(char_left, f32(top), 0.0).scale(size, size, 0.0);
             const mvp = t.projection.mult(model);
 
             // TODO u8 should implicitly cast to i32
-            t.digits.draw(t.shaders, i32(digit), mvp);
+            t.font.draw(t.shaders, i32(c), mvp);
         } else {
             unreachable{};
         }

@@ -44,11 +44,13 @@ pub error NoMem;
 pub fn spritesheet_init(filename: &const u8, w: i32, h: i32) -> %Spritesheet {
     var s: Spritesheet = undefined;
 
-    var buffer: [1024]u8 = undefined;
+    var buffer: [10 * 1024]u8 = undefined;
     const compressed_bytes = %return fs_fetch_file(filename, buffer);
 
     s.img = %return create_png_image(compressed_bytes);
-    s.count = s.img.width / w;
+    const col_count = s.img.width / w;
+    const row_count = s.img.height / h;
+    s.count = col_count * row_count;
 
     glGenTextures(1, &s.texture_id);
     %defer glDeleteTextures(1, &s.texture_id);
@@ -84,8 +86,13 @@ pub fn spritesheet_init(filename: &const u8, w: i32, h: i32) -> %Spritesheet {
     %defer glDeleteBuffers(GLint(s.tex_coord_buffers.len), &s.tex_coord_buffers[0]);
 
     for (s.tex_coord_buffers) |tex_coord_buffer, i| {
-        const x = f32(i * w);
-        const y = 0.0;
+        const upside_down_row = i / col_count;
+        const col = i % col_count;
+        const row = row_count - upside_down_row - 1;
+
+        const x = f32(col * w);
+        const y = f32(row * h);
+
         const img_w = f32(s.img.width);
         const img_h = f32(s.img.height);
         const tex_coords = [][2]GLfloat {
