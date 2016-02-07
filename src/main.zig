@@ -268,9 +268,17 @@ fn draw(t: &Tetris) {
     fill_rect(t, board_color, next_piece_left, next_piece_top, next_piece_width, next_piece_height);
     fill_rect(t, board_color, score_left, score_top, score_width, score_height);
 
-    const abs_x = board_left + t.cur_piece_x * cell_size;
-    const abs_y = board_top + t.cur_piece_y * cell_size;
-    draw_piece(t, t.cur_piece, abs_x, abs_y, t.cur_piece_rot);
+    if (t.game_over) {
+        const game_over_text = "GAME OVER";
+        const label_width = font_char_width * i32(game_over_text.len);
+        const draw_left = board_left + board_width / 2 - label_width / 2;
+        const draw_top = board_top + board_height / 2 - font_char_height / 2;
+        draw_text(t, game_over_text, draw_left, draw_top, 1.0);
+    } else {
+        const abs_x = board_left + t.cur_piece_x * cell_size;
+        const abs_y = board_top + t.cur_piece_y * cell_size;
+        draw_piece(t, t.cur_piece, abs_x, abs_y, t.cur_piece_rot);
+    }
 
     draw_piece(t, t.next_piece, next_piece_left + margin_size, next_piece_top + margin_size, 0);
 
@@ -293,10 +301,22 @@ fn draw(t: &Tetris) {
         }
     }
 
-    var score_text: [20]u8 = undefined;
-    const len = sprintf(&score_text[0], c"%d", t.score);
-    draw_text(t, "SCORE:", score_left + margin_size, score_top + margin_size, 1.0);
-    draw_text(t, score_text[0...len], score_left + margin_size, score_top + score_height / 2, 1.0);
+    {
+        const score_text = "SCORE:";
+        const score_label_width = font_char_width * i32(score_text.len);
+        draw_text(t, score_text,
+            score_left + score_width / 2 - score_label_width / 2,
+            score_top + margin_size, 1.0);
+    }
+    {
+        var score_text_buf: [20]u8 = undefined;
+        const len = sprintf(&score_text_buf[0], c"%d", t.score);
+        const score_text = score_text_buf[0...len];
+        const score_label_width = font_char_width * i32(score_text.len);
+        draw_text(t, score_text,
+            score_left + score_width / 2 - score_label_width / 2,
+            score_top + score_height / 2, 1.0);
+    }
 
 }
 
