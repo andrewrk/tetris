@@ -3,12 +3,7 @@
 A simple tetris clone written in
 [zig programming language](https://github.com/andrewrk/zig).
 
-![](http://i.imgur.com/yowEnE2.png)
-
-## Status
-
- * Playable game. Missing features:
-   - Sound effects and music
+![](http://i.imgur.com/umuNndz.png)
 
 ## Controls
 
