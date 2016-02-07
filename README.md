@@ -11,6 +11,15 @@ A simple tetris clone written in
    - Speed up over time
    - Sound effects and music
 
+## Controls
+
+ * Left/Right/Down Arrow - Move piece left/right/down.
+ * Up Arrow - Rotate piece clockwise.
+ * Shift - Rotate piece counter clockwise.
+ * Space - Drop piece immediately.
+ * R - Start new game.
+ * Escape - Quit.
+
 ## Dependencies
 
  * [Zig compiler](https://github.com/andrewrk/zig) - use the debug build.

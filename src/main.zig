@@ -120,6 +120,8 @@ export fn tetris_key_callback(window: ?&GLFWwindow, key: c_int, scancode: c_int,
         GLFW_KEY_LEFT => user_move_cur_piece(t, -1),
         GLFW_KEY_RIGHT => user_move_cur_piece(t, 1),
         GLFW_KEY_UP => user_rotate_cur_piece(t, 1),
+        GLFW_KEY_LEFT_SHIFT,
+        GLFW_KEY_RIGHT_SHIFT => user_rotate_cur_piece(t, -1),
         GLFW_KEY_R => restart_game(t),
         else => {},
     }
@@ -487,7 +489,7 @@ fn user_move_cur_piece(t: &Tetris, dir: i8) {
 
 fn user_rotate_cur_piece(t: &Tetris, rot: i8) {
     if (t.game_over) return;
-    const new_rot = (t.cur_piece_rot + rot) % 4;
+    const new_rot = (t.cur_piece_rot + rot + 4) % 4;
     if (piece_would_collide(t, t.cur_piece, t.cur_piece_x, t.cur_piece_y, new_rot)) {
         return;
     }
