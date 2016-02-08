@@ -436,8 +436,7 @@ fn next_frame(t: &Tetris, elapsed: f64) {
 
         p.angle += p.angle_vel;
 
-        if (p.pos.data[1] + cell_size >= board_top + board_height) {
-            add_explosion(t, p.color, p.pos.data[0], p.pos.data[1]);
+        if (p.pos.data[1] > f32(t.framebuffer_height)) {
             p.used = false;
         }
     }
