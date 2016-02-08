@@ -3,6 +3,9 @@
 A simple tetris clone written in
 [zig programming language](https://github.com/andrewrk/zig).
 
+[YouTube Demo](https://www.youtube.com/watch?v=AiintPutWrE).
+
+
 ![](http://i.imgur.com/umuNndz.png)
 
 ## Controls
