@@ -1,7 +1,6 @@
 import "libc.zig";
 
-// TODO
-//const gl_debug_on = if (@compile_var("is_release")) GL_FALSE else GL_TRUE;
+pub const gl_debug_on = if (@compile_var("is_release")) GL_FALSE else GL_TRUE;
 
 pub fn assert_no_gl_error() {
     if (!@compile_var("is_release")) {

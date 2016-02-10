@@ -142,10 +142,6 @@ export fn tetris_key_callback(window: ?&GLFWwindow, key: c_int, scancode: c_int,
 }
 
 export fn main(argc: c_int, argv: &&u8) -> c_int {
-    // TODO this crashes the compiler:
-    // const gl_debug_on = if (@compile_var("is_release")) GL_FALSE else GL_TRUE;
-
-
     glfwSetErrorCallback(tetris_error_callback);
 
     if (glfwInit() == GL_FALSE) {
@@ -157,7 +153,6 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    const gl_debug_on : c_int = if (@compile_var("is_release")) GL_FALSE else GL_TRUE; // TODO move to const
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, gl_debug_on);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_DEPTH_BITS, 0);
