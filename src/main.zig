@@ -475,7 +475,7 @@ fn next_frame(t: &Tetris, elapsed: f64) {
         } else {
             const rate = 8; // oscillations per sec
             const amplitude = 4; // pixels
-            const offset = f32(amplitude * -sin(2 * PI * t.screen_shake_elapsed * rate));
+            const offset = f32(amplitude * -sin(2.0 * PI * t.screen_shake_elapsed * rate));
             t.projection = mat4x4_ortho(0.0, f32(t.framebuffer_width),
                 f32(t.framebuffer_height) + offset, offset);
         }
