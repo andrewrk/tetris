@@ -33,12 +33,12 @@ pub fn create_png_image(compressed_bytes: []u8) -> %PngImage {
     };
     defer png_destroy_read_struct(&png_ptr, &info_ptr, null);
 
-    // don't call any png_* functions outside of this function.
-    // cursed is he who thought setjmp and longjmp was in any way acceptable to
-    // bake into a library API.
-    if (setjmp((?&struct___jmp_buf_tag)(png_set_longjmp_fn(png_ptr, longjmp, @sizeof(jmp_buf)))) != 0) {
-        return error.InvalidFormat;
-    }
+    //// don't call any png_* functions outside of this function.
+    //// cursed is he who thought setjmp and longjmp was in any way acceptable to
+    //// bake into a library API.
+    //if (setjmp((?&struct___jmp_buf_tag)(png_set_longjmp_fn(png_ptr, longjmp, @sizeof(jmp_buf)))) != 0) {
+    //    return error.InvalidFormat;
+    //}
 
     png_set_sig_bytes(png_ptr, 8);
 

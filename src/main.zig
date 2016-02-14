@@ -1,8 +1,12 @@
 #link("c")
 #link("m")
+//#link("glfw3")
 #link("glfw")
 #link("epoxy")
 #link("png")
+#link("z")
+//#link("gdi32")
+//#link("opengl32")
 export executable "tetris";
 
 import "math3d.zig";
@@ -117,7 +121,7 @@ const empty_row = []Cell{
 
 // TODO avoid having to make this function export
 export fn tetris_error_callback(err: c_int, description: ?&const u8) {
-    fprintf(stderr, c"Error: %s\n", description);
+    printf(c"Error: %s\n", description);
     abort();
 }
 
@@ -141,11 +145,14 @@ export fn tetris_key_callback(window: ?&GLFWwindow, key: c_int, scancode: c_int,
     }
 }
 
+
+var t : Tetris = undefined;
+
 export fn main(argc: c_int, argv: &&u8) -> c_int {
     glfwSetErrorCallback(tetris_error_callback);
 
     if (glfwInit() == GL_FALSE) {
-        fprintf(stderr, c"GLFW init failure\n");
+        printf(c"GLFW init failure\n");
         abort();
     }
     defer glfwTerminate();
@@ -160,7 +167,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
     var window = glfwCreateWindow(window_width, window_height, c"Tetris", null, null) ?? {
-        fprintf(stderr, c"unable to create window\n");
+        printf(c"unable to create window\n");
         abort();
     };
     defer glfwDestroyWindow(window);
@@ -177,11 +184,9 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
     defer glDeleteVertexArrays(1, &vertex_array_object);
 
     const rand_seed = get_random_seed() %% {
-        fprintf(stderr, c"unable to get random seed\n");
+        printf(c"unable to get random seed\n");
         abort();
     };
-
-    var t : Tetris = undefined;
 
     glfwGetFramebufferSize(window, &t.framebuffer_width, &t.framebuffer_height);
     if (t.framebuffer_width < window_width || t.framebuffer_height < window_height) unreachable{};
@@ -195,7 +200,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
     defer t.static_geometry.destroy();
 
     t.font = spritesheet_init(c"assets/font.png", font_char_width, font_char_height) %% {
-        fprintf(stderr, c"unable to read assets\n");
+        printf(c"unable to read assets\n");
         abort();
     };
     defer t.font.deinit();

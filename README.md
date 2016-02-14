@@ -8,6 +8,8 @@ A simple tetris clone written in
 
 ![](http://i.imgur.com/umuNndz.png)
 
+[Windows 64-bit build](http://superjoe.s3.amazonaws.com/temp/tetris.zip)
+
 ## Controls
 
  * Left/Right/Down Arrow - Move piece left/right/down.

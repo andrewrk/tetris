@@ -125,7 +125,7 @@ pub fn spritesheet_init(filename: &const u8, w: i32, h: i32) -> %Spritesheet {
 error OpenFail;
 error ReadFail;
 fn fs_fetch_file(path: &const u8, buffer: []u8) -> %[]u8 {
-    const file = fopen(path, c"r") ?? return error.OpenFail;
+    const file = fopen(path, c"rb") ?? return error.OpenFail;
     const amt_read = fread((&c_void)(&buffer[0]), 1, size_t(buffer.len), file);
     if (amt_read < 0) return error.ReadFail;
     fclose(file);
