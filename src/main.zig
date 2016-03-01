@@ -1,23 +1,12 @@
-#link("c")
-#link("m")
-//#link("glfw3")
-#link("glfw")
-#link("epoxy")
-#link("png")
-#link("z")
-//#link("gdi32")
-//#link("opengl32")
-export executable "tetris";
-
-import "math3d.zig";
-import "libc.zig";
-import "all_shaders.zig";
-import "static_geometry.zig";
-import "debug_gl.zig";
-import "rand.zig";
-import "os.zig";
-import "pieces.zig";
-import "spritesheet.zig";
+const std = @import("std");
+const Rand = std.Rand;
+use @import("math3d.zig");
+use @import("libc.zig");
+use @import("all_shaders.zig");
+use @import("static_geometry.zig");
+use @import("debug_gl.zig");
+use @import("pieces.zig");
+use @import("spritesheet.zig");
 
 struct Tetris {
     window: &GLFWwindow,
@@ -146,7 +135,7 @@ export fn tetris_key_callback(window: ?&GLFWwindow, key: c_int, scancode: c_int,
 }
 
 
-var t : Tetris = undefined;
+var tetris_state : Tetris = undefined;
 
 export fn main(argc: c_int, argv: &&u8) -> c_int {
     glfwSetErrorCallback(tetris_error_callback);
@@ -188,6 +177,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
         abort();
     };
 
+    const t = &tetris_state;
     glfwGetFramebufferSize(window, &t.framebuffer_width, &t.framebuffer_height);
     if (t.framebuffer_width < window_width || t.framebuffer_height < window_height) unreachable{};
 
@@ -205,10 +195,10 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
     };
     defer t.font.deinit();
 
-    reset_projection(&t);
-    t.rand = rand_new(rand_seed);
+    reset_projection(t);
+    t.rand = Rand.init(rand_seed);
 
-    restart_game(&t);
+    restart_game(t);
 
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glEnable(GL_BLEND);
@@ -216,7 +206,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     glViewport(0, 0, t.framebuffer_width, t.framebuffer_height);
-    glfwSetWindowUserPointer(window, (&c_void)(&t));
+    glfwSetWindowUserPointer(window, (&c_void)(t));
 
     assert_no_gl_error();
 
@@ -230,9 +220,9 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
         const elapsed = now_time - prev_time;
         prev_time = now_time;
 
-        next_frame(&t, elapsed);
+        next_frame(t, elapsed);
 
-        draw(&t);
+        draw(t);
         glfwSwapBuffers(window);
 
         glfwPollEvents();
@@ -294,7 +284,7 @@ fn draw_falling_block(t: &Tetris, p: Particle) {
 fn get_random_seed() -> %u32 {
     var seed : u32 = undefined;
     const seed_bytes = (&u8)(&seed)[0...4];
-    %return os_get_random_bytes(seed_bytes);
+    %return std.os.get_random_bytes(seed_bytes);
     return seed;
 }
 

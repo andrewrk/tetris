@@ -1,6 +1,6 @@
-import "libc.zig";
-import "math3d.zig";
-import "debug_gl.zig";
+use @import("libc.zig");
+use @import("math3d.zig");
+use @import("debug_gl.zig");
 
 pub struct AllShaders {
     primitive: ShaderProgram,

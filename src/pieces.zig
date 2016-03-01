@@ -1,4 +1,4 @@
-import "math3d.zig";
+use @import("math3d.zig");
 
 pub struct Piece {
     name: u8,

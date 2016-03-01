@@ -1,4 +1,4 @@
-import "libc.zig";
+use @import("libc.zig");
 
 pub struct PngImage {
     width: i32,

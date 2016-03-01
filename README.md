@@ -30,5 +30,6 @@ A simple tetris clone written in
 ## Building and Running
 
  0. Install the dependencies.
- 0. `zig build src/main.zig`
+ 0. On Linux, `zig build src/main.zig --name tetris --export exe --library c --library m --library glfw --library epoxy --library png --library z`
+ 0. On Windows, `zig build src/main.zig --name tetris --export exe --library c --library m --library glfw3 --library epoxy --library png --library z --library gdi32 --library opengl32`
  0. `./tetris`

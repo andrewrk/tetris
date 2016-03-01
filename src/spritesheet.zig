@@ -1,7 +1,7 @@
-import "libc.zig";
-import "png.zig";
-import "all_shaders.zig";
-import "math3d.zig";
+use @import("libc.zig");
+use @import("png.zig");
+use @import("all_shaders.zig");
+use @import("math3d.zig");
 
 pub struct Spritesheet {
     img: PngImage,
