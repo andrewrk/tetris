@@ -89,8 +89,7 @@ pub struct ShaderProgram {
 pub fn create_all_shaders() -> AllShaders {
     var as : AllShaders = undefined;
 
-    // TODO multiline strings
-    as.primitive = create_shader("
+    as.primitive = create_shader(r"VERT(
 #version 150 core
 
 in vec3 VertexPosition;
@@ -99,7 +98,7 @@ uniform mat4 MVP;
 
 void main(void) {
     gl_Position = vec4(VertexPosition, 1.0) * MVP;
-}", "
+})VERT", r"FRAG(
 #version 150 core
 
 out vec4 FragColor;
@@ -108,7 +107,7 @@ uniform vec4 Color;
 
 void main(void) {
     FragColor = Color;
-}", null);
+})FRAG", null);
 
     as.primitive_attrib_position = as.primitive.attrib_location(c"VertexPosition");
     as.primitive_uniform_mvp = as.primitive.uniform_location(c"MVP");
@@ -116,7 +115,7 @@ void main(void) {
 
 
 
-    as.texture = create_shader("
+    as.texture = create_shader(r"VERT(
 #version 150 core
 
 in vec3 VertexPosition;
@@ -131,7 +130,7 @@ void main(void)
     FragTexCoord = TexCoord;
     gl_Position = vec4(VertexPosition, 1.0) * MVP;
 }
-    ", "
+    )VERT", r"FRAG(
 #version 150 core
 
 in vec2 FragTexCoord;
@@ -143,7 +142,7 @@ void main(void)
 {
     FragColor = texture(Tex, FragTexCoord);
 }
-    ", null);
+    )FRAG", null);
 
     as.primitive_attrib_position = as.primitive.attrib_location(c"VertexPosition");
     as.primitive_uniform_mvp = as.primitive.uniform_location(c"MVP");
