@@ -66,13 +66,11 @@ pub fn create_png_image(compressed_bytes: []u8) -> %PngImage {
     if (color_type != PNG_COLOR_TYPE_RGBA) return error.InvalidFormat;
 
     pi.pitch = pi.width * bits_per_channel * channel_count / 8;
-    // TODO generics so we can have a nice malloc wrapper
-    const alloc_amt = pi.height * pi.pitch;
-    pi.raw = (&u8)(malloc(size_t(alloc_amt)) ?? return error.NoMem)[0...alloc_amt];
-    %defer free((&c_void)(&pi.raw[0]));
+    pi.raw = mem_alloc(u8)(pi.height * pi.pitch) %% return error.NoMem;
+    %defer mem_free(u8)(pi.raw);
 
-    const row_ptrs = (&png_bytep)(malloc(@sizeof(png_bytep) * size_t(pi.height)) ?? return error.NoMem);
-    defer free((&c_void)(row_ptrs));
+    const row_ptrs = mem_alloc(png_bytep)(pi.height) %% return error.NoMem;
+    defer mem_free(png_bytep)(row_ptrs);
 
     // TODO for range
     var i: i32 = 0;
@@ -82,7 +80,7 @@ pub fn create_png_image(compressed_bytes: []u8) -> %PngImage {
         i += 1;
     }
 
-    png_read_image(png_ptr, row_ptrs);
+    png_read_image(png_ptr, &row_ptrs[0]);
 
     return pi;
 }

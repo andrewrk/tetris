@@ -79,8 +79,8 @@ pub fn spritesheet_init(filename: &const u8, w: i32, h: i32) -> %Spritesheet {
     glBufferData(GL_ARRAY_BUFFER, 4 * 3 * @sizeof(GLfloat), (&c_void)(&vertexes[0][0]), GL_STATIC_DRAW);
 
 
-    s.tex_coord_buffers = (&GLuint)(malloc(@sizeof([]GLuint) * size_t(s.count)) ?? return error.NoMem)[0...s.count];
-    %defer free((&c_void)(&s.tex_coord_buffers[0]));
+    s.tex_coord_buffers = mem_alloc(GLuint)(s.count) %% return error.NoMem;
+    %defer mem_free(GLuint)(s.tex_coord_buffers);
 
     glGenBuffers(GLint(s.tex_coord_buffers.len), &s.tex_coord_buffers[0]);
     %defer glDeleteBuffers(GLint(s.tex_coord_buffers.len), &s.tex_coord_buffers[0]);
