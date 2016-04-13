@@ -6,13 +6,3 @@ pub use @c_import({
     @c_include("stdlib.h");
     @c_include("stdio.h");
 });
-
-error NoMem;
-
-pub fn mem_alloc(T: type)(n: isize) -> %[]T {
-    return (&T)(malloc(size_t(n * @sizeof(T))) ?? return error.NoMem)[0...n];
-}
-
-pub fn mem_free(T: type)(mem: []T) {
-    free((&c_void)(&mem[0]));
-}

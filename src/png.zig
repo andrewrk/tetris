@@ -1,4 +1,5 @@
 use @import("libc.zig");
+const mem = @import("mem.zig");
 
 pub struct PngImage {
     width: i32,
@@ -66,11 +67,11 @@ pub fn create_png_image(compressed_bytes: []u8) -> %PngImage {
     if (color_type != PNG_COLOR_TYPE_RGBA) return error.InvalidFormat;
 
     pi.pitch = pi.width * bits_per_channel * channel_count / 8;
-    pi.raw = mem_alloc(u8)(pi.height * pi.pitch) %% return error.NoMem;
-    %defer mem_free(u8)(pi.raw);
+    pi.raw = mem.alloc(u8)(pi.height * pi.pitch) %% return error.NoMem;
+    %defer mem.free(u8)(pi.raw);
 
-    const row_ptrs = mem_alloc(png_bytep)(pi.height) %% return error.NoMem;
-    defer mem_free(png_bytep)(row_ptrs);
+    const row_ptrs = mem.alloc(png_bytep)(pi.height) %% return error.NoMem;
+    defer mem.free(png_bytep)(row_ptrs);
 
     // TODO for range
     var i: i32 = 0;

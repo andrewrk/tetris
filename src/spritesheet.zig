@@ -2,6 +2,7 @@ use @import("libc.zig");
 use @import("png.zig");
 use @import("all_shaders.zig");
 use @import("math3d.zig");
+const mem = @import("mem.zig");
 
 pub struct Spritesheet {
     img: PngImage,
@@ -31,7 +32,7 @@ pub struct Spritesheet {
     
     pub fn deinit(s: &Spritesheet) {
         glDeleteBuffers(GLint(s.tex_coord_buffers.len), &s.tex_coord_buffers[0]);
-        free((&c_void)(&s.tex_coord_buffers[0]));
+        mem.free(GLuint)(s.tex_coord_buffers);
         glDeleteBuffers(1, &s.vertex_buffer);
         glDeleteTextures(1, &s.texture_id);
 
@@ -79,8 +80,8 @@ pub fn spritesheet_init(filename: &const u8, w: i32, h: i32) -> %Spritesheet {
     glBufferData(GL_ARRAY_BUFFER, 4 * 3 * @sizeof(GLfloat), (&c_void)(&vertexes[0][0]), GL_STATIC_DRAW);
 
 
-    s.tex_coord_buffers = mem_alloc(GLuint)(s.count) %% return error.NoMem;
-    %defer mem_free(GLuint)(s.tex_coord_buffers);
+    s.tex_coord_buffers = mem.alloc(GLuint)(s.count) %% return error.NoMem;
+    %defer mem.free(GLuint)(s.tex_coord_buffers);
 
     glGenBuffers(GLint(s.tex_coord_buffers.len), &s.tex_coord_buffers[0]);
     %defer glDeleteBuffers(GLint(s.tex_coord_buffers.len), &s.tex_coord_buffers[0]);
