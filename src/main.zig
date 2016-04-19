@@ -1,7 +1,7 @@
 const std = @import("std");
 const Rand = std.Rand;
 use @import("math3d.zig");
-use @import("libc.zig");
+use @import("c.zig");
 use @import("all_shaders.zig");
 use @import("static_geometry.zig");
 use @import("debug_gl.zig");

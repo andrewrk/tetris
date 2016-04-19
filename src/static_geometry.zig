@@ -1,4 +1,4 @@
-use @import("libc.zig");
+use @import("c.zig");
 
 pub struct StaticGeometry {
     rect_2d_vertex_buffer: GLuint,

@@ -1,4 +1,4 @@
-use @import("libc.zig");
+use @import("c.zig");
 
 pub const gl_debug_on = if (@compile_var("is_release")) GL_FALSE else GL_TRUE;
 

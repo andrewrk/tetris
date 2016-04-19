@@ -1,4 +1,4 @@
-use @import("libc.zig");
+use @import("c.zig");
 
 pub struct Mat4x4 {
     data: [4][4]f32,

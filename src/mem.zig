@@ -1,4 +1,4 @@
-const c = @import("libc.zig");
+const c = @import("c.zig");
 const size_t = c.size_t;
 
 error NoMem;

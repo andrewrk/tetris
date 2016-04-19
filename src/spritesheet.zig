@@ -1,4 +1,4 @@
-use @import("libc.zig");
+use @import("c.zig");
 use @import("all_shaders.zig");
 use @import("math3d.zig");
 const mem = @import("mem.zig");

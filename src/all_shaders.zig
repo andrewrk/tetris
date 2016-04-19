@@ -1,4 +1,4 @@
-use @import("libc.zig");
+use @import("c.zig");
 use @import("math3d.zig");
 use @import("debug_gl.zig");
 

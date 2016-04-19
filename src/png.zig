@@ -1,4 +1,4 @@
-const c = @import("libc.zig");
+const c = @import("c.zig");
 const mem = @import("mem.zig");
 
 pub struct PngImage {
