@@ -137,6 +137,8 @@ export fn tetris_key_callback(window: ?&GLFWwindow, key: c_int, scancode: c_int,
 
 var tetris_state : Tetris = undefined;
 
+const font_png = @embed_file("../assets/font.png");
+
 export fn main(argc: c_int, argv: &&u8) -> c_int {
     glfwSetErrorCallback(tetris_error_callback);
 
@@ -189,7 +191,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
     t.static_geometry = create_static_geometry();
     defer t.static_geometry.destroy();
 
-    t.font = spritesheet_init(c"assets/font.png", font_char_width, font_char_height) %% {
+    t.font = spritesheet_init(font_png, font_char_width, font_char_height) %% {
         printf(c"unable to read assets\n");
         abort();
     };

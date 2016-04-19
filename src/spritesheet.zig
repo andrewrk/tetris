@@ -1,8 +1,8 @@
 use @import("libc.zig");
-use @import("png.zig");
 use @import("all_shaders.zig");
 use @import("math3d.zig");
 const mem = @import("mem.zig");
+const PngImage = @import("png.zig").PngImage;
 
 pub struct Spritesheet {
     img: PngImage,
@@ -42,13 +42,10 @@ pub struct Spritesheet {
 
 pub error NoMem;
 
-pub fn spritesheet_init(filename: &const u8, w: i32, h: i32) -> %Spritesheet {
+pub fn spritesheet_init(compressed_bytes: []const u8, w: i32, h: i32) -> %Spritesheet {
     var s: Spritesheet = undefined;
 
-    var buffer: [10 * 1024]u8 = undefined;
-    const compressed_bytes = %return fs_fetch_file(filename, buffer);
-
-    s.img = %return create_png_image(compressed_bytes);
+    s.img = %return PngImage.create(compressed_bytes);
     const col_count = s.img.width / w;
     const row_count = s.img.height / h;
     s.count = col_count * row_count;
@@ -120,15 +117,4 @@ pub fn spritesheet_init(filename: &const u8, w: i32, h: i32) -> %Spritesheet {
     }
 
     return s;
-}
-
-// TODO implement in zig standard library and use that instead of relying on libc
-error OpenFail;
-error ReadFail;
-fn fs_fetch_file(path: &const u8, buffer: []u8) -> %[]u8 {
-    const file = fopen(path, c"rb") ?? return error.OpenFail;
-    const amt_read = fread((&c_void)(&buffer[0]), 1, size_t(buffer.len), file);
-    if (amt_read < 0) return error.ReadFail;
-    fclose(file);
-    return buffer[0...isize(amt_read)];
 }
