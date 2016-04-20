@@ -416,11 +416,8 @@ fn draw_piece_with_color(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: i3
 fn next_frame(t: &Tetris, elapsed: f64) {
     if (t.is_paused) return;
 
-    // TODO for loop with ref
     // TODO maybe unwrap with ref:  if (var *particle ?= t.particles[i]) {
-    for (t.falling_blocks) |_, i| {
-        const p = &t.falling_blocks[i];
-
+    for (t.falling_blocks) |*p| {
         if (!p.used) continue;
         p.pos = p.pos.add(p.vel);
         p.vel = p.vel.add(vec3(0, gravity, 0));
@@ -432,10 +429,8 @@ fn next_frame(t: &Tetris, elapsed: f64) {
         }
     }
 
-    // TODO for loop with ref
     // TODO maybe unwrap with ref:  if (var *particle ?= t.particles[i]) {
-    for (t.particles) |_, i| {
-        const p = &t.particles[i];
+    for (t.particles) |*p| {
         if (!p.used) continue;
         p.pos = p.pos.add(p.vel);
         p.vel = p.vel.add(vec3(0, gravity, 0));
@@ -790,22 +785,20 @@ fn drop_new_piece(t: &Tetris) {
 }
 
 fn init_empty_grid(t: &Tetris) {
-    // TODO for loop with ref
-    for (t.grid) |row, y| {
-        t.grid[y] = empty_row;
+    for (t.grid) |*row| {
+        *row = empty_row;
     }
 }
 
 fn clear_particles(t: &Tetris) {
-    // TODO for loop with ref
     // TODO this crashes compiler, when t.particles is not maybe: t.particles[i] = null;
-    for (t.particles) |_, i| {
-        t.particles[i].used = false;
+    for (t.particles) |*p| {
+        p.used = false;
     }
     t.next_particle_index = 0;
 
-    for (t.falling_blocks) |_, i| {
-        t.falling_blocks[i].used = false;
+    for (t.falling_blocks) |*fb| {
+        fb.used = false;
     }
     t.next_falling_block_index = 0;
 }
