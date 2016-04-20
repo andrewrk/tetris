@@ -390,8 +390,7 @@ fn draw_text(t: &Tetris, text: []u8, left: i32, top: i32, size: f32) {
             const model = mat4x4_identity.translate(char_left, f32(top), 0.0).scale(size, size, 0.0);
             const mvp = t.projection.mult(model);
 
-            // TODO u8 should implicitly cast to i32
-            t.font.draw(t.shaders, i32(c), mvp);
+            t.font.draw(t.shaders, c, mvp);
         } else {
             unreachable{};
         }
@@ -524,7 +523,7 @@ fn insert_garbage_row_at_bottom(t: &Tetris) {
             if (filled) {
                 // TODO type generics so this doesn't have to be a u64
                 const index = t.rand.range_u64(0, u64(pieces.len));
-                t.grid[bottom_y][x] = Cell.Color(pieces[isize(index)].color);
+                t.grid[bottom_y][x] = Cell.Color{pieces[isize(index)].color};
                 all_empty = false;
             } else {
                 t.grid[bottom_y][x] = Cell.Empty;
@@ -630,7 +629,7 @@ fn lock_piece(t: &Tetris) {
             const abs_x = t.cur_piece_x + x;
             const abs_y = t.cur_piece_y + y;
             if (abs_x >= 0 && abs_y >= 0 && abs_x < grid_width && abs_y < grid_height) {
-                t.grid[abs_y][abs_x] = Cell.Color(t.cur_piece.color);
+                t.grid[abs_y][abs_x] = Cell.Color{t.cur_piece.color};
             }
         }
     }
