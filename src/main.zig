@@ -495,22 +495,16 @@ fn level_up(t: &Tetris) {
         proposed_lines_to_fill
     };
 
-    // TODO for with range
-    var i : i32 = 0;
-    while (i < lines_to_fill) {
+    {var i : i32 = 0; while (i < lines_to_fill; i += 1) {
         insert_garbage_row_at_bottom(t);
-        i += 1;
-    }
+    }}
 }
 
 fn insert_garbage_row_at_bottom(t: &Tetris) {
     // move everything up to make room at the bottom
-    // TODO for with range
-    var y : i32 = 1;
-    while (y < t.grid.len) {
+    {var y : i32 = 1; while (y < t.grid.len; y += 1) {
         t.grid[y - 1] = t.grid[y];
-        y += 1;
-    }
+    }}
 
     // populate bottom row with garbage and make sure it fills at least
     // one and leaves at least one empty
@@ -796,14 +790,14 @@ fn drop_new_piece(t: &Tetris) {
 }
 
 fn init_empty_grid(t: &Tetris) {
-    // TODO for loop range
+    // TODO for loop with ref
     for (t.grid) |row, y| {
         t.grid[y] = empty_row;
     }
 }
 
 fn clear_particles(t: &Tetris) {
-    // TODO for loop range
+    // TODO for loop with ref
     // TODO this crashes compiler, when t.particles is not maybe: t.particles[i] = null;
     for (t.particles) |_, i| {
         t.particles[i].used = false;
@@ -831,15 +825,12 @@ fn get_next_falling_block_index(t: &Tetris) -> i32 {
 fn add_explosion(t: &Tetris, color: Vec4, center_x: f32, center_y: f32) {
     const particle_count = 12;
     const particle_size = f32(cell_size) / 3.0;
-    // TODO for loop range
-    var i: i32 = 0;
-    while (i < particle_count) {
+    {var i: i32 = 0; while (i < particle_count; i += 1) {
         const off_x = t.rand.float32() * f32(cell_size) / 2.0;
         const off_y = t.rand.float32() * f32(cell_size) / 2.0;
         const pos = vec3(center_x + off_x, center_y + off_y, 0.0);
         t.particles[get_next_particle_index(t)] = create_particle(t, color, particle_size, pos);
-        i += 1;
-    }
+    }}
 }
 
 fn create_particle(t: &Tetris, color: Vec4, size: f32, pos: Vec3) -> Particle {

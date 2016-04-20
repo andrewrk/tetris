@@ -67,13 +67,10 @@ pub struct PngImage {
         const row_ptrs = mem.alloc(c.png_bytep)(pi.height) %% return error.NoMem;
         defer mem.free(c.png_bytep)(row_ptrs);
 
-        // TODO for range
-        var i: i32 = 0;
-        while (i < pi.height) {
+        {var i: i32 = 0; while (i < pi.height; i += 1) {
             const q = (pi.height - i - 1) * pi.pitch;
             row_ptrs[i] = &pi.raw[q];
-            i += 1;
-        }
+        }}
 
         c.png_read_image(png_ptr, &row_ptrs[0]);
 
