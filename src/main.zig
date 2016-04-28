@@ -601,9 +601,8 @@ fn restart_game(t: &Tetris) {
 }
 
 fn reset_piece_pool(t: &Tetris) {
-    // TODO for (t.piece_pool) |*piece|
-    for (t.piece_pool) |_, i| {
-        t.piece_pool[i] = 1;
+    for (t.piece_pool) |*piece| {
+        *piece = 1;
     }
 }
 
