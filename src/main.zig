@@ -108,14 +108,12 @@ const empty_row = []Cell{
 };
 
 
-// TODO avoid having to make this function export
-export fn tetris_error_callback(err: c_int, description: ?&const u8) {
+extern fn error_callback(err: c_int, description: ?&const u8) {
     printf(c"Error: %s\n", description);
     abort();
 }
 
-// TODO avoid having to make this function export
-export fn tetris_key_callback(window: ?&GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) {
+extern fn key_callback(window: ?&GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) {
     if (action != GLFW_PRESS) return;
     const t = (&Tetris)(??glfwGetWindowUserPointer(window));
 
@@ -140,7 +138,7 @@ var tetris_state : Tetris = undefined;
 const font_png = @embed_file("../assets/font.png");
 
 export fn main(argc: c_int, argv: &&u8) -> c_int {
-    glfwSetErrorCallback(tetris_error_callback);
+    glfwSetErrorCallback(error_callback);
 
     if (glfwInit() == GL_FALSE) {
         printf(c"GLFW init failure\n");
@@ -163,7 +161,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
     };
     defer glfwDestroyWindow(window);
 
-    glfwSetKeyCallback(window, tetris_key_callback);
+    glfwSetKeyCallback(window, key_callback);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 

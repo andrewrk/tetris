@@ -41,7 +41,7 @@ pub struct PngImage {
             .index = 8,
             .buffer = compressed_bytes,
         };
-        c.png_set_read_fn(png_ptr, (&c_void)(&png_io), tetris_read_png_data);
+        c.png_set_read_fn(png_ptr, (&c_void)(&png_io), read_png_data);
 
         c.png_read_info(png_ptr, info_ptr);
 
@@ -89,8 +89,7 @@ struct PngIo {
     buffer: []const u8,
 }
 
-// TODO ability to make this extern instead of export
-export fn tetris_read_png_data(png_ptr: c.png_structp, data: c.png_bytep, length: c.png_size_t) {
+extern fn read_png_data(png_ptr: c.png_structp, data: c.png_bytep, length: c.png_size_t) {
     const png_io = (&PngIo)(??c.png_get_io_ptr(png_ptr));
     const new_index = png_io.index + isize(length);
     if (new_index > png_io.buffer.len) unreachable{};
