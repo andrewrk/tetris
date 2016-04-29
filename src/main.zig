@@ -101,11 +101,8 @@ const font_char_height = 32;
 const gravity = 0.14;
 const time_per_level = 60.0;
 
-// TODO use * syntax when it is supported to create this
-const empty_row = []Cell{
-    Cell.Empty, Cell.Empty, Cell.Empty, Cell.Empty, Cell.Empty,
-    Cell.Empty, Cell.Empty, Cell.Empty, Cell.Empty, Cell.Empty,
-};
+const empty_row = []Cell{Cell.Empty} ** grid_width;
+const empty_grid = [][grid_width]Cell{ empty_row } ** grid_height;
 
 
 extern fn error_callback(err: c_int, description: ?&const u8) {
@@ -587,21 +584,13 @@ fn restart_game(t: &Tetris) {
     t.time_till_next_level = time_per_level;
     t.is_paused = false;
 
-    // TODO support the * operator for initializing constant arrays
-    reset_piece_pool(t);
+    t.piece_pool = []i32{1} ** pieces.len;
 
     clear_particles(t);
-    // TODO support the * operator for initializing constant arrays
-    // then do: .grid =  [][grid_width]Cell{[1]Cell{Cell.Empty} * grid_width} * grid_height
-    init_empty_grid(t);
+    t.grid = empty_grid;
+
     populate_next_piece(t);
     drop_new_piece(t);
-}
-
-fn reset_piece_pool(t: &Tetris) {
-    for (t.piece_pool) |*piece| {
-        *piece = 1;
-    }
 }
 
 fn lock_piece(t: &Tetris) {
@@ -779,12 +768,6 @@ fn drop_new_piece(t: &Tetris) {
     t.cur_piece_rot = start_rot;
 
     populate_next_piece(t);
-}
-
-fn init_empty_grid(t: &Tetris) {
-    for (t.grid) |*row| {
-        *row = empty_row;
-    }
 }
 
 fn clear_particles(t: &Tetris) {
