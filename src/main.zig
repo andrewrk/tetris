@@ -37,8 +37,8 @@ struct Tetris {
     piece_pool: [pieces.len]i32,
     is_paused: bool,
 
-    particles: [max_particle_count]Particle,
-    falling_blocks: [max_falling_block_count]Particle,
+    particles: [max_particle_count]?Particle,
+    falling_blocks: [max_falling_block_count]?Particle,
 }
 
 enum Cell {
@@ -47,8 +47,6 @@ enum Cell {
 }
 
 struct Particle {
-    // TODO make this a maybe
-    used: bool,
     color: Vec4,
     pos: Vec3,
     vel: Vec3,
@@ -363,14 +361,14 @@ fn draw(t: &Tetris) {
             level_display_top + level_display_height / 2, 1.0);
     }
 
-    for (t.falling_blocks) |particle| {
-        if (particle.used) {
+    for (t.falling_blocks) |maybe_particle| {
+        if (const particle ?= maybe_particle) {
             draw_falling_block(t, particle);
         }
     }
 
-    for (t.particles) |particle| {
-        if (particle.used) {
+    for (t.particles) |maybe_particle| {
+        if (const particle ?= maybe_particle) {
             draw_particle(t, particle);
         }
     }
@@ -411,29 +409,31 @@ fn draw_piece_with_color(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: i3
 fn next_frame(t: &Tetris, elapsed: f64) {
     if (t.is_paused) return;
 
-    // TODO maybe unwrap with ref:  if (var *particle ?= t.particles[i]) {
-    for (t.falling_blocks) |*p| {
-        if (!p.used) continue;
-        p.pos = p.pos.add(p.vel);
-        p.vel = p.vel.add(vec3(0, gravity, 0));
+    for (t.falling_blocks) |*maybe_p| {
+        // TODO allow const *p ?= maybe_p
+        if (const *p ?= *maybe_p) {
+            p.pos = p.pos.add(p.vel);
+            p.vel = p.vel.add(vec3(0, gravity, 0));
 
-        p.angle += p.angle_vel;
+            p.angle += p.angle_vel;
 
-        if (p.pos.data[1] > f32(t.framebuffer_height)) {
-            p.used = false;
+            if (p.pos.data[1] > f32(t.framebuffer_height)) {
+                *maybe_p = null;
+            }
         }
     }
 
-    // TODO maybe unwrap with ref:  if (var *particle ?= t.particles[i]) {
-    for (t.particles) |*p| {
-        if (!p.used) continue;
-        p.pos = p.pos.add(p.vel);
-        p.vel = p.vel.add(vec3(0, gravity, 0));
+    for (t.particles) |*maybe_p| {
+        // TODO allow const *p ?= maybe_p
+        if (const *p ?= *maybe_p) {
+            p.pos = p.pos.add(p.vel);
+            p.vel = p.vel.add(vec3(0, gravity, 0));
 
-        p.angle += p.angle_vel;
+            p.angle += p.angle_vel;
 
-        if (p.pos.data[1] > f32(window_height) + 10.0) {
-            p.used = false;
+            if (p.pos.data[1] > f32(window_height) + 10.0) {
+                *maybe_p = null;
+            }
         }
     }
 
@@ -771,14 +771,13 @@ fn drop_new_piece(t: &Tetris) {
 }
 
 fn clear_particles(t: &Tetris) {
-    // TODO this crashes compiler, when t.particles is not maybe: t.particles[i] = null;
     for (t.particles) |*p| {
-        p.used = false;
+        *p = null;
     }
     t.next_particle_index = 0;
 
     for (t.falling_blocks) |*fb| {
-        fb.used = false;
+        *fb = null;
     }
     t.next_falling_block_index = 0;
 }
@@ -821,8 +820,6 @@ fn create_particle(t: &Tetris, color: Vec4, size: f32, pos: Vec3) -> Particle {
     const vel_y = -(2.0 + t.rand.float32() * 1.0);
     p.vel = vec3(vel_x, vel_y, 0.0);
 
-    p.used = true;
-
     return p;
 }
 
@@ -840,8 +837,6 @@ fn create_block_particle(t: &Tetris, color: Vec4, pos: Vec3) -> Particle {
     const vel_x = t.rand.float32() * 0.5 - 0.25;
     const vel_y = -t.rand.float32() * 0.5;
     p.vel = vec3(vel_x, vel_y, 0.0);
-
-    p.used = true;
 
     return p;
 }
