@@ -410,7 +410,6 @@ fn next_frame(t: &Tetris, elapsed: f64) {
     if (t.is_paused) return;
 
     for (t.falling_blocks) |*maybe_p| {
-        // TODO allow const *p ?= maybe_p
         if (const *p ?= *maybe_p) {
             p.pos = p.pos.add(p.vel);
             p.vel = p.vel.add(vec3(0, gravity, 0));
@@ -424,7 +423,6 @@ fn next_frame(t: &Tetris, elapsed: f64) {
     }
 
     for (t.particles) |*maybe_p| {
-        // TODO allow const *p ?= maybe_p
         if (const *p ?= *maybe_p) {
             p.pos = p.pos.add(p.vel);
             p.vel = p.vel.add(vec3(0, gravity, 0));
