@@ -45,7 +45,7 @@ pub struct Mat4x4 {
         const axis = axis_unnormalized.normalize();
         const temp = axis.scale(1.0 - c);
 
-        const rotate = Mat4x4 {
+        const rot = Mat4x4 {
             .data = [][4]f32 {
                 []f32{c   + temp.data[0] * axis.data[0],                    0.0 + temp.data[1] * axis.data[0] - s * axis.data[2], 0.0 + temp.data[2] * axis.data[0] + s * axis.data[1], 0.0},
                 []f32{0.0 + temp.data[0] * axis.data[1] + s * axis.data[2], c   + temp.data[1] * axis.data[1],                    0.0 + temp.data[2] * axis.data[1] - s * axis.data[0], 0.0},
@@ -57,27 +57,27 @@ pub struct Mat4x4 {
         Mat4x4 {
             .data = [][4]f32 {
                 []f32 {
-                    m.data[0][0] * rotate.data[0][0] + m.data[0][1] * rotate.data[1][0] + m.data[0][2] * rotate.data[2][0],
-                    m.data[0][0] * rotate.data[0][1] + m.data[0][1] * rotate.data[1][1] + m.data[0][2] * rotate.data[2][1],
-                    m.data[0][0] * rotate.data[0][2] + m.data[0][1] * rotate.data[1][2] + m.data[0][2] * rotate.data[2][2],
+                    m.data[0][0] * rot.data[0][0] + m.data[0][1] * rot.data[1][0] + m.data[0][2] * rot.data[2][0],
+                    m.data[0][0] * rot.data[0][1] + m.data[0][1] * rot.data[1][1] + m.data[0][2] * rot.data[2][1],
+                    m.data[0][0] * rot.data[0][2] + m.data[0][1] * rot.data[1][2] + m.data[0][2] * rot.data[2][2],
                     m.data[0][3]
                 },
                 []f32 {
-                    m.data[1][0] * rotate.data[0][0] + m.data[1][1] * rotate.data[1][0] + m.data[1][2] * rotate.data[2][0],
-                    m.data[1][0] * rotate.data[0][1] + m.data[1][1] * rotate.data[1][1] + m.data[1][2] * rotate.data[2][1],
-                    m.data[1][0] * rotate.data[0][2] + m.data[1][1] * rotate.data[1][2] + m.data[1][2] * rotate.data[2][2],
+                    m.data[1][0] * rot.data[0][0] + m.data[1][1] * rot.data[1][0] + m.data[1][2] * rot.data[2][0],
+                    m.data[1][0] * rot.data[0][1] + m.data[1][1] * rot.data[1][1] + m.data[1][2] * rot.data[2][1],
+                    m.data[1][0] * rot.data[0][2] + m.data[1][1] * rot.data[1][2] + m.data[1][2] * rot.data[2][2],
                     m.data[1][3]
                 },
                 []f32 {
-                    m.data[2][0] * rotate.data[0][0] + m.data[2][1] * rotate.data[1][0] + m.data[2][2] * rotate.data[2][0],
-                    m.data[2][0] * rotate.data[0][1] + m.data[2][1] * rotate.data[1][1] + m.data[2][2] * rotate.data[2][1],
-                    m.data[2][0] * rotate.data[0][2] + m.data[2][1] * rotate.data[1][2] + m.data[2][2] * rotate.data[2][2],
+                    m.data[2][0] * rot.data[0][0] + m.data[2][1] * rot.data[1][0] + m.data[2][2] * rot.data[2][0],
+                    m.data[2][0] * rot.data[0][1] + m.data[2][1] * rot.data[1][1] + m.data[2][2] * rot.data[2][1],
+                    m.data[2][0] * rot.data[0][2] + m.data[2][1] * rot.data[1][2] + m.data[2][2] * rot.data[2][2],
                     m.data[2][3]
                 },
                 []f32 {
-                    m.data[3][0] * rotate.data[0][0] + m.data[3][1] * rotate.data[1][0] + m.data[3][2] * rotate.data[2][0],
-                    m.data[3][0] * rotate.data[0][1] + m.data[3][1] * rotate.data[1][1] + m.data[3][2] * rotate.data[2][1],
-                    m.data[3][0] * rotate.data[0][2] + m.data[3][1] * rotate.data[1][2] + m.data[3][2] * rotate.data[2][2],
+                    m.data[3][0] * rot.data[0][0] + m.data[3][1] * rot.data[1][0] + m.data[3][2] * rot.data[2][0],
+                    m.data[3][0] * rot.data[0][1] + m.data[3][1] * rot.data[1][1] + m.data[3][2] * rot.data[2][1],
+                    m.data[3][0] * rot.data[0][2] + m.data[3][1] * rot.data[1][2] + m.data[3][2] * rot.data[2][2],
                     m.data[3][3]
                 },
             },
