@@ -1,4 +1,5 @@
-use @import("c.zig");
+const c = @import("c.zig");
+const assert = @import("std").debug.assert;
 
 pub struct Mat4x4 {
     data: [4][4]f32,
@@ -40,16 +41,16 @@ pub struct Mat4x4 {
     /// angle: Rotation angle expressed in radians.
     /// axis: Rotation axis, recommended to be normalized.
     pub fn rotate(m: Mat4x4, angle: f32, axis_unnormalized: Vec3) -> Mat4x4 {
-        const c = cosf(angle);
-        const s = sinf(angle);
+        const cos = c.cosf(angle);
+        const s = c.sinf(angle);
         const axis = axis_unnormalized.normalize();
-        const temp = axis.scale(1.0 - c);
+        const temp = axis.scale(1.0 - cos);
 
         const rot = Mat4x4 {
             .data = [][4]f32 {
-                []f32{c   + temp.data[0] * axis.data[0],                    0.0 + temp.data[1] * axis.data[0] - s * axis.data[2], 0.0 + temp.data[2] * axis.data[0] + s * axis.data[1], 0.0},
-                []f32{0.0 + temp.data[0] * axis.data[1] + s * axis.data[2], c   + temp.data[1] * axis.data[1],                    0.0 + temp.data[2] * axis.data[1] - s * axis.data[0], 0.0},
-                []f32{0.0 + temp.data[0] * axis.data[2] - s * axis.data[1], 0.0 + temp.data[1] * axis.data[2] + s * axis.data[0], c   + temp.data[2] * axis.data[2], 0.0},
+                []f32{cos   + temp.data[0] * axis.data[0],                    0.0 + temp.data[1] * axis.data[0] - s * axis.data[2], 0.0 + temp.data[2] * axis.data[0] + s * axis.data[1], 0.0},
+                []f32{0.0 + temp.data[0] * axis.data[1] + s * axis.data[2], cos   + temp.data[1] * axis.data[1],                    0.0 + temp.data[2] * axis.data[1] - s * axis.data[0], 0.0},
+                []f32{0.0 + temp.data[0] * axis.data[2] - s * axis.data[1], 0.0 + temp.data[1] * axis.data[2] + s * axis.data[0], cos   + temp.data[2] * axis.data[2], 0.0},
                 []f32{0.0, 0.0, 0.0, 0.0},
             },
         };
@@ -152,7 +153,7 @@ pub struct Vec3 {
     data: [3]f32,
 
     pub fn normalize(v: Vec3) -> Vec3 {
-        v.scale(1.0 / sqrtf(v.dot(v)))
+        v.scale(1.0 / c.sqrtf(v.dot(v)))
     }
 
     pub fn scale(v: Vec3, scalar: f32) -> Vec3 {
@@ -172,7 +173,7 @@ pub struct Vec3 {
     }
 
     pub fn length(v: Vec3) -> f32 {
-        sqrtf(v.dot(v))
+        c.sqrtf(v.dot(v))
     }
 
     /// returns the cross product
@@ -277,8 +278,7 @@ fn test_ortho() {
 
 fn assert_f_eq(left: f32, right: f32) {
     const diff = fabsf(left - right);
-    const within_range = diff < 0.01;
-    if (!within_range) unreachable{};
+    assert(diff < 0.01);
 }
 
 fn assert_matrix_eq(left: Mat4x4, right: Mat4x4) {
