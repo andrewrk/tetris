@@ -1,4 +1,4 @@
-use @import("math3d.zig");
+const Vec4 = @import("math3d.zig").Vec4;
 
 pub struct Piece {
     name: u8,

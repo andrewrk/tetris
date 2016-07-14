@@ -1,13 +1,13 @@
-use @import("c.zig");
+const c = @import("c.zig");
 
-pub const gl_debug_on = if (@compile_var("is_release")) GL_FALSE else GL_TRUE;
+pub const is_on = if (@compile_var("is_release")) c.GL_FALSE else c.GL_TRUE;
 
-pub fn assert_no_gl_error() {
+pub fn assert_no_error() {
     if (!@compile_var("is_release")) {
-        const err = glGetError();
-        if (err != GL_NO_ERROR) {
-            printf(c"GL error: %d\n", err);
-            abort();
+        const err = c.glGetError();
+        if (err != c.GL_NO_ERROR) {
+            c.printf(c"GL error: %d\n", err);
+            c.abort();
         }
     }
 }

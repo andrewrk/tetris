@@ -1,18 +1,20 @@
-use @import("c.zig");
-use @import("math3d.zig");
-use @import("debug_gl.zig");
+const c = @import("c.zig");
+const math3d = @import("math3d.zig");
+const debug_gl = @import("debug_gl.zig");
+const Vec4 = math3d.Vec4;
+const Mat4x4 = math3d.Mat4x4;
 
 pub struct AllShaders {
     primitive: ShaderProgram,
-    primitive_attrib_position: GLint,
-    primitive_uniform_mvp: GLint,
-    primitive_uniform_color: GLint,
+    primitive_attrib_position: c.GLint,
+    primitive_uniform_mvp: c.GLint,
+    primitive_uniform_color: c.GLint,
 
     texture: ShaderProgram,
-    texture_attrib_tex_coord: GLint,
-    texture_attrib_position: GLint,
-    texture_uniform_mvp: GLint,
-    texture_uniform_tex: GLint,
+    texture_attrib_tex_coord: c.GLint,
+    texture_attrib_position: c.GLint,
+    texture_uniform_mvp: c.GLint,
+    texture_uniform_tex: c.GLint,
 
     pub fn destroy(as: &AllShaders) {
         as.primitive.destroy();
@@ -21,68 +23,68 @@ pub struct AllShaders {
 }
 
 pub struct ShaderProgram {
-    program_id: GLuint,
-    vertex_id: GLuint,
-    fragment_id: GLuint,
-    geometry_id: ?GLuint,
+    program_id: c.GLuint,
+    vertex_id: c.GLuint,
+    fragment_id: c.GLuint,
+    geometry_id: ?c.GLuint,
     
 
     pub fn bind(sp: ShaderProgram) {
-        glUseProgram(sp.program_id);
+        c.glUseProgram(sp.program_id);
     }
 
-    pub fn attrib_location(sp: ShaderProgram, name: &const u8) -> GLint {
-        const id = glGetAttribLocation(sp.program_id, name);
+    pub fn attrib_location(sp: ShaderProgram, name: &const u8) -> c.GLint {
+        const id = c.glGetAttribLocation(sp.program_id, name);
         if (id == -1) {
-            printf(c"invalid attrib: %s\n", name);
-            abort();
+            c.printf(c"invalid attrib: %s\n", name);
+            c.abort();
         }
         return id;
     }
 
-    pub fn uniform_location(sp: ShaderProgram, name: &const u8) -> GLint {
-        const id = glGetUniformLocation(sp.program_id, name);
+    pub fn uniform_location(sp: ShaderProgram, name: &const u8) -> c.GLint {
+        const id = c.glGetUniformLocation(sp.program_id, name);
         if (id == -1) {
-            printf(c"invalid uniform: %s\n", name);
-            abort();
+            c.printf(c"invalid uniform: %s\n", name);
+            c.abort();
         }
         return id;
     }
 
-    pub fn set_uniform_int(sp: ShaderProgram, uniform_id: GLint, value: c_int) {
-        glUniform1i(uniform_id, value);
+    pub fn set_uniform_int(sp: ShaderProgram, uniform_id: c.GLint, value: c_int) {
+        c.glUniform1i(uniform_id, value);
     }
 
-    pub fn set_uniform_float(sp: ShaderProgram, uniform_id: GLint, value: f32) {
-        glUniform1f(uniform_id, value);
+    pub fn set_uniform_float(sp: ShaderProgram, uniform_id: c.GLint, value: f32) {
+        c.glUniform1f(uniform_id, value);
     }
 
-    pub fn set_uniform_vec3(sp: ShaderProgram, uniform_id: GLint, value: Vec3) {
-        glUniform3fv(uniform_id, 1, &value.data[0]);
+    pub fn set_uniform_vec3(sp: ShaderProgram, uniform_id: c.GLint, value: Vec3) {
+        c.glUniform3fv(uniform_id, 1, &value.data[0]);
     }
 
-    pub fn set_uniform_vec4(sp: ShaderProgram, uniform_id: GLint, value: Vec4) {
-        glUniform4fv(uniform_id, 1, &value.data[0]);
+    pub fn set_uniform_vec4(sp: ShaderProgram, uniform_id: c.GLint, value: Vec4) {
+        c.glUniform4fv(uniform_id, 1, &value.data[0]);
     }
 
-    pub fn set_uniform_mat4x4(sp: ShaderProgram, uniform_id: GLint, value: Mat4x4) {
-        glUniformMatrix4fv(uniform_id, 1, GL_FALSE, &value.data[0][0]);
+    pub fn set_uniform_mat4x4(sp: ShaderProgram, uniform_id: c.GLint, value: Mat4x4) {
+        c.glUniformMatrix4fv(uniform_id, 1, c.GL_FALSE, &value.data[0][0]);
     }
 
     pub fn destroy(sp: &ShaderProgram) {
         if (var geo_id ?= sp.geometry_id) {
-            glDetachShader(sp.program_id, geo_id);
+            c.glDetachShader(sp.program_id, geo_id);
         }
-        glDetachShader(sp.program_id, sp.fragment_id);
-        glDetachShader(sp.program_id, sp.vertex_id);
+        c.glDetachShader(sp.program_id, sp.fragment_id);
+        c.glDetachShader(sp.program_id, sp.vertex_id);
 
         if (var geo_id ?= sp.geometry_id) {
-            glDeleteShader(geo_id);
+            c.glDeleteShader(geo_id);
         }
-        glDeleteShader(sp.fragment_id);
-        glDeleteShader(sp.vertex_id);
+        c.glDeleteShader(sp.fragment_id);
+        c.glDeleteShader(sp.vertex_id);
 
-        glDeleteProgram(sp.program_id);
+        c.glDeleteProgram(sp.program_id);
     }
 }
 
@@ -156,7 +158,7 @@ void main(void)
 
 
 
-    assert_no_gl_error();
+    debug_gl.assert_no_error();
 
     return as;
 }
@@ -165,50 +167,50 @@ pub fn create_shader(vertex_source: []u8, frag_source: []u8,
                      maybe_geometry_source: ?[]u8) -> ShaderProgram
 {
     var sp : ShaderProgram = undefined;
-    sp.vertex_id = init_shader(vertex_source, c"vertex", GL_VERTEX_SHADER);
-    sp.fragment_id = init_shader(frag_source, c"fragment", GL_FRAGMENT_SHADER);
+    sp.vertex_id = init_shader(vertex_source, c"vertex", c.GL_VERTEX_SHADER);
+    sp.fragment_id = init_shader(frag_source, c"fragment", c.GL_FRAGMENT_SHADER);
     sp.geometry_id = if (const geo_source ?= maybe_geometry_source) {
-        init_shader(geo_source, c"geometry", GL_GEOMETRY_SHADER)
+        init_shader(geo_source, c"geometry", c.GL_GEOMETRY_SHADER)
     } else {
         null
     };
 
-    sp.program_id = glCreateProgram();
-    glAttachShader(sp.program_id, sp.vertex_id);
-    glAttachShader(sp.program_id, sp.fragment_id);
+    sp.program_id = c.glCreateProgram();
+    c.glAttachShader(sp.program_id, sp.vertex_id);
+    c.glAttachShader(sp.program_id, sp.fragment_id);
     if (const geo_id ?= sp.geometry_id) {
-        glAttachShader(sp.program_id, geo_id);
+        c.glAttachShader(sp.program_id, geo_id);
     }
-    glLinkProgram(sp.program_id);
+    c.glLinkProgram(sp.program_id);
 
-    var ok: GLint = undefined;
-    glGetProgramiv(sp.program_id, GL_LINK_STATUS, &ok);
+    var ok: c.GLint = undefined;
+    c.glGetProgramiv(sp.program_id, c.GL_LINK_STATUS, &ok);
     if (ok != 0) return sp;
 
-    var error_size: GLint = undefined;
-    glGetProgramiv(sp.program_id, GL_INFO_LOG_LENGTH, &error_size);
+    var error_size: c.GLint = undefined;
+    c.glGetProgramiv(sp.program_id, c.GL_INFO_LOG_LENGTH, &error_size);
     var message: [error_size]u8 = undefined;
-    glGetProgramInfoLog(sp.program_id, error_size, &error_size, &message[0]);
-    printf(c"Error linking shader program: %s\n", &message[0]);
-    abort();
+    c.glGetProgramInfoLog(sp.program_id, error_size, &error_size, &message[0]);
+    c.printf(c"Error linking shader program: %s\n", &message[0]);
+    c.abort();
 }
 
-fn init_shader(source: []u8, name: &const u8, kind: GLenum) -> GLuint {
-    const shader_id = glCreateShader(kind);
-    const source_ptr : ?&const GLchar = &source[0];
-    const source_len = GLint(source.len);
-    glShaderSource(shader_id, 1, &source_ptr, &source_len);
-    glCompileShader(shader_id);
+fn init_shader(source: []u8, name: &const u8, kind: c.GLenum) -> c.GLuint {
+    const shader_id = c.glCreateShader(kind);
+    const source_ptr : ?&const c.GLchar = &source[0];
+    const source_len = c.GLint(source.len);
+    c.glShaderSource(shader_id, 1, &source_ptr, &source_len);
+    c.glCompileShader(shader_id);
 
-    var ok: GLint = undefined;
-    glGetShaderiv(shader_id, GL_COMPILE_STATUS, &ok);
+    var ok: c.GLint = undefined;
+    c.glGetShaderiv(shader_id, c.GL_COMPILE_STATUS, &ok);
     if (ok != 0) return shader_id;
 
-    var error_size: GLint = undefined;
-    glGetShaderiv(shader_id, GL_INFO_LOG_LENGTH, &error_size);
+    var error_size: c.GLint = undefined;
+    c.glGetShaderiv(shader_id, c.GL_INFO_LOG_LENGTH, &error_size);
 
     var message: [error_size]u8 = undefined;
-    glGetShaderInfoLog(shader_id, error_size, &error_size, &message[0]);
-    printf(c"Error compiling %s shader:\n%s\n", name, &message[0]);
-    abort();
+    c.glGetShaderInfoLog(shader_id, error_size, &error_size, &message[0]);
+    c.printf(c"Error compiling %s shader:\n%s\n", name, &message[0]);
+    c.abort();
 }
