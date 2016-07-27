@@ -59,7 +59,7 @@ pub struct ShaderProgram {
         c.glUniform1f(uniform_id, value);
     }
 
-    pub fn set_uniform_vec3(sp: ShaderProgram, uniform_id: c.GLint, value: Vec3) {
+    pub fn set_uniform_vec3(sp: ShaderProgram, uniform_id: c.GLint, value: math3d.Vec3) {
         c.glUniform3fv(uniform_id, 1, &value.data[0]);
     }
 

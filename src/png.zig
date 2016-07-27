@@ -8,7 +8,7 @@ pub struct PngImage {
     raw: []u8,
 
     pub fn destroy(pi: &PngImage) {
-        mem.free(u8)(pi.raw);
+        mem.free(u8, pi.raw);
     }
 
     pub fn create(compressed_bytes: []const u8) -> %PngImage {
@@ -61,11 +61,11 @@ pub struct PngImage {
         if (color_type != PNG_COLOR_TYPE_RGBA) return error.InvalidFormat;
 
         pi.pitch = pi.width * bits_per_channel * channel_count / 8;
-        pi.raw = mem.alloc(u8)(pi.height * pi.pitch) %% return error.NoMem;
-        %defer mem.free(u8)(pi.raw);
+        pi.raw = mem.alloc(u8, pi.height * pi.pitch) %% return error.NoMem;
+        %defer mem.free(u8, pi.raw);
 
-        const row_ptrs = mem.alloc(c.png_bytep)(pi.height) %% return error.NoMem;
-        defer mem.free(c.png_bytep)(row_ptrs);
+        const row_ptrs = mem.alloc(c.png_bytep, pi.height) %% return error.NoMem;
+        defer mem.free(c.png_bytep, row_ptrs);
 
         {var i: i32 = 0; while (i < pi.height; i += 1) {
             const q = (pi.height - i - 1) * pi.pitch;

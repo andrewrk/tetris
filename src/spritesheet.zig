@@ -32,7 +32,7 @@ pub struct Spritesheet {
     
     pub fn deinit(s: &Spritesheet) {
         c.glDeleteBuffers(c.GLint(s.tex_coord_buffers.len), &s.tex_coord_buffers[0]);
-        mem.free(c.GLuint)(s.tex_coord_buffers);
+        mem.free(c.GLuint, s.tex_coord_buffers);
         c.glDeleteBuffers(1, &s.vertex_buffer);
         c.glDeleteTextures(1, &s.texture_id);
 
@@ -77,8 +77,8 @@ pub fn init(compressed_bytes: []const u8, w: i32, h: i32) -> %Spritesheet {
     c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 3 * @sizeof(c.GLfloat), (&c_void)(&vertexes[0][0]), c.GL_STATIC_DRAW);
 
 
-    s.tex_coord_buffers = mem.alloc(c.GLuint)(s.count) %% return error.NoMem;
-    %defer mem.free(c.GLuint)(s.tex_coord_buffers);
+    s.tex_coord_buffers = mem.alloc(c.GLuint, s.count) %% return error.NoMem;
+    %defer mem.free(c.GLuint, s.tex_coord_buffers);
 
     c.glGenBuffers(c.GLint(s.tex_coord_buffers.len), &s.tex_coord_buffers[0]);
     %defer c.glDeleteBuffers(c.GLint(s.tex_coord_buffers.len), &s.tex_coord_buffers[0]);

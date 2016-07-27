@@ -209,9 +209,9 @@ pub struct Vec4 {
     data: [4]f32,
 }
 
-pub fn vec4(a: f32, b: f32, c: f32, d: f32) -> Vec4 {
+pub fn vec4(xa: f32, xb: f32, xc: f32, xd: f32) -> Vec4 {
     Vec4 {
-        .data = []f32 { a, b, c, d, },
+        .data = []f32 { xa, xb, xc, xd, },
     }
 }
 
@@ -277,7 +277,7 @@ fn test_ortho() {
 }
 
 fn assert_f_eq(left: f32, right: f32) {
-    const diff = fabsf(left - right);
+    const diff = c.fabsf(left - right);
     assert(diff < 0.01);
 }
 
