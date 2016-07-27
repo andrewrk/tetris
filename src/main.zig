@@ -502,10 +502,9 @@ fn insert_garbage_row_at_bottom(t: &Tetris) {
         var all_filled = true;
         const bottom_y = grid_height - 1;
         for (t.grid[bottom_y]) |_, x| {
-            const filled = t.rand.boolean();
+            const filled = t.rand.scalar(bool);
             if (filled) {
-                // TODO type generics so this doesn't have to be a u64
-                const index = t.rand.range_u64(0, pieces.pieces.len);
+                const index = t.rand.range_unsigned(usize, 0, pieces.pieces.len);
                 t.grid[bottom_y][x] = Cell.Color{pieces.pieces[index].color};
                 all_empty = false;
             } else {
@@ -710,8 +709,7 @@ fn populate_next_piece(t: &Tetris) {
         upper_bound += count;
     }
 
-    // TODO type generics so this doesn't have to be a u64
-    const rand_val = i32(t.rand.range_u64(0, u64(upper_bound)));
+    const rand_val = i32(t.rand.range_unsigned(u32, 0, u32(upper_bound)));
     var this_piece_upper_bound: i32 = 0;
     var any_zero = false;
     for (t.piece_pool) |count, piece_index| {
@@ -797,8 +795,8 @@ fn add_explosion(t: &Tetris, color: Vec4, center_x: f32, center_y: f32) {
     const particle_count = 12;
     const particle_size = f32(cell_size) / 3.0;
     {var i: i32 = 0; while (i < particle_count; i += 1) {
-        const off_x = t.rand.float32() * f32(cell_size) / 2.0;
-        const off_y = t.rand.float32() * f32(cell_size) / 2.0;
+        const off_x = t.rand.float(f32) * f32(cell_size) / 2.0;
+        const off_y = t.rand.float(f32) * f32(cell_size) / 2.0;
         const pos = vec3(center_x + off_x, center_y + off_y, 0.0);
         t.particles[get_next_particle_index(t)] = create_particle(t, color, particle_size, pos);
     }}
@@ -807,16 +805,16 @@ fn add_explosion(t: &Tetris, color: Vec4, center_x: f32, center_y: f32) {
 fn create_particle(t: &Tetris, color: Vec4, size: f32, pos: Vec3) -> Particle {
     var p: Particle = undefined;
 
-    p.angle_vel = t.rand.float32() * 0.1 - 0.05;
-    p.angle = t.rand.float32() * 2.0 * PI;
+    p.angle_vel = t.rand.float(f32) * 0.1 - 0.05;
+    p.angle = t.rand.float(f32) * 2.0 * PI;
     p.axis = vec3(0.0, 0.0, 1.0);
-    p.scale_w = size * (0.8 + t.rand.float32() * 0.4);
-    p.scale_h = size * (0.8 + t.rand.float32() * 0.4);
+    p.scale_w = size * (0.8 + t.rand.float(f32) * 0.4);
+    p.scale_h = size * (0.8 + t.rand.float(f32) * 0.4);
     p.color = color;
     p.pos = pos;
 
-    const vel_x = t.rand.float32() * 2.0 - 1.0;
-    const vel_y = -(2.0 + t.rand.float32() * 1.0);
+    const vel_x = t.rand.float(f32) * 2.0 - 1.0;
+    const vel_y = -(2.0 + t.rand.float(f32) * 1.0);
     p.vel = vec3(vel_x, vel_y, 0.0);
 
     return p;
@@ -825,7 +823,7 @@ fn create_particle(t: &Tetris, color: Vec4, size: f32, pos: Vec3) -> Particle {
 fn create_block_particle(t: &Tetris, color: Vec4, pos: Vec3) -> Particle {
     var p: Particle = undefined;
 
-    p.angle_vel = t.rand.float32() * 0.05 - 0.025;
+    p.angle_vel = t.rand.float(f32) * 0.05 - 0.025;
     p.angle = 0;
     p.axis = vec3(0.0, 0.0, 1.0);
     p.scale_w = cell_size;
@@ -833,8 +831,8 @@ fn create_block_particle(t: &Tetris, color: Vec4, pos: Vec3) -> Particle {
     p.color = color;
     p.pos = pos;
 
-    const vel_x = t.rand.float32() * 0.5 - 0.25;
-    const vel_y = -t.rand.float32() * 0.5;
+    const vel_x = t.rand.float(f32) * 0.5 - 0.25;
+    const vel_y = -t.rand.float(f32) * 0.5;
     p.vel = vec3(vel_x, vel_y, 0.0);
 
     return p;
