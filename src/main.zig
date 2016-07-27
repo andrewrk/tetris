@@ -22,11 +22,11 @@ struct Tetris {
     cur_piece: &Piece,
     cur_piece_x: i32,
     cur_piece_y: i32,
-    cur_piece_rot: i32,
+    cur_piece_rot: usize,
     score: c_int,
     game_over: bool,
-    next_particle_index: i32,
-    next_falling_block_index: i32,
+    next_particle_index: usize,
+    next_falling_block_index: usize,
     font: spritesheet.Spritesheet,
     ghost_y: i32,
     framebuffer_width: c_int,
@@ -338,7 +338,7 @@ fn draw(t: &Tetris) {
     }
     {
         var score_text_buf: [20]u8 = undefined;
-        const len = c.sprintf(&score_text_buf[0], c"%d", t.score);
+        const len = usize(c.sprintf(&score_text_buf[0], c"%d", t.score));
         const score_text = score_text_buf[0...len];
         const score_label_width = font_char_width * i32(score_text.len);
         draw_text(t, score_text,
@@ -354,7 +354,7 @@ fn draw(t: &Tetris) {
     }
     {
         var text_buf: [20]u8 = undefined;
-        const len = c.sprintf(&text_buf[0], c"%d", t.level);
+        const len = usize(c.sprintf(&text_buf[0], c"%d", t.level));
         const text = text_buf[0...len];
         const text_width = font_char_width * i32(text.len);
         draw_text(t, text,
@@ -391,16 +391,16 @@ fn draw_text(t: &Tetris, text: []u8, left: i32, top: i32, size: f32) {
     }
 }
 
-fn draw_piece(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: i32) {
+fn draw_piece(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: usize) {
     draw_piece_with_color(t, piece, left, top, rot, piece.color);
 }
 
-fn draw_piece_with_color(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: i32, color: Vec4) {
+fn draw_piece_with_color(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: usize, color: Vec4) {
     for (piece.layout[rot]) |row, y| {
         for (row) |is_filled, x| {
             if (!is_filled) continue;
-            const abs_x = f32(left + x * cell_size);
-            const abs_y = f32(top + y * cell_size);
+            const abs_x = f32(left + i32(x) * cell_size);
+            const abs_y = f32(top + i32(y) * cell_size);
 
             fill_rect(t, color, abs_x, abs_y, cell_size, cell_size);
         }
@@ -491,7 +491,7 @@ fn level_up(t: &Tetris) {
 
 fn insert_garbage_row_at_bottom(t: &Tetris) {
     // move everything up to make room at the bottom
-    {var y : i32 = 1; while (y < t.grid.len; y += 1) {
+    {var y : usize = 1; while (y < t.grid.len; y += 1) {
         t.grid[y - 1] = t.grid[y];
     }}
 
@@ -505,8 +505,8 @@ fn insert_garbage_row_at_bottom(t: &Tetris) {
             const filled = t.rand.boolean();
             if (filled) {
                 // TODO type generics so this doesn't have to be a u64
-                const index = t.rand.range_u64(0, u64(pieces.pieces.len));
-                t.grid[bottom_y][x] = Cell.Color{pieces.pieces[isize(index)].color};
+                const index = t.rand.range_u64(0, pieces.pieces.len);
+                t.grid[bottom_y][x] = Cell.Color{pieces.pieces[index].color};
                 all_empty = false;
             } else {
                 t.grid[bottom_y][x] = Cell.Empty;
@@ -559,7 +559,7 @@ fn user_move_cur_piece(t: &Tetris, dir: i8) {
 
 fn user_rotate_cur_piece(t: &Tetris, rot: i8) {
     if (t.game_over || t.is_paused) return;
-    const new_rot = (t.cur_piece_rot + rot + 4) % 4;
+    const new_rot = usize((isize(t.cur_piece_rot) + rot + 4) % 4);
     if (piece_would_collide(t, t.cur_piece, t.cur_piece_x, t.cur_piece_y, new_rot)) {
         return;
     }
@@ -600,10 +600,10 @@ fn lock_piece(t: &Tetris) {
             if (!is_filled) {
                 continue;
             }
-            const abs_x = t.cur_piece_x + x;
-            const abs_y = t.cur_piece_y + y;
+            const abs_x = t.cur_piece_x + i32(x);
+            const abs_y = t.cur_piece_y + i32(y);
             if (abs_x >= 0 && abs_y >= 0 && abs_x < grid_width && abs_y < grid_height) {
-                t.grid[abs_y][abs_x] = Cell.Color{t.cur_piece.color};
+                t.grid[usize(abs_y)][usize(abs_x)] = Cell.Color{t.cur_piece.color};
             }
         }
     }
@@ -629,11 +629,11 @@ fn lock_piece(t: &Tetris) {
     }
 
     // test for line
-    var rows_deleted: i32 = 0;
+    var rows_deleted: usize = 0;
     var y: i32 = grid_height - 1;
     while (y >= 0) {
         var all_filled: bool = true;
-        for (t.grid[y]) |cell| {
+        for (t.grid[usize(y)]) |cell| {
             const filled = switch (cell) { Empty => false, else => true, };
             if (!filled) {
                 all_filled = false;
@@ -642,7 +642,7 @@ fn lock_piece(t: &Tetris) {
         }
         if (all_filled) {
             rows_deleted += 1;
-            delete_row(t, y);
+            delete_row(t, usize(y));
         } else {
             y -= 1;
         }
@@ -666,8 +666,8 @@ fn activate_screen_shake(t: &Tetris, duration: f64) {
     t.screen_shake_timeout = duration;
 }
 
-fn delete_row(t: &Tetris, del_index: i32) {
-    var y: i32 = del_index;
+fn delete_row(t: &Tetris, del_index: usize) {
+    var y: usize = del_index;
     while (y >= 1) {
         t.grid[y] = t.grid[y - 1];
         y -= 1;
@@ -676,13 +676,13 @@ fn delete_row(t: &Tetris, del_index: i32) {
 }
 
 fn cell_empty(t: &Tetris, x: i32, y: i32) -> bool {
-    switch (t.grid[y][x]) {
+    switch (t.grid[usize(y)][usize(x)]) {
         Empty => true,
         else => false,
     }
 }
 
-fn piece_would_collide(t: &Tetris, piece: &Piece, grid_x: i32, grid_y: i32, rot: i32) -> bool {
+fn piece_would_collide(t: &Tetris, piece: &Piece, grid_x: i32, grid_y: i32, rot: usize) -> bool {
     for (piece.layout[rot]) |row, y| {
         for (row) |is_filled, x| {
             if (!is_filled) {
@@ -781,13 +781,13 @@ fn clear_particles(t: &Tetris) {
     t.next_falling_block_index = 0;
 }
 
-fn get_next_particle_index(t: &Tetris) -> i32 {
+fn get_next_particle_index(t: &Tetris) -> usize {
     const result = t.next_particle_index;
     t.next_particle_index = (t.next_particle_index + 1) % max_particle_count;
     return result;
 }
 
-fn get_next_falling_block_index(t: &Tetris) -> i32 {
+fn get_next_falling_block_index(t: &Tetris) -> usize {
     const result = t.next_falling_block_index;
     t.next_falling_block_index = (t.next_falling_block_index + 1) % max_falling_block_count;
     return result;

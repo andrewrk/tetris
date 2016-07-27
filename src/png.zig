@@ -2,9 +2,9 @@ const c = @import("c.zig");
 const mem = @import("mem.zig");
 
 pub struct PngImage {
-    width: i32,
-    height: i32,
-    pitch: i32,
+    width: u32,
+    height: u32,
+    pitch: u32,
     raw: []u8,
 
     pub fn destroy(pi: &PngImage) {
@@ -45,16 +45,16 @@ pub struct PngImage {
 
         c.png_read_info(png_ptr, info_ptr);
 
-        pi.width  = i32(c.png_get_image_width(png_ptr, info_ptr));
-        pi.height = i32(c.png_get_image_height(png_ptr, info_ptr));
+        pi.width  = c.png_get_image_width(png_ptr, info_ptr);
+        pi.height = c.png_get_image_height(png_ptr, info_ptr);
 
         if (pi.width <= 0 || pi.height <= 0) return error.NoPixels;
 
         // bits per channel (not per pixel)
-        const bits_per_channel = i32(c.png_get_bit_depth(png_ptr, info_ptr));
+        const bits_per_channel = c.png_get_bit_depth(png_ptr, info_ptr);
         if (bits_per_channel != 8) return error.InvalidFormat;
 
-        const channel_count = i32(c.png_get_channels(png_ptr, info_ptr));
+        const channel_count = c.png_get_channels(png_ptr, info_ptr);
         if (channel_count != 4) return error.InvalidFormat;
 
         const color_type = c.png_get_color_type(png_ptr, info_ptr);
@@ -67,7 +67,7 @@ pub struct PngImage {
         const row_ptrs = mem.alloc(c.png_bytep, pi.height) %% return error.NoMem;
         defer mem.free(c.png_bytep, row_ptrs);
 
-        {var i: i32 = 0; while (i < pi.height; i += 1) {
+        {var i: usize = 0; while (i < pi.height; i += 1) {
             const q = (pi.height - i - 1) * pi.pitch;
             row_ptrs[i] = &pi.raw[q];
         }}
@@ -85,15 +85,15 @@ pub error InvalidFormat;
 pub error NoPixels;
 
 struct PngIo {
-    index: isize,
+    index: usize,
     buffer: []const u8,
 }
 
 extern fn read_png_data(png_ptr: c.png_structp, data: c.png_bytep, length: c.png_size_t) {
     const png_io = (&PngIo)(??c.png_get_io_ptr(png_ptr));
-    const new_index = png_io.index + isize(length);
+    const new_index = png_io.index + length;
     if (new_index > png_io.buffer.len) unreachable{};
-    @memcpy((&c_void)(??data), &png_io.buffer[png_io.index], isize(length));
+    @memcpy((&c_void)(??data), &png_io.buffer[png_io.index], length);
     png_io.index = new_index;
 }
 

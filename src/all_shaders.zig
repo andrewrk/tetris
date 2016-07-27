@@ -189,7 +189,7 @@ pub fn create_shader(vertex_source: []u8, frag_source: []u8,
 
     var error_size: c.GLint = undefined;
     c.glGetProgramiv(sp.program_id, c.GL_INFO_LOG_LENGTH, &error_size);
-    var message: [error_size]u8 = undefined;
+    var message: [usize(error_size)]u8 = undefined;
     c.glGetProgramInfoLog(sp.program_id, error_size, &error_size, &message[0]);
     c.printf(c"Error linking shader program: %s\n", &message[0]);
     c.abort();
@@ -209,7 +209,7 @@ fn init_shader(source: []u8, name: &const u8, kind: c.GLenum) -> c.GLuint {
     var error_size: c.GLint = undefined;
     c.glGetShaderiv(shader_id, c.GL_INFO_LOG_LENGTH, &error_size);
 
-    var message: [error_size]u8 = undefined;
+    var message: [usize(error_size)]u8 = undefined;
     c.glGetShaderInfoLog(shader_id, error_size, &error_size, &message[0]);
     c.printf(c"Error compiling %s shader:\n%s\n", name, &message[0]);
     c.abort();

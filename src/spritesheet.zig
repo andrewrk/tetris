@@ -6,12 +6,12 @@ const PngImage = @import("png.zig").PngImage;
 
 pub struct Spritesheet {
     img: PngImage,
-    count: i32,
+    count: usize,
     texture_id: c.GLuint,
     vertex_buffer: c.GLuint,
     tex_coord_buffers: []c.GLuint,
 
-    pub fn draw(s: &Spritesheet, shaders: AllShaders, index: i32, mvp: Mat4x4) {
+    pub fn draw(s: &Spritesheet, shaders: AllShaders, index: usize, mvp: Mat4x4) {
         shaders.texture.bind();
         shaders.texture.set_uniform_mat4x4(shaders.texture_uniform_mvp, mvp);
         shaders.texture.set_uniform_int(shaders.texture_uniform_tex, 0);
@@ -42,7 +42,7 @@ pub struct Spritesheet {
 
 pub error NoMem;
 
-pub fn init(compressed_bytes: []const u8, w: i32, h: i32) -> %Spritesheet {
+pub fn init(compressed_bytes: []const u8, w: usize, h: usize) -> %Spritesheet {
     var s: Spritesheet = undefined;
 
     s.img = %return PngImage.create(compressed_bytes);
@@ -60,7 +60,7 @@ pub fn init(compressed_bytes: []const u8, w: i32, h: i32) -> %Spritesheet {
     c.glTexParameteri(c.GL_TEXTURE_2D, c.GL_TEXTURE_WRAP_T, c.GL_CLAMP_TO_EDGE);
     c.glPixelStorei(c.GL_PACK_ALIGNMENT, 4);
     c.glTexImage2D(c.GL_TEXTURE_2D, 0, c.GL_RGBA,
-            s.img.width, s.img.height,
+            c_int(s.img.width), c_int(s.img.height),
             0, c.GL_RGBA, c.GL_UNSIGNED_BYTE, (&c_void)(&s.img.raw[0]));
 
     c.glGenBuffers(1, &s.vertex_buffer);
