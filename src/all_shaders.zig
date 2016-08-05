@@ -91,25 +91,27 @@ pub struct ShaderProgram {
 pub fn create_all_shaders() -> AllShaders {
     var as : AllShaders = undefined;
 
-    as.primitive = create_shader(r"VERT(
-#version 150 core
-
-in vec3 VertexPosition;
-
-uniform mat4 MVP;
-
-void main(void) {
-    gl_Position = vec4(VertexPosition, 1.0) * MVP;
-})VERT", r"FRAG(
-#version 150 core
-
-out vec4 FragColor;
-
-uniform vec4 Color;
-
-void main(void) {
-    FragColor = Color;
-})FRAG", null);
+    as.primitive = create_shader(
+        \\#version 150 core
+        \\
+        \\in vec3 VertexPosition;
+        \\
+        \\uniform mat4 MVP;
+        \\
+        \\void main(void) {
+        \\    gl_Position = vec4(VertexPosition, 1.0) * MVP;
+        \\}
+    ,
+        \\#version 150 core
+        \\
+        \\out vec4 FragColor;
+        \\
+        \\uniform vec4 Color;
+        \\
+        \\void main(void) {
+        \\    FragColor = Color;
+        \\}
+    , null);
 
     as.primitive_attrib_position = as.primitive.attrib_location(c"VertexPosition");
     as.primitive_uniform_mvp = as.primitive.uniform_location(c"MVP");
@@ -117,34 +119,34 @@ void main(void) {
 
 
 
-    as.texture = create_shader(r"VERT(
-#version 150 core
-
-in vec3 VertexPosition;
-in vec2 TexCoord;
-
-out vec2 FragTexCoord;
-
-uniform mat4 MVP;
-
-void main(void)
-{
-    FragTexCoord = TexCoord;
-    gl_Position = vec4(VertexPosition, 1.0) * MVP;
-}
-    )VERT", r"FRAG(
-#version 150 core
-
-in vec2 FragTexCoord;
-out vec4 FragColor;
-
-uniform sampler2D Tex;
-
-void main(void)
-{
-    FragColor = texture(Tex, FragTexCoord);
-}
-    )FRAG", null);
+    as.texture = create_shader(
+        \\#version 150 core
+        \\
+        \\in vec3 VertexPosition;
+        \\in vec2 TexCoord;
+        \\
+        \\out vec2 FragTexCoord;
+        \\
+        \\uniform mat4 MVP;
+        \\
+        \\void main(void)
+        \\{
+        \\    FragTexCoord = TexCoord;
+        \\    gl_Position = vec4(VertexPosition, 1.0) * MVP;
+        \\}
+    ,
+        \\#version 150 core
+        \\
+        \\in vec2 FragTexCoord;
+        \\out vec4 FragColor;
+        \\
+        \\uniform sampler2D Tex;
+        \\
+        \\void main(void)
+        \\{
+        \\    FragColor = texture(Tex, FragTexCoord);
+        \\}
+    , null);
 
     as.primitive_attrib_position = as.primitive.attrib_location(c"VertexPosition");
     as.primitive_uniform_mvp = as.primitive.uniform_location(c"MVP");
@@ -155,8 +157,6 @@ void main(void)
     as.texture_attrib_position = as.texture.attrib_location(c"VertexPosition");
     as.texture_uniform_mvp = as.texture.uniform_location(c"MVP");
     as.texture_uniform_tex = as.texture.uniform_location(c"Tex");
-
-
 
     debug_gl.assert_no_error();
 
