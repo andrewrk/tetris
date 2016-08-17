@@ -31,7 +31,7 @@ pub struct PngImage {
         //// don't call any png_* functions outside of this function.
         //// cursed is he who thought setjmp and longjmp was in any way acceptable to
         //// bake into a library API.
-        //if (setjmp((?&struct___jmp_buf_tag)(png_set_longjmp_fn(png_ptr, longjmp, @sizeof(jmp_buf)))) != 0) {
+        //if (setjmp((?&struct___jmp_buf_tag)(png_set_longjmp_fn(png_ptr, longjmp, @sizeOf(jmp_buf)))) != 0) {
         //    return error.InvalidFormat;
         //}
 

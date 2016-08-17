@@ -88,10 +88,10 @@ pub struct ShaderProgram {
     }
 }
 
-pub fn create_all_shaders() -> AllShaders {
+pub fn createAllShaders() -> AllShaders {
     var as : AllShaders = undefined;
 
-    as.primitive = create_shader(
+    as.primitive = createShader(
         \\#version 150 core
         \\
         \\in vec3 VertexPosition;
@@ -119,7 +119,7 @@ pub fn create_all_shaders() -> AllShaders {
 
 
 
-    as.texture = create_shader(
+    as.texture = createShader(
         \\#version 150 core
         \\
         \\in vec3 VertexPosition;
@@ -158,12 +158,12 @@ pub fn create_all_shaders() -> AllShaders {
     as.texture_uniform_mvp = as.texture.uniform_location(c"MVP");
     as.texture_uniform_tex = as.texture.uniform_location(c"Tex");
 
-    debug_gl.assert_no_error();
+    debug_gl.assertNoError();
 
     return as;
 }
 
-pub fn create_shader(vertex_source: []u8, frag_source: []u8,
+pub fn createShader(vertex_source: []u8, frag_source: []u8,
                      maybe_geometry_source: ?[]u8) -> ShaderProgram
 {
     var sp : ShaderProgram = undefined;
