@@ -168,7 +168,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
     c.glBindVertexArray(vertex_array_object);
     defer c.glDeleteVertexArrays(1, &vertex_array_object);
 
-    const rand_seed = get_random_seed() %% {
+    const rand_seed = getRandomSeed() %% {
         c.printf(c"unable to get random seed\n");
         c.abort();
     };
@@ -277,10 +277,10 @@ fn draw_falling_block(t: &Tetris, p: Particle) {
     fillRectMvp(t, p.color, mvp);
 }
 
-fn get_random_seed() -> %u32 {
+fn getRandomSeed() -> %u32 {
     var seed : u32 = undefined;
     const seed_bytes = (&u8)(&seed)[0...4];
-    %return std.os.get_random_bytes(seed_bytes);
+    %return std.os.getRandomBytes(seed_bytes);
     return seed;
 }
 
