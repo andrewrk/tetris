@@ -1,5 +1,5 @@
 const std = @import("std");
-const Rand = std.Rand;
+const Rand = std.rand.Rand;
 const c = @import("c.zig");
 const debug_gl = @import("debug_gl.zig");
 use @import("math3d.zig");
