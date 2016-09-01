@@ -148,11 +148,6 @@ pub fn createAllShaders() -> AllShaders {
         \\}
     , null);
 
-    as.primitive_attrib_position = as.primitive.attrib_location(c"VertexPosition");
-    as.primitive_uniform_mvp = as.primitive.uniform_location(c"MVP");
-    as.primitive_uniform_color = as.primitive.uniform_location(c"Color");
-
-
     as.texture_attrib_tex_coord = as.texture.attrib_location(c"TexCoord");
     as.texture_attrib_position = as.texture.attrib_location(c"VertexPosition");
     as.texture_uniform_mvp = as.texture.uniform_location(c"MVP");
