@@ -175,7 +175,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
 
     const t = &tetris_state;
     c.glfwGetFramebufferSize(window, &t.framebuffer_width, &t.framebuffer_height);
-    if (t.framebuffer_width < window_width || t.framebuffer_height < window_height) unreachable{};
+    if (t.framebuffer_width < window_width || t.framebuffer_height < window_height) @unreachable();
 
     t.window = window;
 
@@ -386,7 +386,7 @@ fn draw_text(t: &Tetris, text: []u8, left: i32, top: i32, size: f32) {
 
             t.font.draw(t.shaders, col, mvp);
         } else {
-            unreachable{};
+            @unreachable();
         }
     }
 }
@@ -705,7 +705,7 @@ fn populate_next_piece(t: &Tetris) {
     // Let's turn Gambler's Fallacy into Gambler's Accurate Model of Reality.
     var upper_bound: i32 = 0;
     for (t.piece_pool) |count| {
-        if (count == 0) unreachable{};
+        if (count == 0) @unreachable();
         upper_bound += count;
     }
 
