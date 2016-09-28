@@ -216,8 +216,9 @@ pub fn vec4(xa: f32, xb: f32, xc: f32, xd: f32) -> Vec4 {
 }
 
 
-#attribute("test")
-fn test_scale() {
+fn testScale() {
+    @setFnTest(this, true);
+
     const m = Mat4x4 {
         .data = [][4]f32 {
             []f32{0.840188, 0.911647, 0.277775, 0.364784},
@@ -238,8 +239,9 @@ fn test_scale() {
     assert_matrix_eq(answer, expected);
 }
 
-#attribute("test")
-fn test_translate() {
+fn testTranslate() {
+    @setFnTest(this, true);
+
     const m = Mat4x4 {
         .data = [][4]f32 {
             []f32{0.840188, 0.911647, 0.277775, 0.364784},
@@ -260,8 +262,9 @@ fn test_translate() {
     assert_matrix_eq(answer, expected);
 }
 
-#attribute("test")
-fn test_ortho() {
+fn testOrtho() {
+    @setFnTest(this, true);
+
     const m = mat4x4_ortho(0.840188, 0.394383, 0.783099, 0.79844);
 
     const expected = Mat4x4 {
@@ -303,8 +306,9 @@ fn assert_matrix_eq(left: Mat4x4, right: Mat4x4) {
     assert_f_eq(left.data[3][3], right.data[3][3]);
 }
 
-#attribute("test")
-fn test_mult() {
+fn testMult() {
+    @setFnTest(this, true);
+
     const m1 = Mat4x4 {
         .data = [][4]f32 {
             []f32{0.635712 , 0.717297, 0.141603, 0.606969 },
@@ -333,8 +337,9 @@ fn test_mult() {
     assert_matrix_eq(tmp, answer);
 }
 
-#attribute("test")
-fn test_rotate() {
+fn testRotate() {
+    @setFnTest(this, true);
+
     const m1 = Mat4x4 {
         .data = [][4]f32 {
             []f32{0.840188, 0.911647, 0.277775, 0.364784},
