@@ -1,6 +1,6 @@
 const c = @import("c.zig");
 
-pub struct StaticGeometry {
+pub const StaticGeometry = struct {
     rect_2d_vertex_buffer: c.GLuint,
     rect_2d_tex_coord_buffer: c.GLuint,
 
@@ -14,7 +14,7 @@ pub struct StaticGeometry {
         c.glDeleteBuffers(1, &sg.triangle_2d_vertex_buffer);
         c.glDeleteBuffers(1, &sg.triangle_2d_tex_coord_buffer);
     }
-}
+};
 
 pub fn createStaticGeometry() -> StaticGeometry {
     var sg: StaticGeometry = undefined;

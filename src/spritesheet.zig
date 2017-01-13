@@ -4,7 +4,7 @@ const Mat4x4 = @import("math3d.zig").Mat4x4;
 const mem = @import("mem.zig");
 const PngImage = @import("png.zig").PngImage;
 
-pub struct Spritesheet {
+pub const Spritesheet = struct {
     img: PngImage,
     count: usize,
     texture_id: c.GLuint,
@@ -38,9 +38,9 @@ pub struct Spritesheet {
 
         s.img.destroy();
     }
-}
+};
 
-pub error NoMem;
+error NoMem;
 
 pub fn init(compressed_bytes: []const u8, w: usize, h: usize) -> %Spritesheet {
     var s: Spritesheet = undefined;

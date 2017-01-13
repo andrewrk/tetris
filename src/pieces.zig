@@ -1,10 +1,10 @@
 const Vec4 = @import("math3d.zig").Vec4;
 
-pub struct Piece {
+pub const Piece = struct {
     name: u8,
     color: Vec4,
     layout: [4][4][4]bool,
-}
+};
 
 const _ = false;
 const O = true;

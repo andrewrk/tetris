@@ -9,7 +9,7 @@ const pieces = @import("pieces.zig");
 const Piece = pieces.Piece;
 const spritesheet = @import("spritesheet.zig");
 
-struct Tetris {
+const Tetris = struct {
     window: &c.GLFWwindow,
     shaders: all_shaders.AllShaders,
     static_geometry: static_geometry.StaticGeometry,
@@ -40,14 +40,14 @@ struct Tetris {
 
     particles: [max_particle_count]?Particle,
     falling_blocks: [max_falling_block_count]?Particle,
-}
+};
 
-enum Cell {
+const Cell = enum {
     Empty,
     Color: Vec4,
-}
+};
 
-struct Particle {
+const Particle = struct {
     color: Vec4,
     pos: Vec3,
     vel: Vec3,
@@ -56,7 +56,7 @@ struct Particle {
     scale_h: f32,
     angle: f32,
     angle_vel: f32,
-}
+};
 
 const PI = 3.14159265358979;
 const max_particle_count = 500;
@@ -318,7 +318,7 @@ fn draw(t: &Tetris) {
         for (t.grid) |row, y| {
             for (row) |cell, x| {
                 switch (cell) {
-                    Color => |color| {
+                    Cell.Color => |color| {
                         const cell_left = board_left + i32(x) * cell_size;
                         const cell_top = board_top + i32(y) * cell_size;
                         fillRect(t, color, f32(cell_left), f32(cell_top), cell_size, cell_size);
@@ -611,7 +611,7 @@ fn lock_piece(t: &Tetris) {
     for (t.grid) |row, y| {
         var all_filled = true;
         for (t.grid[y]) |cell| {
-            const filled = switch (cell) { Empty => false, else => true, };
+            const filled = switch (cell) { Cell.Empty => false, else => true, };
             if (!filled) {
                 all_filled = false;
                 break;
@@ -619,7 +619,7 @@ fn lock_piece(t: &Tetris) {
         }
         if (all_filled) {
             for (t.grid[y]) |cell, x| {
-                const color = switch (cell) { Empty => continue, Color => |col| col,};
+                const color = switch (cell) { Cell.Empty => continue, Cell.Color => |col| col,};
                 const center_x = f32(board_left + x * cell_size) + f32(cell_size) / 2.0;
                 const center_y = f32(board_top + y * cell_size) + f32(cell_size) / 2.0;
                 add_explosion(t, color, center_x, center_y);
@@ -633,7 +633,7 @@ fn lock_piece(t: &Tetris) {
     while (y >= 0) {
         var all_filled: bool = true;
         for (t.grid[usize(y)]) |cell| {
-            const filled = switch (cell) { Empty => false, else => true, };
+            const filled = switch (cell) { Cell.Empty => false, else => true, };
             if (!filled) {
                 all_filled = false;
                 break;
@@ -676,7 +676,7 @@ fn delete_row(t: &Tetris, del_index: usize) {
 
 fn cell_empty(t: &Tetris, x: i32, y: i32) -> bool {
     switch (t.grid[usize(y)][usize(x)]) {
-        Empty => true,
+        Cell.Empty => true,
         else => false,
     }
 }
@@ -738,7 +738,7 @@ fn do_game_over(t: &Tetris) {
     // turn every piece into a falling object
     for (t.grid) |row, y| {
         for (row) |cell, x| {
-            const color = switch (cell) { Empty => continue, Color => |col| col,};
+            const color = switch (cell) { Cell.Empty => continue, Cell.Color => |col| col,};
             const left = f32(board_left + x * cell_size);
             const top = f32(board_top + y * cell_size);
             t.falling_blocks[get_next_falling_block_index(t)] = create_block_particle(t,

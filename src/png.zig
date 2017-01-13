@@ -1,7 +1,7 @@
 const c = @import("c.zig");
 const mem = @import("mem.zig");
 
-pub struct PngImage {
+pub const PngImage = struct {
     width: u32,
     height: u32,
     pitch: u32,
@@ -18,10 +18,10 @@ pub struct PngImage {
             return error.NotPngFile;
         }
 
-        const png_ptr = c.png_create_read_struct(c.PNG_LIBPNG_VER_STRING, null, null, null);
+        var png_ptr = c.png_create_read_struct(c.PNG_LIBPNG_VER_STRING, null, null, null);
         png_ptr ?? return error.NoMem;
 
-        const info_ptr = c.png_create_info_struct(png_ptr);
+        var info_ptr = c.png_create_info_struct(png_ptr);
         info_ptr ?? {
             c.png_destroy_read_struct(&png_ptr, null, null);
             return error.NoMem;
@@ -77,23 +77,23 @@ pub struct PngImage {
         return pi;
     }
 
-}
+};
 
-pub error NotPngFile;
-pub error NoMem;
-pub error InvalidFormat;
-pub error NoPixels;
+error NotPngFile;
+error NoMem;
+error InvalidFormat;
+error NoPixels;
 
-struct PngIo {
+const PngIo = struct {
     index: usize,
     buffer: []const u8,
-}
+};
 
 extern fn read_png_data(png_ptr: c.png_structp, data: c.png_bytep, length: c.png_size_t) {
     const png_io = (&PngIo)(??c.png_get_io_ptr(png_ptr));
     const new_index = png_io.index + length;
     if (new_index > png_io.buffer.len) @unreachable();
-    @memcpy((&c_void)(??data), &png_io.buffer[png_io.index], length);
+    @memcpy((&u8)(??data), &png_io.buffer[png_io.index], length);
     png_io.index = new_index;
 }
 
