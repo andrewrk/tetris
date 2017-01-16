@@ -229,7 +229,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
     return 0;
 }
 
-fn fillRectMvp(t: &Tetris, color: Vec4, mvp: Mat4x4) {
+fn fillRectMvp(t: &Tetris, color: &const Vec4, mvp: &const Mat4x4) {
     t.shaders.primitive.bind();
     t.shaders.primitive.set_uniform_vec4(t.shaders.primitive_uniform_color, color);
     t.shaders.primitive.set_uniform_mat4x4(t.shaders.primitive_uniform_mvp, mvp);
@@ -241,13 +241,13 @@ fn fillRectMvp(t: &Tetris, color: Vec4, mvp: Mat4x4) {
     c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 4);
 }
 
-fn fillRect(t: &Tetris, color: Vec4, x: f32, y: f32, w: f32, h: f32) {
+fn fillRect(t: &Tetris, color: &const Vec4, x: f32, y: f32, w: f32, h: f32) {
     const model = mat4x4_identity.translate(x, y, 0.0).scale(w, h, 0.0);
     const mvp = t.projection.mult(model);
     fillRectMvp(t, color, mvp);
 }
 
-fn draw_particle(t: &Tetris, p: Particle) {
+fn draw_particle(t: &Tetris, p: &const Particle) {
     const model = mat4x4_identity
         .translate_by_vec(p.pos)
         .rotate(p.angle, p.axis)
@@ -266,7 +266,7 @@ fn draw_particle(t: &Tetris, p: Particle) {
     c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 3);
 }
 
-fn draw_falling_block(t: &Tetris, p: Particle) {
+fn draw_falling_block(t: &Tetris, p: &const Particle) {
     const model = mat4x4_identity
         .translate_by_vec(p.pos)
         .rotate(p.angle, p.axis)
@@ -395,7 +395,7 @@ fn draw_piece(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: usize) {
     draw_piece_with_color(t, piece, left, top, rot, piece.color);
 }
 
-fn draw_piece_with_color(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: usize, color: Vec4) {
+fn draw_piece_with_color(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: usize, color: &const Vec4) {
     for (piece.layout[rot]) |row, y| {
         for (row) |is_filled, x| {
             if (!is_filled) continue;
@@ -791,7 +791,7 @@ fn get_next_falling_block_index(t: &Tetris) -> usize {
     return result;
 }
 
-fn add_explosion(t: &Tetris, color: Vec4, center_x: f32, center_y: f32) {
+fn add_explosion(t: &Tetris, color: &const Vec4, center_x: f32, center_y: f32) {
     const particle_count = 12;
     const particle_size = f32(cell_size) / 3.0;
     {var i: i32 = 0; while (i < particle_count; i += 1) {
@@ -802,7 +802,7 @@ fn add_explosion(t: &Tetris, color: Vec4, center_x: f32, center_y: f32) {
     }}
 }
 
-fn create_particle(t: &Tetris, color: Vec4, size: f32, pos: Vec3) -> Particle {
+fn create_particle(t: &Tetris, color: &const Vec4, size: f32, pos: &const Vec3) -> Particle {
     var p: Particle = undefined;
 
     p.angle_vel = t.rand.float(f32) * 0.1 - 0.05;
@@ -810,8 +810,8 @@ fn create_particle(t: &Tetris, color: Vec4, size: f32, pos: Vec3) -> Particle {
     p.axis = vec3(0.0, 0.0, 1.0);
     p.scale_w = size * (0.8 + t.rand.float(f32) * 0.4);
     p.scale_h = size * (0.8 + t.rand.float(f32) * 0.4);
-    p.color = color;
-    p.pos = pos;
+    p.color = *color;
+    p.pos = *pos;
 
     const vel_x = t.rand.float(f32) * 2.0 - 1.0;
     const vel_y = -(2.0 + t.rand.float(f32) * 1.0);
@@ -820,7 +820,7 @@ fn create_particle(t: &Tetris, color: Vec4, size: f32, pos: Vec3) -> Particle {
     return p;
 }
 
-fn create_block_particle(t: &Tetris, color: Vec4, pos: Vec3) -> Particle {
+fn create_block_particle(t: &Tetris, color: &const Vec4, pos: &const Vec3) -> Particle {
     var p: Particle = undefined;
 
     p.angle_vel = t.rand.float(f32) * 0.05 - 0.025;
@@ -828,8 +828,8 @@ fn create_block_particle(t: &Tetris, color: Vec4, pos: Vec3) -> Particle {
     p.axis = vec3(0.0, 0.0, 1.0);
     p.scale_w = cell_size;
     p.scale_h = cell_size;
-    p.color = color;
-    p.pos = pos;
+    p.color = *color;
+    p.pos = *pos;
 
     const vel_x = t.rand.float(f32) * 0.5 - 0.25;
     const vel_y = -t.rand.float(f32) * 0.5;

@@ -5,7 +5,7 @@ pub const Mat4x4 = struct {
     data: [4][4]f32,
 
     /// matrix multiplication
-    pub fn mult(m: &const Mat4x4, other: Mat4x4) -> Mat4x4 {
+    pub fn mult(m: &const Mat4x4, other: &const Mat4x4) -> Mat4x4 {
         Mat4x4 {
             .data = [][4]f32{
                 []f32{
