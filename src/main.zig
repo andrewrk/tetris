@@ -1,5 +1,6 @@
 const std = @import("std");
 const Rand = std.rand.Rand;
+const assert = std.debug.assert;
 const c = @import("c.zig");
 const debug_gl = @import("debug_gl.zig");
 use @import("math3d.zig");
@@ -18,8 +19,8 @@ const Tetris = struct {
     piece_delay: f64,
     delay_left: f64,
     grid: [grid_height][grid_width]Cell,
-    next_piece: &Piece,
-    cur_piece: &Piece,
+    next_piece: &const Piece,
+    cur_piece: &const Piece,
     cur_piece_x: i32,
     cur_piece_y: i32,
     cur_piece_rot: usize,
@@ -175,7 +176,8 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
 
     const t = &tetris_state;
     c.glfwGetFramebufferSize(window, &t.framebuffer_width, &t.framebuffer_height);
-    if (t.framebuffer_width < window_width || t.framebuffer_height < window_height) @unreachable();
+    assert(t.framebuffer_width >= window_width);
+    assert(t.framebuffer_height >= window_height);
 
     t.window = window;
 
@@ -284,7 +286,7 @@ fn getRandomSeed() -> %u32 {
     return seed;
 }
 
-fn draw_centered_text(t: &Tetris, text: []u8) {
+fn draw_centered_text(t: &Tetris, text: []const u8) {
     const label_width = font_char_width * i32(text.len);
     const draw_left = board_left + board_width / 2 - label_width / 2;
     const draw_top = board_top + board_height / 2 - font_char_height / 2;
@@ -377,7 +379,7 @@ fn draw(t: &Tetris) {
 
 }
 
-fn draw_text(t: &Tetris, text: []u8, left: i32, top: i32, size: f32) {
+fn draw_text(t: &Tetris, text: []const u8, left: i32, top: i32, size: f32) {
     for (text) |col, i| {
         if (col <= '~') {
             const char_left = f32(left) + f32(i * font_char_width) * size;
@@ -391,11 +393,11 @@ fn draw_text(t: &Tetris, text: []u8, left: i32, top: i32, size: f32) {
     }
 }
 
-fn draw_piece(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: usize) {
+fn draw_piece(t: &Tetris, piece: &const Piece, left: i32, top: i32, rot: usize) {
     draw_piece_with_color(t, piece, left, top, rot, piece.color);
 }
 
-fn draw_piece_with_color(t: &Tetris, piece: &Piece, left: i32, top: i32, rot: usize, color: &const Vec4) {
+fn draw_piece_with_color(t: &Tetris, piece: &const Piece, left: i32, top: i32, rot: usize, color: &const Vec4) {
     for (piece.layout[rot]) |row, y| {
         for (row) |is_filled, x| {
             if (!is_filled) continue;
@@ -681,7 +683,7 @@ fn cell_empty(t: &Tetris, x: i32, y: i32) -> bool {
     }
 }
 
-fn piece_would_collide(t: &Tetris, piece: &Piece, grid_x: i32, grid_y: i32, rot: usize) -> bool {
+fn piece_would_collide(t: &Tetris, piece: &const Piece, grid_x: i32, grid_y: i32, rot: usize) -> bool {
     for (piece.layout[rot]) |row, y| {
         for (row) |is_filled, x| {
             if (!is_filled) {

@@ -158,7 +158,7 @@ pub fn createAllShaders() -> AllShaders {
     return as;
 }
 
-pub fn createShader(vertex_source: []u8, frag_source: []u8,
+pub fn createShader(vertex_source: []const u8, frag_source: []const u8,
                      maybe_geometry_source: ?[]u8) -> ShaderProgram
 {
     var sp : ShaderProgram = undefined;
@@ -190,9 +190,9 @@ pub fn createShader(vertex_source: []u8, frag_source: []u8,
     c.abort();
 }
 
-fn init_shader(source: []u8, name: &const u8, kind: c.GLenum) -> c.GLuint {
+fn init_shader(source: []const u8, name: &const u8, kind: c.GLenum) -> c.GLuint {
     const shader_id = c.glCreateShader(kind);
-    const source_ptr : ?&const c.GLchar = &source[0];
+    const source_ptr: ?&const u8 = &source[0];
     const source_len = c.GLint(source.len);
     c.glShaderSource(shader_id, 1, &source_ptr, &source_len);
     c.glCompileShader(shader_id);
