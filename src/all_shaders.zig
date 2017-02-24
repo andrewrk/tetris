@@ -36,7 +36,7 @@ pub const ShaderProgram = struct {
     pub fn attrib_location(sp: &const ShaderProgram, name: &const u8) -> c.GLint {
         const id = c.glGetAttribLocation(sp.program_id, name);
         if (id == -1) {
-            c.printf(c"invalid attrib: %s\n", name);
+            _ = c.printf(c"invalid attrib: %s\n", name);
             c.abort();
         }
         return id;
@@ -45,7 +45,7 @@ pub const ShaderProgram = struct {
     pub fn uniform_location(sp: &const ShaderProgram, name: &const u8) -> c.GLint {
         const id = c.glGetUniformLocation(sp.program_id, name);
         if (id == -1) {
-            c.printf(c"invalid uniform: %s\n", name);
+            _ = c.printf(c"invalid uniform: %s\n", name);
             c.abort();
         }
         return id;
@@ -186,7 +186,7 @@ pub fn createShader(vertex_source: []const u8, frag_source: []const u8,
     c.glGetProgramiv(sp.program_id, c.GL_INFO_LOG_LENGTH, &error_size);
     const message = @alloca(u8, usize(error_size));
     c.glGetProgramInfoLog(sp.program_id, error_size, &error_size, &message[0]);
-    c.printf(c"Error linking shader program: %s\n", &message[0]);
+    _ = c.printf(c"Error linking shader program: %s\n", &message[0]);
     c.abort();
 }
 
@@ -206,6 +206,6 @@ fn init_shader(source: []const u8, name: &const u8, kind: c.GLenum) -> c.GLuint 
 
     const message = @alloca(u8, usize(error_size));
     c.glGetShaderInfoLog(shader_id, error_size, &error_size, &message[0]);
-    c.printf(c"Error compiling %s shader:\n%s\n", name, &message[0]);
+    _ = c.printf(c"Error compiling %s shader:\n%s\n", name, &message[0]);
     c.abort();
 }

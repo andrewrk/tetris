@@ -106,7 +106,7 @@ const empty_grid = [][grid_width]Cell{ empty_row } ** grid_height;
 
 
 extern fn error_callback(err: c_int, description: ?&const u8) {
-    c.printf(c"Error: %s\n", description);
+    _ = c.printf(c"Error: %s\n", description);
     c.abort();
 }
 
@@ -135,10 +135,10 @@ var tetris_state : Tetris = undefined;
 const font_png = @embedFile("../assets/font.png");
 
 export fn main(argc: c_int, argv: &&u8) -> c_int {
-    c.glfwSetErrorCallback(error_callback);
+    _ = c.glfwSetErrorCallback(error_callback);
 
     if (c.glfwInit() == c.GL_FALSE) {
-        c.printf(c"GLFW init failure\n");
+        _ = c.printf(c"GLFW init failure\n");
         c.abort();
     }
     defer c.glfwTerminate();
@@ -153,12 +153,12 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
     c.glfwWindowHint(c.GLFW_RESIZABLE, c.GL_FALSE);
 
     var window = c.glfwCreateWindow(window_width, window_height, c"Tetris", null, null) ?? {
-        c.printf(c"unable to create window\n");
+        _ = c.printf(c"unable to create window\n");
         c.abort();
     };
     defer c.glfwDestroyWindow(window);
 
-    c.glfwSetKeyCallback(window, key_callback);
+    _ = c.glfwSetKeyCallback(window, key_callback);
     c.glfwMakeContextCurrent(window);
     c.glfwSwapInterval(1);
 
@@ -170,7 +170,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
     defer c.glDeleteVertexArrays(1, &vertex_array_object);
 
     const rand_seed = getRandomSeed() %% {
-        c.printf(c"unable to get random seed\n");
+        _ = c.printf(c"unable to get random seed\n");
         c.abort();
     };
 
@@ -188,7 +188,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
     defer t.static_geometry.destroy();
 
     t.font = spritesheet.init(font_png, font_char_width, font_char_height) %% {
-        c.printf(c"unable to read assets\n");
+        _ = c.printf(c"unable to read assets\n");
         c.abort();
     };
     defer t.font.deinit();
@@ -442,7 +442,7 @@ fn next_frame(t: &Tetris, elapsed: f64) {
         t.delay_left -= elapsed;
 
         if (t.delay_left <= 0) {
-            cur_piece_fall(t);
+            _ = cur_piece_fall(t);
 
             t.delay_left = t.piece_delay;
         }
@@ -528,7 +528,7 @@ fn compute_ghost(t: &Tetris) {
 
 fn user_cur_piece_fall(t: &Tetris) {
     if (t.game_over || t.is_paused) return;
-    cur_piece_fall(t);
+    _ = cur_piece_fall(t);
 }
 
 fn cur_piece_fall(t: &Tetris) -> bool {
