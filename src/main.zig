@@ -1,4 +1,5 @@
 const std = @import("std");
+const os = std.os;
 const Rand = std.rand.Rand;
 const assert = std.debug.assert;
 const c = @import("c.zig");
@@ -107,7 +108,7 @@ const empty_grid = [][grid_width]Cell{ empty_row } ** grid_height;
 
 extern fn error_callback(err: c_int, description: ?&const u8) {
     _ = c.printf(c"Error: %s\n", description);
-    c.abort();
+    os.abort();
 }
 
 extern fn key_callback(window: ?&c.GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) {
@@ -134,12 +135,12 @@ var tetris_state : Tetris = undefined;
 
 const font_png = @embedFile("../assets/font.png");
 
-export fn main(argc: c_int, argv: &&u8) -> c_int {
+pub fn main(args: [][]u8) -> %void {
     _ = c.glfwSetErrorCallback(error_callback);
 
     if (c.glfwInit() == c.GL_FALSE) {
         _ = c.printf(c"GLFW init failure\n");
-        c.abort();
+        os.abort();
     }
     defer c.glfwTerminate();
 
@@ -154,7 +155,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
 
     var window = c.glfwCreateWindow(window_width, window_height, c"Tetris", null, null) ?? {
         _ = c.printf(c"unable to create window\n");
-        c.abort();
+        os.abort();
     };
     defer c.glfwDestroyWindow(window);
 
@@ -171,7 +172,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
 
     const rand_seed = getRandomSeed() %% {
         _ = c.printf(c"unable to get random seed\n");
-        c.abort();
+        os.abort();
     };
 
     const t = &tetris_state;
@@ -189,7 +190,7 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
 
     t.font = spritesheet.init(font_png, font_char_width, font_char_height) %% {
         _ = c.printf(c"unable to read assets\n");
-        c.abort();
+        os.abort();
     };
     defer t.font.deinit();
 
@@ -227,8 +228,6 @@ export fn main(argc: c_int, argv: &&u8) -> c_int {
     }
 
     debug_gl.assertNoError();
-
-    return 0;
 }
 
 fn fillRectMvp(t: &Tetris, color: &const Vec4, mvp: &const Mat4x4) {
@@ -282,7 +281,7 @@ fn draw_falling_block(t: &Tetris, p: &const Particle) {
 fn getRandomSeed() -> %u32 {
     var seed : u32 = undefined;
     const seed_bytes = (&u8)(&seed)[0...4];
-    %return std.os.getRandomBytes(seed_bytes);
+    %return os.getRandomBytes(seed_bytes);
     return seed;
 }
 
