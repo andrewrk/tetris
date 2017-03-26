@@ -387,7 +387,7 @@ fn draw_text(t: &Tetris, text: []const u8, left: i32, top: i32, size: f32) {
 
             t.font.draw(t.shaders, col, mvp);
         } else {
-            @unreachable();
+            unreachable;
         }
     }
 }
@@ -706,7 +706,7 @@ fn populate_next_piece(t: &Tetris) {
     // Let's turn Gambler's Fallacy into Gambler's Accurate Model of Reality.
     var upper_bound: i32 = 0;
     for (t.piece_pool) |count| {
-        if (count == 0) @unreachable();
+        if (count == 0) unreachable;
         upper_bound += count;
     }
 
