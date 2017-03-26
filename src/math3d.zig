@@ -40,7 +40,7 @@ pub const Mat4x4 = struct {
     /// Input matrix multiplied by this rotation matrix.
     /// angle: Rotation angle expressed in radians.
     /// axis: Rotation axis, recommended to be normalized.
-    pub fn rotate(m: &const Mat4x4, angle: f32, axis_unnormalized: Vec3) -> Mat4x4 {
+    pub fn rotate(m: &const Mat4x4, angle: f32, axis_unnormalized: &const Vec3) -> Mat4x4 {
         const cos = c.cosf(angle);
         const s = c.sinf(angle);
         const axis = axis_unnormalized.normalize();
@@ -98,7 +98,7 @@ pub const Mat4x4 = struct {
         }
     }
 
-    pub fn translate_by_vec(m: &const Mat4x4, v: Vec3) -> Mat4x4 {
+    pub fn translate_by_vec(m: &const Mat4x4, v: &const Vec3) -> Mat4x4 {
         m.translate(v.data[0], v.data[1], v.data[2])
     }
 
