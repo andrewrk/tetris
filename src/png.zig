@@ -48,7 +48,7 @@ pub const PngImage = struct {
         pi.width  = c.png_get_image_width(png_ptr, info_ptr);
         pi.height = c.png_get_image_height(png_ptr, info_ptr);
 
-        if (pi.width <= 0 || pi.height <= 0) return error.NoPixels;
+        if (pi.width <= 0 or pi.height <= 0) return error.NoPixels;
 
         // bits per channel (not per pixel)
         const bits_per_channel = c.png_get_bit_depth(png_ptr, info_ptr);

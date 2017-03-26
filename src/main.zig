@@ -513,7 +513,7 @@ fn insert_garbage_row_at_bottom(t: &Tetris) {
                 all_filled = false;
             }
         }
-        if (!all_empty && !all_filled) break;
+        if (!all_empty and !all_filled) break;
     }
 }
 
@@ -526,7 +526,7 @@ fn compute_ghost(t: &Tetris) {
 }
 
 fn user_cur_piece_fall(t: &Tetris) {
-    if (t.game_over || t.is_paused) return;
+    if (t.game_over or t.is_paused) return;
     _ = cur_piece_fall(t);
 }
 
@@ -543,14 +543,14 @@ fn cur_piece_fall(t: &Tetris) -> bool {
 }
 
 fn user_drop_cur_piece(t: &Tetris) {
-    if (t.game_over || t.is_paused) return;
+    if (t.game_over or t.is_paused) return;
     while (!cur_piece_fall(t)) {
         t.score += 1;
     }
 }
 
 fn user_move_cur_piece(t: &Tetris, dir: i8) {
-    if (t.game_over || t.is_paused) return;
+    if (t.game_over or t.is_paused) return;
     if (piece_would_collide(t, t.cur_piece, t.cur_piece_x + dir, t.cur_piece_y, t.cur_piece_rot)) {
         return;
     }
@@ -558,7 +558,7 @@ fn user_move_cur_piece(t: &Tetris, dir: i8) {
 }
 
 fn userRotateCurPiece(t: &Tetris, rot: i8) {
-    if (t.game_over || t.is_paused) return;
+    if (t.game_over or t.is_paused) return;
     const new_rot = usize((isize(t.cur_piece_rot) + rot + 4) % 4);
     if (piece_would_collide(t, t.cur_piece, t.cur_piece_x, t.cur_piece_y, new_rot)) {
         return;
@@ -602,7 +602,7 @@ fn lock_piece(t: &Tetris) {
             }
             const abs_x = t.cur_piece_x + i32(x);
             const abs_y = t.cur_piece_y + i32(y);
-            if (abs_x >= 0 && abs_y >= 0 && abs_x < grid_width && abs_y < grid_height) {
+            if (abs_x >= 0 and abs_y >= 0 and abs_x < grid_width and abs_y < grid_height) {
                 t.grid[usize(abs_y)][usize(abs_x)] = Cell.Color{t.cur_piece.color};
             }
         }
@@ -690,7 +690,7 @@ fn piece_would_collide(t: &Tetris, piece: &const Piece, grid_x: i32, grid_y: i32
             }
             const abs_x = grid_x + i32(x);
             const abs_y = grid_y + i32(y);
-            if (abs_x >= 0 && abs_y >= 0 && abs_x < grid_width && abs_y < grid_height) {
+            if (abs_x >= 0 and abs_y >= 0 and abs_x < grid_width and abs_y < grid_height) {
                 if (!cell_empty(t, abs_x, abs_y)) {
                     return true;
                 }
