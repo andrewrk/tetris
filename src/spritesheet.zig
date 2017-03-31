@@ -61,7 +61,7 @@ pub fn init(compressed_bytes: []const u8, w: usize, h: usize) -> %Spritesheet {
     c.glPixelStorei(c.GL_PACK_ALIGNMENT, 4);
     c.glTexImage2D(c.GL_TEXTURE_2D, 0, c.GL_RGBA,
             c_int(s.img.width), c_int(s.img.height),
-            0, c.GL_RGBA, c.GL_UNSIGNED_BYTE, (&c_void)(&s.img.raw[0]));
+            0, c.GL_RGBA, c.GL_UNSIGNED_BYTE, @ptrcast(&c_void, &s.img.raw[0]));
 
     c.glGenBuffers(1, &s.vertex_buffer);
     %defer c.glDeleteBuffers(1, &s.vertex_buffer);
@@ -74,7 +74,7 @@ pub fn init(compressed_bytes: []const u8, w: usize, h: usize) -> %Spritesheet {
     };
 
     c.glBindBuffer(c.GL_ARRAY_BUFFER, s.vertex_buffer);
-    c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 3 * @sizeOf(c.GLfloat), (&c_void)(&vertexes[0][0]), c.GL_STATIC_DRAW);
+    c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 3 * @sizeOf(c.GLfloat), @ptrcast(&c_void, &vertexes[0][0]), c.GL_STATIC_DRAW);
 
 
     s.tex_coord_buffers = mem.alloc(c.GLuint, s.count) %% return error.NoMem;
@@ -113,7 +113,7 @@ pub fn init(compressed_bytes: []const u8, w: usize, h: usize) -> %Spritesheet {
         };
 
         c.glBindBuffer(c.GL_ARRAY_BUFFER, tex_coord_buffer);
-        c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 2 * @sizeOf(c.GLfloat), (&c_void)(&tex_coords[0][0]), c.GL_STATIC_DRAW);
+        c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 2 * @sizeOf(c.GLfloat), @ptrcast(&c_void, &tex_coords[0][0]), c.GL_STATIC_DRAW);
     }
 
     return s;
