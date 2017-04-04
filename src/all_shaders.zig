@@ -2,6 +2,7 @@ const os = @import("std").os;
 const c = @import("c.zig");
 const math3d = @import("math3d.zig");
 const debug_gl = @import("debug_gl.zig");
+const mem = @import("mem.zig");
 const Vec4 = math3d.Vec4;
 const Mat4x4 = math3d.Mat4x4;
 
@@ -185,7 +186,7 @@ pub fn createShader(vertex_source: []const u8, frag_source: []const u8,
 
     var error_size: c.GLint = undefined;
     c.glGetProgramiv(sp.program_id, c.GL_INFO_LOG_LENGTH, &error_size);
-    const message = @alloca(u8, usize(error_size));
+    const message = %%mem.alloc(u8, usize(error_size));
     c.glGetProgramInfoLog(sp.program_id, error_size, &error_size, &message[0]);
     _ = c.printf(c"Error linking shader program: %s\n", &message[0]);
     os.abort();
@@ -205,7 +206,7 @@ fn init_shader(source: []const u8, name: &const u8, kind: c.GLenum) -> c.GLuint 
     var error_size: c.GLint = undefined;
     c.glGetShaderiv(shader_id, c.GL_INFO_LOG_LENGTH, &error_size);
 
-    const message = @alloca(u8, usize(error_size));
+    const message = %%mem.alloc(u8, usize(error_size));
     c.glGetShaderInfoLog(shader_id, error_size, &error_size, &message[0]);
     _ = c.printf(c"Error compiling %s shader:\n%s\n", name, &message[0]);
     os.abort();
