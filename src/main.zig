@@ -135,7 +135,7 @@ var tetris_state : Tetris = undefined;
 
 const font_png = @embedFile("../assets/font.png");
 
-pub fn main(args: [][]u8) -> %void {
+pub fn main() -> %void {
     _ = c.glfwSetErrorCallback(error_callback);
 
     if (c.glfwInit() == c.GL_FALSE) {
