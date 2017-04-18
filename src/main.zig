@@ -195,7 +195,7 @@ pub fn main() -> %void {
     defer t.font.deinit();
 
     reset_projection(t);
-    t.rand.init(rand_seed);
+    t.rand = Rand.init(rand_seed);
 
     restartGame(t);
 
