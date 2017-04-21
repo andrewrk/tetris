@@ -6,12 +6,12 @@ pub fn build(b: &Builder) {
     var exe = b.addExecutable("tetris", "src/main.zig");
     exe.setRelease(release);
 
-    exe.linkLibrary("c");
-    exe.linkLibrary("m");
-    exe.linkLibrary("glfw");
-    exe.linkLibrary("epoxy");
-    exe.linkLibrary("png");
-    exe.linkLibrary("z");
+    exe.linkSystemLibrary("c");
+    exe.linkSystemLibrary("m");
+    exe.linkSystemLibrary("glfw");
+    exe.linkSystemLibrary("epoxy");
+    exe.linkSystemLibrary("png");
+    exe.linkSystemLibrary("z");
 
     b.default_step.dependOn(&exe.step);
 }
