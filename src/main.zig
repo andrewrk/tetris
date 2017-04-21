@@ -364,13 +364,13 @@ fn draw(t: &Tetris) {
     }
 
     for (t.falling_blocks) |maybe_particle| {
-        if (const particle ?= maybe_particle) {
+        test (maybe_particle) |particle| {
             draw_falling_block(t, particle);
         }
     }
 
     for (t.particles) |maybe_particle| {
-        if (const particle ?= maybe_particle) {
+        test (maybe_particle) |particle| {
             draw_particle(t, particle);
         }
     }
@@ -412,7 +412,7 @@ fn next_frame(t: &Tetris, elapsed: f64) {
     if (t.is_paused) return;
 
     for (t.falling_blocks) |*maybe_p| {
-        if (const *p ?= *maybe_p) {
+        test (*maybe_p) |*p| {
             p.pos = p.pos.add(p.vel);
             p.vel = p.vel.add(vec3(0, gravity, 0));
 
@@ -425,7 +425,7 @@ fn next_frame(t: &Tetris, elapsed: f64) {
     }
 
     for (t.particles) |*maybe_p| {
-        if (const *p ?= *maybe_p) {
+        test (*maybe_p) |*p| {
             p.pos = p.pos.add(p.vel);
             p.vel = p.vel.add(vec3(0, gravity, 0));
 
