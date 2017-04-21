@@ -113,7 +113,7 @@ extern fn error_callback(err: c_int, description: ?&const u8) {
 
 extern fn key_callback(window: ?&c.GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) {
     if (action != c.GLFW_PRESS) return;
-    const t = @ptrcast(&Tetris, ??c.glfwGetWindowUserPointer(window));
+    const t = @ptrCast(&Tetris, ??c.glfwGetWindowUserPointer(window));
 
     switch (key) {
         c.GLFW_KEY_ESCAPE => c.glfwSetWindowShouldClose(window, c.GL_TRUE),
@@ -205,7 +205,7 @@ pub fn main() -> %void {
     c.glPixelStorei(c.GL_UNPACK_ALIGNMENT, 1);
 
     c.glViewport(0, 0, t.framebuffer_width, t.framebuffer_height);
-    c.glfwSetWindowUserPointer(window, @ptrcast(&c_void, t));
+    c.glfwSetWindowUserPointer(window, @ptrCast(&c_void, t));
 
     debug_gl.assertNoError();
 
@@ -280,7 +280,7 @@ fn draw_falling_block(t: &Tetris, p: &const Particle) {
 
 fn getRandomSeed() -> %u32 {
     var seed : u32 = undefined;
-    const seed_bytes = @ptrcast(&u8, &seed)[0...4];
+    const seed_bytes = @ptrCast(&u8, &seed)[0...4];
     %return os.getRandomBytes(seed_bytes);
     return seed;
 }

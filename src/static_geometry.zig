@@ -27,7 +27,7 @@ pub fn createStaticGeometry() -> StaticGeometry {
     };
     c.glGenBuffers(1, &sg.rect_2d_vertex_buffer);
     c.glBindBuffer(c.GL_ARRAY_BUFFER, sg.rect_2d_vertex_buffer);
-    c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 3 * @sizeOf(c.GLfloat), @ptrcast(&c_void, &rect_2d_vertexes[0][0]), c.GL_STATIC_DRAW);
+    c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 3 * @sizeOf(c.GLfloat), @ptrCast(&c_void, &rect_2d_vertexes[0][0]), c.GL_STATIC_DRAW);
 
 
     const rect_2d_tex_coords = [][2]c.GLfloat{
@@ -38,7 +38,7 @@ pub fn createStaticGeometry() -> StaticGeometry {
     };
     c.glGenBuffers(1, &sg.rect_2d_tex_coord_buffer);
     c.glBindBuffer(c.GL_ARRAY_BUFFER, sg.rect_2d_tex_coord_buffer);
-    c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 2 * @sizeOf(c.GLfloat), @ptrcast(&c_void, &rect_2d_tex_coords[0][0]),
+    c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 2 * @sizeOf(c.GLfloat), @ptrCast(&c_void, &rect_2d_tex_coords[0][0]),
         c.GL_STATIC_DRAW);
 
 
@@ -50,7 +50,7 @@ pub fn createStaticGeometry() -> StaticGeometry {
     };
     c.glGenBuffers(1, &sg.triangle_2d_vertex_buffer);
     c.glBindBuffer(c.GL_ARRAY_BUFFER, sg.triangle_2d_vertex_buffer);
-    c.glBufferData(c.GL_ARRAY_BUFFER, 3 * 3 * @sizeOf(c.GLfloat), @ptrcast(&c_void, &triangle_2d_vertexes[0][0]),
+    c.glBufferData(c.GL_ARRAY_BUFFER, 3 * 3 * @sizeOf(c.GLfloat), @ptrCast(&c_void, &triangle_2d_vertexes[0][0]),
         c.GL_STATIC_DRAW);
 
 
@@ -61,7 +61,7 @@ pub fn createStaticGeometry() -> StaticGeometry {
     };
     c.glGenBuffers(1, &sg.triangle_2d_tex_coord_buffer);
     c.glBindBuffer(c.GL_ARRAY_BUFFER, sg.triangle_2d_tex_coord_buffer);
-    c.glBufferData(c.GL_ARRAY_BUFFER, 3 * 2 * @sizeOf(c.GLfloat), @ptrcast(&c_void, &triangle_2d_tex_coords[0][0]),
+    c.glBufferData(c.GL_ARRAY_BUFFER, 3 * 2 * @sizeOf(c.GLfloat), @ptrCast(&c_void, &triangle_2d_tex_coords[0][0]),
         c.GL_STATIC_DRAW);
 
 
