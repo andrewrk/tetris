@@ -19,10 +19,10 @@ pub const PngImage = struct {
         }
 
         var png_ptr = c.png_create_read_struct(c.PNG_LIBPNG_VER_STRING, null, null, null);
-        png_ptr ?? return error.NoMem;
+        if (png_ptr == null) return error.NoMem;
 
         var info_ptr = c.png_create_info_struct(png_ptr);
-        info_ptr ?? {
+        if (info_ptr == null) {
             c.png_destroy_read_struct(&png_ptr, null, null);
             return error.NoMem;
         };
