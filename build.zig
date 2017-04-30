@@ -4,6 +4,7 @@ pub fn build(b: &Builder) {
     const release = b.option(bool, "release", "optimizations on and safety off") ?? false;
 
     var exe = b.addExecutable("tetris", "src/main.zig");
+    exe.setOutputPath("tetris");
     exe.setRelease(release);
 
     exe.linkSystemLibrary("c");
