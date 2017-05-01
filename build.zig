@@ -4,7 +4,6 @@ pub fn build(b: &Builder) {
     const release = b.option(bool, "release", "optimizations on and safety off") ?? false;
 
     var exe = b.addExecutable("tetris", "src/main.zig");
-    exe.setOutputPath("tetris");
     exe.setRelease(release);
 
     exe.linkSystemLibrary("c");
@@ -15,4 +14,11 @@ pub fn build(b: &Builder) {
     exe.linkSystemLibrary("z");
 
     b.default_step.dependOn(&exe.step);
+
+    b.installArtifact(exe);
+
+    const play = b.step("play", "Play the game");
+    const run = b.addCommand(".", b.env_map, exe.getOutputPath(), [][]const u8{});
+    play.dependOn(&run.step);
+
 }

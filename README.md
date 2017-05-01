@@ -27,8 +27,8 @@ A simple tetris clone written in
  * [GLFW](http://www.glfw.org/)
  * [libpng](http://www.libpng.org/pub/png/libpng.html)
 
-## Building
+## Building and Running
 
 ```
-zig build
+zig build play
 ```
