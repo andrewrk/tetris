@@ -20,5 +20,6 @@ pub fn build(b: &Builder) {
     const play = b.step("play", "Play the game");
     const run = b.addCommand(".", b.env_map, exe.getOutputPath(), [][]const u8{});
     play.dependOn(&run.step);
+    run.step.dependOn(&exe.step);
 
 }
