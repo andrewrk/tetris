@@ -1,10 +1,10 @@
 const Builder = @import("std").build.Builder;
 
 pub fn build(b: &Builder) {
-    const release = b.option(bool, "release", "optimizations on and safety off") ?? false;
+    const mode = b.standardReleaseOptions();
 
     var exe = b.addExecutable("tetris", "src/main.zig");
-    exe.setRelease(release);
+    exe.setBuildMode(mode);
 
     exe.linkSystemLibrary("c");
     exe.linkSystemLibrary("m");
