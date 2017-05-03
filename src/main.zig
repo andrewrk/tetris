@@ -485,14 +485,14 @@ fn level_up(t: &Tetris) {
         proposed_lines_to_fill
     };
 
-    {var i : i32 = 0; while (i < lines_to_fill; i += 1) {
+    {var i : i32 = 0; while (i < lines_to_fill) : (i += 1) {
         insert_garbage_row_at_bottom(t);
     }}
 }
 
 fn insert_garbage_row_at_bottom(t: &Tetris) {
     // move everything up to make room at the bottom
-    {var y : usize = 1; while (y < t.grid.len; y += 1) {
+    {var y : usize = 1; while (y < t.grid.len) : (y += 1) {
         t.grid[y - 1] = t.grid[y];
     }}
 
@@ -795,7 +795,7 @@ fn get_next_falling_block_index(t: &Tetris) -> usize {
 fn add_explosion(t: &Tetris, color: &const Vec4, center_x: f32, center_y: f32) {
     const particle_count = 12;
     const particle_size = f32(cell_size) / 3.0;
-    {var i: i32 = 0; while (i < particle_count; i += 1) {
+    {var i: i32 = 0; while (i < particle_count) : (i += 1) {
         const off_x = t.rand.float(f32) * f32(cell_size) / 2.0;
         const off_y = t.rand.float(f32) * f32(cell_size) / 2.0;
         const pos = vec3(center_x + off_x, center_y + off_y, 0.0);
