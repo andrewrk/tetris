@@ -74,13 +74,13 @@ pub const ShaderProgram = struct {
     }
 
     pub fn destroy(sp: &ShaderProgram) {
-        test (sp.geometry_id) |geo_id| {
+        if (sp.geometry_id) |geo_id| {
             c.glDetachShader(sp.program_id, geo_id);
         }
         c.glDetachShader(sp.program_id, sp.fragment_id);
         c.glDetachShader(sp.program_id, sp.vertex_id);
 
-        test (sp.geometry_id) |geo_id| {
+        if (sp.geometry_id) |geo_id| {
             c.glDeleteShader(geo_id);
         }
         c.glDeleteShader(sp.fragment_id);
@@ -166,7 +166,7 @@ pub fn createShader(vertex_source: []const u8, frag_source: []const u8,
     var sp : ShaderProgram = undefined;
     sp.vertex_id = init_shader(vertex_source, c"vertex", c.GL_VERTEX_SHADER);
     sp.fragment_id = init_shader(frag_source, c"fragment", c.GL_FRAGMENT_SHADER);
-    sp.geometry_id = test (maybe_geometry_source) |geo_source| {
+    sp.geometry_id = if (maybe_geometry_source) |geo_source| {
         init_shader(geo_source, c"geometry", c.GL_GEOMETRY_SHADER)
     } else {
         null
@@ -175,7 +175,7 @@ pub fn createShader(vertex_source: []const u8, frag_source: []const u8,
     sp.program_id = c.glCreateProgram();
     c.glAttachShader(sp.program_id, sp.vertex_id);
     c.glAttachShader(sp.program_id, sp.fragment_id);
-    test (sp.geometry_id) |geo_id| {
+    if (sp.geometry_id) |geo_id| {
         c.glAttachShader(sp.program_id, geo_id);
     }
     c.glLinkProgram(sp.program_id);
