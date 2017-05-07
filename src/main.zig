@@ -287,8 +287,8 @@ fn getRandomSeed() -> %u32 {
 
 fn draw_centered_text(t: &Tetris, text: []const u8) {
     const label_width = font_char_width * i32(text.len);
-    const draw_left = board_left + board_width / 2 - label_width / 2;
-    const draw_top = board_top + board_height / 2 - font_char_height / 2;
+    const draw_left = board_left + @divExact(board_width, 2) - @divExact(label_width, 2);
+    const draw_top = board_top + @divExact(board_height, 2) - @divExact(font_char_height, 2);
     draw_text(t, text, draw_left, draw_top, 1.0);
 }
 
@@ -334,7 +334,7 @@ fn draw(t: &Tetris) {
         const score_text = "SCORE:";
         const score_label_width = font_char_width * i32(score_text.len);
         draw_text(t, score_text,
-            score_left + score_width / 2 - score_label_width / 2,
+            score_left + @divExact(score_width, 2) - @divExact(score_label_width, 2),
             score_top + margin_size, 1.0);
     }
     {
@@ -343,14 +343,14 @@ fn draw(t: &Tetris) {
         const score_text = score_text_buf[0...len];
         const score_label_width = font_char_width * i32(score_text.len);
         draw_text(t, score_text,
-            score_left + score_width / 2 - score_label_width / 2,
-            score_top + score_height / 2, 1.0);
+            score_left + @divExact(score_width, 2) - @divExact(score_label_width, 2),
+            score_top + @divExact(score_height, 2), 1.0);
     }
     {
         const text = "LEVEL:";
         const text_width = font_char_width * i32(text.len);
         draw_text(t, text,
-            level_display_left + level_display_width / 2 - text_width / 2,
+            level_display_left + @divExact(level_display_width, 2) - @divExact(text_width, 2),
             level_display_top + margin_size, 1.0);
     }
     {
@@ -359,8 +359,8 @@ fn draw(t: &Tetris) {
         const text = text_buf[0...len];
         const text_width = font_char_width * i32(text.len);
         draw_text(t, text,
-            level_display_left + level_display_width / 2 - text_width / 2,
-            level_display_top + level_display_height / 2, 1.0);
+            level_display_left + @divExact(level_display_width, 2) - @divExact(text_width, 2),
+            level_display_top + @divExact(level_display_height, 2), 1.0);
     }
 
     for (t.falling_blocks) |maybe_particle| {
@@ -478,7 +478,7 @@ fn level_up(t: &Tetris) {
     activate_screen_shake(t, 0.08);
 
     const max_lines_to_fill = 4;
-    const proposed_lines_to_fill = ((t.level + 2) / 3);
+    const proposed_lines_to_fill = @divTrunc(t.level + 2, 3);
     const lines_to_fill = if (proposed_lines_to_fill > max_lines_to_fill) {
         max_lines_to_fill
     } else {
@@ -559,7 +559,7 @@ fn user_move_cur_piece(t: &Tetris, dir: i8) {
 
 fn userRotateCurPiece(t: &Tetris, rot: i8) {
     if (t.game_over or t.is_paused) return;
-    const new_rot = usize((isize(t.cur_piece_rot) + rot + 4) % 4);
+    const new_rot = usize(@mod(isize(t.cur_piece_rot) + rot + 4, 4));
     if (piece_would_collide(t, t.cur_piece, t.cur_piece_x, t.cur_piece_y, new_rot)) {
         return;
     }
