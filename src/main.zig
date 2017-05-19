@@ -280,7 +280,7 @@ fn draw_falling_block(t: &Tetris, p: &const Particle) {
 
 fn getRandomSeed() -> %u32 {
     var seed : u32 = undefined;
-    const seed_bytes = @ptrCast(&u8, &seed)[0...4];
+    const seed_bytes = @ptrCast(&u8, &seed)[0..4];
     %return os.getRandomBytes(seed_bytes);
     return seed;
 }
@@ -340,7 +340,7 @@ fn draw(t: &Tetris) {
     {
         var score_text_buf: [20]u8 = undefined;
         const len = usize(c.sprintf(&score_text_buf[0], c"%d", t.score));
-        const score_text = score_text_buf[0...len];
+        const score_text = score_text_buf[0..len];
         const score_label_width = font_char_width * i32(score_text.len);
         draw_text(t, score_text,
             score_left + score_width / 2 - @divExact(score_label_width, 2),
@@ -356,7 +356,7 @@ fn draw(t: &Tetris) {
     {
         var text_buf: [20]u8 = undefined;
         const len = usize(c.sprintf(&text_buf[0], c"%d", t.level));
-        const text = text_buf[0...len];
+        const text = text_buf[0..len];
         const text_width = font_char_width * i32(text.len);
         draw_text(t, text,
             level_display_left + level_display_width / 2 - @divExact(text_width, 2),
