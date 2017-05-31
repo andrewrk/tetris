@@ -505,7 +505,7 @@ fn insert_garbage_row_at_bottom(t: &Tetris) {
         for (t.grid[bottom_y]) |_, x| {
             const filled = t.rand.scalar(bool);
             if (filled) {
-                const index = t.rand.rangeUnsigned(usize, 0, pieces.pieces.len);
+                const index = t.rand.range(usize, 0, pieces.pieces.len);
                 t.grid[bottom_y][x] = Cell.Color{pieces.pieces[index].color};
                 all_empty = false;
             } else {
@@ -710,7 +710,7 @@ fn populate_next_piece(t: &Tetris) {
         upper_bound += count;
     }
 
-    const rand_val = i32(t.rand.rangeUnsigned(u32, 0, u32(upper_bound)));
+    const rand_val = i32(t.rand.range(u32, 0, u32(upper_bound)));
     var this_piece_upper_bound: i32 = 0;
     var any_zero = false;
     for (t.piece_pool) |count, piece_index| {
