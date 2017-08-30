@@ -113,7 +113,7 @@ extern fn error_callback(err: c_int, description: ?&const u8) {
 
 extern fn key_callback(window: ?&c.GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) {
     if (action != c.GLFW_PRESS) return;
-    const t = @ptrCast(&Tetris, ??c.glfwGetWindowUserPointer(window));
+    const t = @ptrCast(&Tetris, @alignCast(@alignOf(Tetris), ??c.glfwGetWindowUserPointer(window)));
 
     switch (key) {
         c.GLFW_KEY_ESCAPE => c.glfwSetWindowShouldClose(window, c.GL_TRUE),
