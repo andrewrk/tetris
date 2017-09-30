@@ -1,10 +1,16 @@
 const Builder = @import("std").build.Builder;
+const builtin = @import("builtin");
 
 pub fn build(b: &Builder) {
     const mode = b.standardReleaseOptions();
+    const windows = b.option(bool, "windows", "create windows build") ?? false;
 
     var exe = b.addExecutable("tetris", "src/main.zig");
     exe.setBuildMode(mode);
+
+    if (windows) {
+        exe.setTarget(builtin.Arch.x86_64, builtin.Os.windows, builtin.Environ.gnu);
+    }
 
     exe.linkSystemLibrary("c");
     exe.linkSystemLibrary("m");
@@ -18,7 +24,8 @@ pub fn build(b: &Builder) {
     b.installArtifact(exe);
 
     const play = b.step("play", "Play the game");
-    const run = b.addCommand(".", b.env_map, exe.getOutputPath(), [][]const u8{});
+    const run = b.addCommand(".", b.env_map,
+        [][]const u8{exe.getOutputPath(), });
     play.dependOn(&run.step);
     run.step.dependOn(&exe.step);
 
