@@ -44,8 +44,8 @@ const Tetris = struct {
     falling_blocks: [max_falling_block_count]?Particle,
 };
 
-const Cell = enum {
-    Empty,
+const Cell = union(enum) {
+    Empty: void,
     Color: Vec4,
 };
 
@@ -102,7 +102,7 @@ const font_char_height = 32;
 const gravity = 0.14;
 const time_per_level = 60.0;
 
-const empty_row = []Cell{Cell.Empty} ** grid_width;
+const empty_row = []Cell{Cell{ .Empty={} }} ** grid_width;
 const empty_grid = [][grid_width]Cell{ empty_row } ** grid_height;
 
 
@@ -506,10 +506,10 @@ fn insert_garbage_row_at_bottom(t: &Tetris) {
             const filled = t.rand.scalar(bool);
             if (filled) {
                 const index = t.rand.range(usize, 0, pieces.pieces.len);
-                t.grid[bottom_y][x] = Cell.Color{pieces.pieces[index].color};
+                t.grid[bottom_y][x] = Cell{ .Color=pieces.pieces[index].color};
                 all_empty = false;
             } else {
-                t.grid[bottom_y][x] = Cell.Empty;
+                t.grid[bottom_y][x] = Cell{.Empty={}};
                 all_filled = false;
             }
         }
@@ -603,7 +603,7 @@ fn lock_piece(t: &Tetris) {
             const abs_x = t.cur_piece_x + i32(x);
             const abs_y = t.cur_piece_y + i32(y);
             if (abs_x >= 0 and abs_y >= 0 and abs_x < grid_width and abs_y < grid_height) {
-                t.grid[usize(abs_y)][usize(abs_x)] = Cell.Color{t.cur_piece.color};
+                t.grid[usize(abs_y)][usize(abs_x)] = Cell{ .Color=t.cur_piece.color};
             }
         }
     }
