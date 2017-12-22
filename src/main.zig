@@ -45,7 +45,7 @@ const Tetris = struct {
 };
 
 const Cell = union(enum) {
-    Empty: void,
+    Empty,
     Color: Vec4,
 };
 
@@ -479,11 +479,10 @@ fn level_up(t: &Tetris) {
 
     const max_lines_to_fill = 4;
     const proposed_lines_to_fill = @divTrunc(t.level + 2, 3);
-    const lines_to_fill = if (proposed_lines_to_fill > max_lines_to_fill) {
+    const lines_to_fill = if (proposed_lines_to_fill > max_lines_to_fill)
         max_lines_to_fill
-    } else {
-        proposed_lines_to_fill
-    };
+    else
+        proposed_lines_to_fill;
 
     {var i : i32 = 0; while (i < lines_to_fill) : (i += 1) {
         insert_garbage_row_at_bottom(t);
@@ -506,7 +505,7 @@ fn insert_garbage_row_at_bottom(t: &Tetris) {
             const filled = t.rand.scalar(bool);
             if (filled) {
                 const index = t.rand.range(usize, 0, pieces.pieces.len);
-                t.grid[bottom_y][x] = Cell{ .Color=pieces.pieces[index].color};
+                t.grid[bottom_y][x] = Cell{.Color = pieces.pieces[index].color};
                 all_empty = false;
             } else {
                 t.grid[bottom_y][x] = Cell{.Empty={}};
@@ -603,7 +602,7 @@ fn lock_piece(t: &Tetris) {
             const abs_x = t.cur_piece_x + i32(x);
             const abs_y = t.cur_piece_y + i32(y);
             if (abs_x >= 0 and abs_y >= 0 and abs_x < grid_width and abs_y < grid_height) {
-                t.grid[usize(abs_y)][usize(abs_x)] = Cell{ .Color=t.cur_piece.color};
+                t.grid[usize(abs_y)][usize(abs_x)] = Cell{.Color = t.cur_piece.color};
             }
         }
     }
@@ -676,10 +675,10 @@ fn delete_row(t: &Tetris, del_index: usize) {
 }
 
 fn cell_empty(t: &Tetris, x: i32, y: i32) -> bool {
-    switch (t.grid[usize(y)][usize(x)]) {
+    return switch (t.grid[usize(y)][usize(x)]) {
         Cell.Empty => true,
         else => false,
-    }
+    };
 }
 
 fn piece_would_collide(t: &Tetris, piece: &const Piece, grid_x: i32, grid_y: i32, rot: usize) -> bool {

@@ -25,7 +25,7 @@ pub const PngImage = struct {
         if (info_ptr == null) {
             c.png_destroy_read_struct(&png_ptr, null, null);
             return error.NoMem;
-        };
+        }
         defer c.png_destroy_read_struct(&png_ptr, &info_ptr, null);
 
         //// don't call any png_* functions outside of this function.

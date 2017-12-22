@@ -166,11 +166,10 @@ pub fn createShader(vertex_source: []const u8, frag_source: []const u8,
     var sp : ShaderProgram = undefined;
     sp.vertex_id = init_shader(vertex_source, c"vertex", c.GL_VERTEX_SHADER);
     sp.fragment_id = init_shader(frag_source, c"fragment", c.GL_FRAGMENT_SHADER);
-    sp.geometry_id = if (maybe_geometry_source) |geo_source| {
+    sp.geometry_id = if (maybe_geometry_source) |geo_source|
         init_shader(geo_source, c"geometry", c.GL_GEOMETRY_SHADER)
-    } else {
-        null
-    };
+    else
+        null;
 
     sp.program_id = c.glCreateProgram();
     c.glAttachShader(sp.program_id, sp.vertex_id);
