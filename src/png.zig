@@ -61,10 +61,10 @@ pub const PngImage = struct {
         if (color_type != PNG_COLOR_TYPE_RGBA) return error.InvalidFormat;
 
         pi.pitch = pi.width * bits_per_channel * channel_count / 8;
-        pi.raw = mem.alloc(u8, pi.height * pi.pitch) %% return error.NoMem;
+        pi.raw = mem.alloc(u8, pi.height * pi.pitch) catch return error.NoMem;
         %defer mem.free(u8, pi.raw);
 
-        const row_ptrs = mem.alloc(c.png_bytep, pi.height) %% return error.NoMem;
+        const row_ptrs = mem.alloc(c.png_bytep, pi.height) catch return error.NoMem;
         defer mem.free(c.png_bytep, row_ptrs);
 
         {var i: usize = 0; while (i < pi.height) : (i += 1) {

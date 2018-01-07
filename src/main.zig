@@ -170,7 +170,7 @@ pub fn main() -> %void {
     c.glBindVertexArray(vertex_array_object);
     defer c.glDeleteVertexArrays(1, &vertex_array_object);
 
-    const rand_seed = getRandomSeed() %% {
+    const rand_seed = getRandomSeed() catch {
         _ = c.printf(c"unable to get random seed\n");
         os.abort();
     };
@@ -188,7 +188,7 @@ pub fn main() -> %void {
     t.static_geometry = static_geometry.createStaticGeometry();
     defer t.static_geometry.destroy();
 
-    t.font = spritesheet.init(font_png, font_char_width, font_char_height) %% {
+    t.font = spritesheet.init(font_png, font_char_width, font_char_height) catch {
         _ = c.printf(c"unable to read assets\n");
         os.abort();
     };

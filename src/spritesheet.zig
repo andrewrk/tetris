@@ -77,7 +77,7 @@ pub fn init(compressed_bytes: []const u8, w: usize, h: usize) -> %Spritesheet {
     c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 3 * @sizeOf(c.GLfloat), @ptrCast(&c_void, &vertexes[0][0]), c.GL_STATIC_DRAW);
 
 
-    s.tex_coord_buffers = mem.alloc(c.GLuint, s.count) %% return error.NoMem;
+    s.tex_coord_buffers = mem.alloc(c.GLuint, s.count) catch return error.NoMem;
     %defer mem.free(c.GLuint, s.tex_coord_buffers);
 
     c.glGenBuffers(c.GLint(s.tex_coord_buffers.len), &s.tex_coord_buffers[0]);
