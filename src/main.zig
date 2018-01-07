@@ -281,7 +281,7 @@ fn draw_falling_block(t: &Tetris, p: &const Particle) {
 fn getRandomSeed() -> %u32 {
     var seed : u32 = undefined;
     const seed_bytes = @ptrCast(&u8, &seed)[0..4];
-    %return os.getRandomBytes(seed_bytes);
+    try os.getRandomBytes(seed_bytes);
     return seed;
 }
 

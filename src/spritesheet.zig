@@ -45,7 +45,7 @@ error NoMem;
 pub fn init(compressed_bytes: []const u8, w: usize, h: usize) -> %Spritesheet {
     var s: Spritesheet = undefined;
 
-    s.img = %return PngImage.create(compressed_bytes);
+    s.img = try PngImage.create(compressed_bytes);
     const col_count = s.img.width / w;
     const row_count = s.img.height / h;
     s.count = col_count * row_count;
