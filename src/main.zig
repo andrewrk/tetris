@@ -182,7 +182,7 @@ pub fn main() -> %void {
 
     t.window = window;
 
-    t.shaders = all_shaders.createAllShaders();
+    t.shaders = try all_shaders.createAllShaders();
     defer t.shaders.destroy();
 
     t.static_geometry = static_geometry.createStaticGeometry();

@@ -90,10 +90,10 @@ pub const ShaderProgram = struct {
     }
 };
 
-pub fn createAllShaders() -> AllShaders {
+pub fn createAllShaders() -> %AllShaders {
     var as : AllShaders = undefined;
 
-    as.primitive = createShader(
+    as.primitive = try createShader(
         \\#version 150 core
         \\
         \\in vec3 VertexPosition;
@@ -121,7 +121,7 @@ pub fn createAllShaders() -> AllShaders {
 
 
 
-    as.texture = createShader(
+    as.texture = try createShader(
         \\#version 150 core
         \\
         \\in vec3 VertexPosition;
@@ -161,13 +161,13 @@ pub fn createAllShaders() -> AllShaders {
 }
 
 pub fn createShader(vertex_source: []const u8, frag_source: []const u8,
-                     maybe_geometry_source: ?[]u8) -> ShaderProgram
+                     maybe_geometry_source: ?[]u8) -> %ShaderProgram
 {
     var sp : ShaderProgram = undefined;
-    sp.vertex_id = init_shader(vertex_source, c"vertex", c.GL_VERTEX_SHADER);
-    sp.fragment_id = init_shader(frag_source, c"fragment", c.GL_FRAGMENT_SHADER);
+    sp.vertex_id = try init_shader(vertex_source, c"vertex", c.GL_VERTEX_SHADER);
+    sp.fragment_id = try init_shader(frag_source, c"fragment", c.GL_FRAGMENT_SHADER);
     sp.geometry_id = if (maybe_geometry_source) |geo_source|
-        init_shader(geo_source, c"geometry", c.GL_GEOMETRY_SHADER)
+        try init_shader(geo_source, c"geometry", c.GL_GEOMETRY_SHADER)
     else
         null;
 
@@ -185,13 +185,13 @@ pub fn createShader(vertex_source: []const u8, frag_source: []const u8,
 
     var error_size: c.GLint = undefined;
     c.glGetProgramiv(sp.program_id, c.GL_INFO_LOG_LENGTH, &error_size);
-    const message = %%mem.alloc(u8, usize(error_size));
+    const message = try mem.alloc(u8, usize(error_size));
     c.glGetProgramInfoLog(sp.program_id, error_size, &error_size, &message[0]);
     _ = c.printf(c"Error linking shader program: %s\n", &message[0]);
     os.abort();
 }
 
-fn init_shader(source: []const u8, name: &const u8, kind: c.GLenum) -> c.GLuint {
+fn init_shader(source: []const u8, name: &const u8, kind: c.GLenum) -> %c.GLuint {
     const shader_id = c.glCreateShader(kind);
     const source_ptr: ?&const u8 = &source[0];
     const source_len = c.GLint(source.len);
@@ -205,7 +205,7 @@ fn init_shader(source: []const u8, name: &const u8, kind: c.GLenum) -> c.GLuint 
     var error_size: c.GLint = undefined;
     c.glGetShaderiv(shader_id, c.GL_INFO_LOG_LENGTH, &error_size);
 
-    const message = %%mem.alloc(u8, usize(error_size));
+    const message = try mem.alloc(u8, usize(error_size));
     c.glGetShaderInfoLog(shader_id, error_size, &error_size, &message[0]);
     _ = c.printf(c"Error compiling %s shader:\n%s\n", name, &message[0]);
     os.abort();
