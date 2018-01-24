@@ -51,7 +51,7 @@ pub fn init(compressed_bytes: []const u8, w: usize, h: usize) -> %Spritesheet {
     s.count = col_count * row_count;
 
     c.glGenTextures(1, &s.texture_id);
-    %defer c.glDeleteTextures(1, &s.texture_id);
+    errdefer c.glDeleteTextures(1, &s.texture_id);
 
     c.glBindTexture(c.GL_TEXTURE_2D, s.texture_id);
     c.glTexParameteri(c.GL_TEXTURE_2D, c.GL_TEXTURE_MAG_FILTER, c.GL_NEAREST);
@@ -64,7 +64,7 @@ pub fn init(compressed_bytes: []const u8, w: usize, h: usize) -> %Spritesheet {
             0, c.GL_RGBA, c.GL_UNSIGNED_BYTE, @ptrCast(&c_void, &s.img.raw[0]));
 
     c.glGenBuffers(1, &s.vertex_buffer);
-    %defer c.glDeleteBuffers(1, &s.vertex_buffer);
+    errdefer c.glDeleteBuffers(1, &s.vertex_buffer);
 
     const vertexes = [][3]c.GLfloat {
         []c.GLfloat{0.0,        0.0,        0.0},
@@ -78,10 +78,10 @@ pub fn init(compressed_bytes: []const u8, w: usize, h: usize) -> %Spritesheet {
 
 
     s.tex_coord_buffers = mem.alloc(c.GLuint, s.count) catch return error.NoMem;
-    %defer mem.free(c.GLuint, s.tex_coord_buffers);
+    errdefer mem.free(c.GLuint, s.tex_coord_buffers);
 
     c.glGenBuffers(c.GLint(s.tex_coord_buffers.len), &s.tex_coord_buffers[0]);
-    %defer c.glDeleteBuffers(c.GLint(s.tex_coord_buffers.len), &s.tex_coord_buffers[0]);
+    errdefer c.glDeleteBuffers(c.GLint(s.tex_coord_buffers.len), &s.tex_coord_buffers[0]);
 
     for (s.tex_coord_buffers) |tex_coord_buffer, i| {
         const upside_down_row = i / col_count;
