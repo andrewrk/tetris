@@ -18,7 +18,7 @@ pub const AllShaders = struct {
     texture_uniform_mvp: c.GLint,
     texture_uniform_tex: c.GLint,
 
-    pub fn destroy(as: &AllShaders) {
+    pub fn destroy(as: &AllShaders) void {
         as.primitive.destroy();
         as.texture.destroy();
     }
@@ -31,11 +31,11 @@ pub const ShaderProgram = struct {
     geometry_id: ?c.GLuint,
     
 
-    pub fn bind(sp: &const ShaderProgram) {
+    pub fn bind(sp: &const ShaderProgram) void {
         c.glUseProgram(sp.program_id);
     }
 
-    pub fn attrib_location(sp: &const ShaderProgram, name: &const u8) -> c.GLint {
+    pub fn attrib_location(sp: &const ShaderProgram, name: &const u8) c.GLint {
         const id = c.glGetAttribLocation(sp.program_id, name);
         if (id == -1) {
             _ = c.printf(c"invalid attrib: %s\n", name);
@@ -44,7 +44,7 @@ pub const ShaderProgram = struct {
         return id;
     }
 
-    pub fn uniform_location(sp: &const ShaderProgram, name: &const u8) -> c.GLint {
+    pub fn uniform_location(sp: &const ShaderProgram, name: &const u8) c.GLint {
         const id = c.glGetUniformLocation(sp.program_id, name);
         if (id == -1) {
             _ = c.printf(c"invalid uniform: %s\n", name);
@@ -53,27 +53,27 @@ pub const ShaderProgram = struct {
         return id;
     }
 
-    pub fn set_uniform_int(sp: &const ShaderProgram, uniform_id: c.GLint, value: c_int) {
+    pub fn set_uniform_int(sp: &const ShaderProgram, uniform_id: c.GLint, value: c_int) void {
         c.glUniform1i(uniform_id, value);
     }
 
-    pub fn set_uniform_float(sp: &const ShaderProgram, uniform_id: c.GLint, value: f32) {
+    pub fn set_uniform_float(sp: &const ShaderProgram, uniform_id: c.GLint, value: f32) void {
         c.glUniform1f(uniform_id, value);
     }
 
-    pub fn set_uniform_vec3(sp: &const ShaderProgram, uniform_id: c.GLint, value: &const math3d.Vec3) {
+    pub fn set_uniform_vec3(sp: &const ShaderProgram, uniform_id: c.GLint, value: &const math3d.Vec3) void {
         c.glUniform3fv(uniform_id, 1, &value.data[0]);
     }
 
-    pub fn set_uniform_vec4(sp: &const ShaderProgram, uniform_id: c.GLint, value: &const Vec4) {
+    pub fn set_uniform_vec4(sp: &const ShaderProgram, uniform_id: c.GLint, value: &const Vec4) void {
         c.glUniform4fv(uniform_id, 1, &value.data[0]);
     }
 
-    pub fn set_uniform_mat4x4(sp: &const ShaderProgram, uniform_id: c.GLint, value: &const Mat4x4) {
+    pub fn set_uniform_mat4x4(sp: &const ShaderProgram, uniform_id: c.GLint, value: &const Mat4x4) void {
         c.glUniformMatrix4fv(uniform_id, 1, c.GL_FALSE, &value.data[0][0]);
     }
 
-    pub fn destroy(sp: &ShaderProgram) {
+    pub fn destroy(sp: &ShaderProgram) void {
         if (sp.geometry_id) |geo_id| {
             c.glDetachShader(sp.program_id, geo_id);
         }
@@ -90,7 +90,7 @@ pub const ShaderProgram = struct {
     }
 };
 
-pub fn createAllShaders() -> %AllShaders {
+pub fn createAllShaders() %AllShaders {
     var as : AllShaders = undefined;
 
     as.primitive = try createShader(
@@ -161,7 +161,7 @@ pub fn createAllShaders() -> %AllShaders {
 }
 
 pub fn createShader(vertex_source: []const u8, frag_source: []const u8,
-                     maybe_geometry_source: ?[]u8) -> %ShaderProgram
+                     maybe_geometry_source: ?[]u8) %ShaderProgram
 {
     var sp : ShaderProgram = undefined;
     sp.vertex_id = try init_shader(vertex_source, c"vertex", c.GL_VERTEX_SHADER);
@@ -191,7 +191,7 @@ pub fn createShader(vertex_source: []const u8, frag_source: []const u8,
     os.abort();
 }
 
-fn init_shader(source: []const u8, name: &const u8, kind: c.GLenum) -> %c.GLuint {
+fn init_shader(source: []const u8, name: &const u8, kind: c.GLenum) %c.GLuint {
     const shader_id = c.glCreateShader(kind);
     const source_ptr: ?&const u8 = &source[0];
     const source_len = c.GLint(source.len);

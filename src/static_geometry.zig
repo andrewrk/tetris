@@ -7,7 +7,7 @@ pub const StaticGeometry = struct {
     triangle_2d_vertex_buffer: c.GLuint,
     triangle_2d_tex_coord_buffer: c.GLuint,
 
-    pub fn destroy(sg: &StaticGeometry) {
+    pub fn destroy(sg: &StaticGeometry) void {
         c.glDeleteBuffers(1, &sg.rect_2d_tex_coord_buffer);
         c.glDeleteBuffers(1, &sg.rect_2d_vertex_buffer);
 
@@ -16,7 +16,7 @@ pub const StaticGeometry = struct {
     }
 };
 
-pub fn createStaticGeometry() -> StaticGeometry {
+pub fn createStaticGeometry() StaticGeometry {
     var sg: StaticGeometry = undefined;
 
     const rect_2d_vertexes = [][3]c.GLfloat {

@@ -5,7 +5,7 @@ pub const Mat4x4 = struct {
     data: [4][4]f32,
 
     /// matrix multiplication
-    pub fn mult(m: &const Mat4x4, other: &const Mat4x4) -> Mat4x4 {
+    pub fn mult(m: &const Mat4x4, other: &const Mat4x4) Mat4x4 {
         return Mat4x4 {
             .data = [][4]f32{
                 []f32{
@@ -40,7 +40,7 @@ pub const Mat4x4 = struct {
     /// Input matrix multiplied by this rotation matrix.
     /// angle: Rotation angle expressed in radians.
     /// axis: Rotation axis, recommended to be normalized.
-    pub fn rotate(m: &const Mat4x4, angle: f32, axis_unnormalized: &const Vec3) -> Mat4x4 {
+    pub fn rotate(m: &const Mat4x4, angle: f32, axis_unnormalized: &const Vec3) Mat4x4 {
         const cos = c.cosf(angle);
         const s = c.sinf(angle);
         const axis = axis_unnormalized.normalize();
@@ -87,7 +87,7 @@ pub const Mat4x4 = struct {
 
     /// Builds a translation 4 * 4 matrix created from a vector of 3 components.
     /// Input matrix multiplied by this translation matrix.
-    pub fn translate(m: &const Mat4x4, x: f32, y: f32, z: f32) -> Mat4x4 {
+    pub fn translate(m: &const Mat4x4, x: f32, y: f32, z: f32) Mat4x4 {
         return Mat4x4 {
             .data = [][4]f32 {
                 []f32{m.data[0][0], m.data[0][1], m.data[0][2], m.data[0][3] + m.data[0][0] * x + m.data[0][1] * y + m.data[0][2] * z},
@@ -98,14 +98,14 @@ pub const Mat4x4 = struct {
         };
     }
 
-    pub fn translate_by_vec(m: &const Mat4x4, v: &const Vec3) -> Mat4x4 {
+    pub fn translate_by_vec(m: &const Mat4x4, v: &const Vec3) Mat4x4 {
         return m.translate(v.data[0], v.data[1], v.data[2]);
     }
 
 
     /// Builds a scale 4 * 4 matrix created from 3 scalars.
     /// Input matrix multiplied by this scale matrix.
-    pub fn scale(m: &const Mat4x4, x: f32, y: f32, z: f32) -> Mat4x4 {
+    pub fn scale(m: &const Mat4x4, x: f32, y: f32, z: f32) Mat4x4 {
         return Mat4x4 {
             .data = [][4]f32{
                 []f32{m.data[0][0] * x, m.data[0][1] * y, m.data[0][2] * z, m.data[0][3]},
@@ -116,7 +116,7 @@ pub const Mat4x4 = struct {
         };
     }
 
-    pub fn transpose(m: &const Mat4x4) -> Mat4x4 {
+    pub fn transpose(m: &const Mat4x4) Mat4x4 {
         return Mat4x4 {
             .data = [][4]f32 {
                 []f32{m.data[0][0], m.data[1][0], m.data[2][0], m.data[3][0]},
@@ -139,7 +139,7 @@ pub const mat4x4_identity = Mat4x4 {
 };
 
 /// Creates a matrix for an orthographic parallel viewing volume.
-pub fn mat4x4_ortho(left: f32, right: f32, bottom: f32, top: f32) -> Mat4x4 {
+pub fn mat4x4_ortho(left: f32, right: f32, bottom: f32, top: f32) Mat4x4 {
     var m = mat4x4_identity;
     m.data[0][0] = 2.0 / (right - left);
     m.data[1][1] = 2.0 / (top - bottom);
@@ -152,11 +152,11 @@ pub fn mat4x4_ortho(left: f32, right: f32, bottom: f32, top: f32) -> Mat4x4 {
 pub const Vec3 = struct {
     data: [3]f32,
 
-    pub fn normalize(v: &const Vec3) -> Vec3 {
+    pub fn normalize(v: &const Vec3) Vec3 {
         return v.scale(1.0 / c.sqrtf(v.dot(v)));
     }
 
-    pub fn scale(v: &const Vec3, scalar: f32) -> Vec3 {
+    pub fn scale(v: &const Vec3, scalar: f32) Vec3 {
         return Vec3 {
             .data = []f32 {
                 v.data[0] * scalar,
@@ -166,18 +166,18 @@ pub const Vec3 = struct {
         };
     }
 
-    pub fn dot(v: &const Vec3, other: &const Vec3) -> f32 {
+    pub fn dot(v: &const Vec3, other: &const Vec3) f32 {
         return v.data[0] * other.data[0] +
         v.data[1] * other.data[1] +
         v.data[2] * other.data[2];
     }
 
-    pub fn length(v: Vec3) -> f32 {
+    pub fn length(v: Vec3) f32 {
         return c.sqrtf(v.dot(v));
     }
 
     /// returns the cross product
-    pub fn cross(v: &const Vec3, other: &const Vec3) -> Vec3 {
+    pub fn cross(v: &const Vec3, other: &const Vec3) Vec3 {
         return Vec3 {
             .data = []f32 {
                 v.data[1] * other.data[2] - other.data[1] * v.data[2],
@@ -187,7 +187,7 @@ pub const Vec3 = struct {
         };
     }
 
-    pub fn add(v: &const Vec3, other: &const Vec3) -> Vec3 {
+    pub fn add(v: &const Vec3, other: &const Vec3) Vec3 {
         return Vec3 {
             .data = []f32 {
                 v.data[0] + other.data[0],
@@ -199,7 +199,7 @@ pub const Vec3 = struct {
 };
 
 
-pub fn vec3(x: f32, y: f32, z: f32) -> Vec3 {
+pub fn vec3(x: f32, y: f32, z: f32) Vec3 {
     return Vec3 {
         .data = []f32 { x, y, z, },
     };
@@ -209,14 +209,14 @@ pub const Vec4 = struct {
     data: [4]f32,
 };
 
-pub fn vec4(xa: f32, xb: f32, xc: f32, xd: f32) -> Vec4 {
+pub fn vec4(xa: f32, xb: f32, xc: f32, xd: f32) Vec4 {
     return Vec4 {
         .data = []f32 { xa, xb, xc, xd, },
     };
 }
 
 
-fn testScale() {
+fn testScale() void {
     @setFnTest(this, true);
 
     const m = Mat4x4 {
@@ -239,7 +239,7 @@ fn testScale() {
     assert_matrix_eq(answer, expected);
 }
 
-fn testTranslate() {
+fn testTranslate() void {
     @setFnTest(this, true);
 
     const m = Mat4x4 {
@@ -262,7 +262,7 @@ fn testTranslate() {
     assert_matrix_eq(answer, expected);
 }
 
-fn testOrtho() {
+fn testOrtho() void {
     @setFnTest(this, true);
 
     const m = mat4x4_ortho(0.840188, 0.394383, 0.783099, 0.79844);
@@ -279,12 +279,12 @@ fn testOrtho() {
     assert_matrix_eq(m, expected);
 }
 
-fn assert_f_eq(left: f32, right: f32) {
+fn assert_f_eq(left: f32, right: f32) void {
     const diff = c.fabsf(left - right);
     assert(diff < 0.01);
 }
 
-fn assert_matrix_eq(left: Mat4x4, right: Mat4x4) {
+fn assert_matrix_eq(left: Mat4x4, right: Mat4x4) void {
     assert_f_eq(left.data[0][0], right.data[0][0]);
     assert_f_eq(left.data[0][1], right.data[0][1]);
     assert_f_eq(left.data[0][2], right.data[0][2]);
@@ -306,7 +306,7 @@ fn assert_matrix_eq(left: Mat4x4, right: Mat4x4) {
     assert_f_eq(left.data[3][3], right.data[3][3]);
 }
 
-fn testMult() {
+fn testMult() void {
     @setFnTest(this, true);
 
     const m1 = Mat4x4 {
@@ -337,7 +337,7 @@ fn testMult() {
     assert_matrix_eq(tmp, answer);
 }
 
-fn testRotate() {
+fn testRotate() void {
     @setFnTest(this, true);
 
     const m1 = Mat4x4 {

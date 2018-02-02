@@ -11,7 +11,7 @@ pub const Spritesheet = struct {
     vertex_buffer: c.GLuint,
     tex_coord_buffers: []c.GLuint,
 
-    pub fn draw(s: &Spritesheet, shaders: &const AllShaders, index: usize, mvp: &const Mat4x4) {
+    pub fn draw(s: &Spritesheet, shaders: &const AllShaders, index: usize, mvp: &const Mat4x4) void {
         shaders.texture.bind();
         shaders.texture.set_uniform_mat4x4(shaders.texture_uniform_mvp, mvp);
         shaders.texture.set_uniform_int(shaders.texture_uniform_tex, 0);
@@ -30,7 +30,7 @@ pub const Spritesheet = struct {
         c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 4);
     }
     
-    pub fn deinit(s: &Spritesheet) {
+    pub fn deinit(s: &Spritesheet) void {
         c.glDeleteBuffers(c.GLint(s.tex_coord_buffers.len), &s.tex_coord_buffers[0]);
         mem.free(c.GLuint, s.tex_coord_buffers);
         c.glDeleteBuffers(1, &s.vertex_buffer);
@@ -42,7 +42,7 @@ pub const Spritesheet = struct {
 
 error NoMem;
 
-pub fn init(compressed_bytes: []const u8, w: usize, h: usize) -> %Spritesheet {
+pub fn init(compressed_bytes: []const u8, w: usize, h: usize) %Spritesheet {
     var s: Spritesheet = undefined;
 
     s.img = try PngImage.create(compressed_bytes);

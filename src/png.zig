@@ -7,11 +7,11 @@ pub const PngImage = struct {
     pitch: u32,
     raw: []u8,
 
-    pub fn destroy(pi: &PngImage) {
+    pub fn destroy(pi: &PngImage) void {
         mem.free(u8, pi.raw);
     }
 
-    pub fn create(compressed_bytes: []const u8) -> %PngImage {
+    pub fn create(compressed_bytes: []const u8) %PngImage {
         var pi : PngImage = undefined;
 
         if (c.png_sig_cmp(&compressed_bytes[0], 0, 8) != 0) {
@@ -89,7 +89,7 @@ const PngIo = struct {
     buffer: []const u8,
 };
 
-extern fn read_png_data(png_ptr: c.png_structp, data: c.png_bytep, length: c.png_size_t) {
+extern fn read_png_data(png_ptr: c.png_structp, data: c.png_bytep, length: c.png_size_t) void {
     const png_io = @ptrCast(&PngIo, @alignCast(@alignOf(PngIo), ??c.png_get_io_ptr(png_ptr)));
     const new_index = png_io.index + length;
     if (new_index > png_io.buffer.len) unreachable;

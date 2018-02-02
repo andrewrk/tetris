@@ -106,12 +106,12 @@ const empty_row = []Cell{Cell{ .Empty={} }} ** grid_width;
 const empty_grid = [][grid_width]Cell{ empty_row } ** grid_height;
 
 
-extern fn error_callback(err: c_int, description: ?&const u8) {
+extern fn error_callback(err: c_int, description: ?&const u8) void {
     _ = c.printf(c"Error: %s\n", description);
     os.abort();
 }
 
-extern fn key_callback(window: ?&c.GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) {
+extern fn key_callback(window: ?&c.GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) void {
     if (action != c.GLFW_PRESS) return;
     const t = @ptrCast(&Tetris, @alignCast(@alignOf(Tetris), ??c.glfwGetWindowUserPointer(window)));
 
@@ -135,7 +135,7 @@ var tetris_state : Tetris = undefined;
 
 const font_png = @embedFile("../assets/font.png");
 
-pub fn main() -> %void {
+pub fn main() %void {
     _ = c.glfwSetErrorCallback(error_callback);
 
     if (c.glfwInit() == c.GL_FALSE) {
@@ -230,7 +230,7 @@ pub fn main() -> %void {
     debug_gl.assertNoError();
 }
 
-fn fillRectMvp(t: &Tetris, color: &const Vec4, mvp: &const Mat4x4) {
+fn fillRectMvp(t: &Tetris, color: &const Vec4, mvp: &const Mat4x4) void {
     t.shaders.primitive.bind();
     t.shaders.primitive.set_uniform_vec4(t.shaders.primitive_uniform_color, color);
     t.shaders.primitive.set_uniform_mat4x4(t.shaders.primitive_uniform_mvp, mvp);
@@ -242,13 +242,13 @@ fn fillRectMvp(t: &Tetris, color: &const Vec4, mvp: &const Mat4x4) {
     c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 4);
 }
 
-fn fillRect(t: &Tetris, color: &const Vec4, x: f32, y: f32, w: f32, h: f32) {
+fn fillRect(t: &Tetris, color: &const Vec4, x: f32, y: f32, w: f32, h: f32) void {
     const model = mat4x4_identity.translate(x, y, 0.0).scale(w, h, 0.0);
     const mvp = t.projection.mult(model);
     fillRectMvp(t, color, mvp);
 }
 
-fn draw_particle(t: &Tetris, p: &const Particle) {
+fn draw_particle(t: &Tetris, p: &const Particle) void {
     const model = mat4x4_identity
         .translate_by_vec(p.pos)
         .rotate(p.angle, p.axis)
@@ -267,7 +267,7 @@ fn draw_particle(t: &Tetris, p: &const Particle) {
     c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 3);
 }
 
-fn draw_falling_block(t: &Tetris, p: &const Particle) {
+fn draw_falling_block(t: &Tetris, p: &const Particle) void {
     const model = mat4x4_identity
         .translate_by_vec(p.pos)
         .rotate(p.angle, p.axis)
@@ -278,21 +278,21 @@ fn draw_falling_block(t: &Tetris, p: &const Particle) {
     fillRectMvp(t, p.color, mvp);
 }
 
-fn getRandomSeed() -> %u32 {
+fn getRandomSeed() %u32 {
     var seed : u32 = undefined;
     const seed_bytes = @ptrCast(&u8, &seed)[0..4];
     try os.getRandomBytes(seed_bytes);
     return seed;
 }
 
-fn draw_centered_text(t: &Tetris, text: []const u8) {
+fn draw_centered_text(t: &Tetris, text: []const u8) void {
     const label_width = font_char_width * i32(text.len);
     const draw_left = board_left + board_width / 2 - @divExact(label_width, 2);
     const draw_top = board_top + board_height / 2 - font_char_height / 2;
     draw_text(t, text, draw_left, draw_top, 1.0);
 }
 
-fn draw(t: &Tetris) {
+fn draw(t: &Tetris) void {
     fillRect(t, board_color, board_left, board_top, board_width, board_height);
     fillRect(t, board_color, next_piece_left, next_piece_top, next_piece_width, next_piece_height);
     fillRect(t, board_color, score_left, score_top, score_width, score_height);
@@ -378,7 +378,7 @@ fn draw(t: &Tetris) {
 
 }
 
-fn draw_text(t: &Tetris, text: []const u8, left: i32, top: i32, size: f32) {
+fn draw_text(t: &Tetris, text: []const u8, left: i32, top: i32, size: f32) void {
     for (text) |col, i| {
         if (col <= '~') {
             const char_left = f32(left) + f32(i * font_char_width) * size;
@@ -392,11 +392,11 @@ fn draw_text(t: &Tetris, text: []const u8, left: i32, top: i32, size: f32) {
     }
 }
 
-fn draw_piece(t: &Tetris, piece: &const Piece, left: i32, top: i32, rot: usize) {
+fn draw_piece(t: &Tetris, piece: &const Piece, left: i32, top: i32, rot: usize) void {
     draw_piece_with_color(t, piece, left, top, rot, piece.color);
 }
 
-fn draw_piece_with_color(t: &Tetris, piece: &const Piece, left: i32, top: i32, rot: usize, color: &const Vec4) {
+fn draw_piece_with_color(t: &Tetris, piece: &const Piece, left: i32, top: i32, rot: usize, color: &const Vec4) void {
     for (piece.layout[rot]) |row, y| {
         for (row) |is_filled, x| {
             if (!is_filled) continue;
@@ -408,7 +408,7 @@ fn draw_piece_with_color(t: &Tetris, piece: &const Piece, left: i32, top: i32, r
     }
 }
 
-fn next_frame(t: &Tetris, elapsed: f64) {
+fn next_frame(t: &Tetris, elapsed: f64) void {
     if (t.is_paused) return;
 
     for (t.falling_blocks) |*maybe_p| {
@@ -468,7 +468,7 @@ fn next_frame(t: &Tetris, elapsed: f64) {
     }
 }
 
-fn level_up(t: &Tetris) {
+fn level_up(t: &Tetris) void {
     t.level += 1;
     t.time_till_next_level = time_per_level;
 
@@ -489,7 +489,7 @@ fn level_up(t: &Tetris) {
     }}
 }
 
-fn insert_garbage_row_at_bottom(t: &Tetris) {
+fn insert_garbage_row_at_bottom(t: &Tetris) void {
     // move everything up to make room at the bottom
     {var y : usize = 1; while (y < t.grid.len) : (y += 1) {
         t.grid[y - 1] = t.grid[y];
@@ -516,7 +516,7 @@ fn insert_garbage_row_at_bottom(t: &Tetris) {
     }
 }
 
-fn compute_ghost(t: &Tetris) {
+fn compute_ghost(t: &Tetris) void {
     var off_y : i32 = 1;
     while (!piece_would_collide(t, t.cur_piece, t.cur_piece_x, t.cur_piece_y + off_y, t.cur_piece_rot)) {
         off_y += 1;
@@ -524,12 +524,12 @@ fn compute_ghost(t: &Tetris) {
     t.ghost_y = board_top + cell_size * (t.cur_piece_y + off_y - 1);
 }
 
-fn user_cur_piece_fall(t: &Tetris) {
+fn user_cur_piece_fall(t: &Tetris) void {
     if (t.game_over or t.is_paused) return;
     _ = cur_piece_fall(t);
 }
 
-fn cur_piece_fall(t: &Tetris) -> bool {
+fn cur_piece_fall(t: &Tetris) bool {
     // if it would hit something, make it stop instead
     if (piece_would_collide(t, t.cur_piece, t.cur_piece_x, t.cur_piece_y + 1, t.cur_piece_rot)) {
         lock_piece(t);
@@ -541,14 +541,14 @@ fn cur_piece_fall(t: &Tetris) -> bool {
     }
 }
 
-fn user_drop_cur_piece(t: &Tetris) {
+fn user_drop_cur_piece(t: &Tetris) void {
     if (t.game_over or t.is_paused) return;
     while (!cur_piece_fall(t)) {
         t.score += 1;
     }
 }
 
-fn user_move_cur_piece(t: &Tetris, dir: i8) {
+fn user_move_cur_piece(t: &Tetris, dir: i8) void {
     if (t.game_over or t.is_paused) return;
     if (piece_would_collide(t, t.cur_piece, t.cur_piece_x + dir, t.cur_piece_y, t.cur_piece_rot)) {
         return;
@@ -556,7 +556,7 @@ fn user_move_cur_piece(t: &Tetris, dir: i8) {
     t.cur_piece_x += dir;
 }
 
-fn userRotateCurPiece(t: &Tetris, rot: i8) {
+fn userRotateCurPiece(t: &Tetris, rot: i8) void {
     if (t.game_over or t.is_paused) return;
     const new_rot = usize(@rem(isize(t.cur_piece_rot) + rot + 4, 4));
     if (piece_would_collide(t, t.cur_piece, t.cur_piece_x, t.cur_piece_y, new_rot)) {
@@ -565,13 +565,13 @@ fn userRotateCurPiece(t: &Tetris, rot: i8) {
     t.cur_piece_rot = new_rot;
 }
 
-fn userTogglePause(t: &Tetris) {
+fn userTogglePause(t: &Tetris) void {
     if (t.game_over) return;
 
     t.is_paused = !t.is_paused;
 }
 
-fn restartGame(t: &Tetris) {
+fn restartGame(t: &Tetris) void {
     t.piece_delay = init_piece_delay;
     t.delay_left = init_piece_delay;
     t.score = 0;
@@ -591,7 +591,7 @@ fn restartGame(t: &Tetris) {
     drop_new_piece(t);
 }
 
-fn lock_piece(t: &Tetris) {
+fn lock_piece(t: &Tetris) void {
     t.score += 1;
 
     for (t.cur_piece.layout[t.cur_piece_rot]) |row, y| {
@@ -656,16 +656,16 @@ fn lock_piece(t: &Tetris) {
 }
 
 
-fn reset_projection(t: &Tetris) {
+fn reset_projection(t: &Tetris) void {
     t.projection = mat4x4_ortho(0.0, f32(t.framebuffer_width), f32(t.framebuffer_height), 0.0);
 }
 
-fn activate_screen_shake(t: &Tetris, duration: f64) {
+fn activate_screen_shake(t: &Tetris, duration: f64) void {
     t.screen_shake_elapsed = 0.0;
     t.screen_shake_timeout = duration;
 }
 
-fn delete_row(t: &Tetris, del_index: usize) {
+fn delete_row(t: &Tetris, del_index: usize) void {
     var y: usize = del_index;
     while (y >= 1) {
         t.grid[y] = t.grid[y - 1];
@@ -674,14 +674,14 @@ fn delete_row(t: &Tetris, del_index: usize) {
     t.grid[y] = empty_row;
 }
 
-fn cell_empty(t: &Tetris, x: i32, y: i32) -> bool {
+fn cell_empty(t: &Tetris, x: i32, y: i32) bool {
     return switch (t.grid[usize(y)][usize(x)]) {
         Cell.Empty => true,
         else => false,
     };
 }
 
-fn piece_would_collide(t: &Tetris, piece: &const Piece, grid_x: i32, grid_y: i32, rot: usize) -> bool {
+fn piece_would_collide(t: &Tetris, piece: &const Piece, grid_x: i32, grid_y: i32, rot: usize) bool {
     for (piece.layout[rot]) |row, y| {
         for (row) |is_filled, x| {
             if (!is_filled) {
@@ -701,7 +701,7 @@ fn piece_would_collide(t: &Tetris, piece: &const Piece, grid_x: i32, grid_y: i32
     return false;
 }
 
-fn populate_next_piece(t: &Tetris) {
+fn populate_next_piece(t: &Tetris) void {
     // Let's turn Gambler's Fallacy into Gambler's Accurate Model of Reality.
     var upper_bound: i32 = 0;
     for (t.piece_pool) |count| {
@@ -732,7 +732,7 @@ fn populate_next_piece(t: &Tetris) {
     }
 }
 
-fn do_game_over(t: &Tetris) {
+fn do_game_over(t: &Tetris) void {
     t.game_over = true;
 
     // turn every piece into a falling object
@@ -747,7 +747,7 @@ fn do_game_over(t: &Tetris) {
     }
 }
 
-fn drop_new_piece(t: &Tetris) {
+fn drop_new_piece(t: &Tetris) void {
     const start_x = 4;
     const start_y = -1;
     const start_rot = 0;
@@ -767,7 +767,7 @@ fn drop_new_piece(t: &Tetris) {
     populate_next_piece(t);
 }
 
-fn clear_particles(t: &Tetris) {
+fn clear_particles(t: &Tetris) void {
     for (t.particles) |*p| {
         *p = null;
     }
@@ -779,19 +779,19 @@ fn clear_particles(t: &Tetris) {
     t.next_falling_block_index = 0;
 }
 
-fn get_next_particle_index(t: &Tetris) -> usize {
+fn get_next_particle_index(t: &Tetris) usize {
     const result = t.next_particle_index;
     t.next_particle_index = (t.next_particle_index + 1) % max_particle_count;
     return result;
 }
 
-fn get_next_falling_block_index(t: &Tetris) -> usize {
+fn get_next_falling_block_index(t: &Tetris) usize {
     const result = t.next_falling_block_index;
     t.next_falling_block_index = (t.next_falling_block_index + 1) % max_falling_block_count;
     return result;
 }
 
-fn add_explosion(t: &Tetris, color: &const Vec4, center_x: f32, center_y: f32) {
+fn add_explosion(t: &Tetris, color: &const Vec4, center_x: f32, center_y: f32) void {
     const particle_count = 12;
     const particle_size = f32(cell_size) / 3.0;
     {var i: i32 = 0; while (i < particle_count) : (i += 1) {
@@ -802,7 +802,7 @@ fn add_explosion(t: &Tetris, color: &const Vec4, center_x: f32, center_y: f32) {
     }}
 }
 
-fn create_particle(t: &Tetris, color: &const Vec4, size: f32, pos: &const Vec3) -> Particle {
+fn create_particle(t: &Tetris, color: &const Vec4, size: f32, pos: &const Vec3) Particle {
     var p: Particle = undefined;
 
     p.angle_vel = t.rand.float(f32) * 0.1 - 0.05;
@@ -820,7 +820,7 @@ fn create_particle(t: &Tetris, color: &const Vec4, size: f32, pos: &const Vec3) 
     return p;
 }
 
-fn create_block_particle(t: &Tetris, color: &const Vec4, pos: &const Vec3) -> Particle {
+fn create_block_particle(t: &Tetris, color: &const Vec4, pos: &const Vec3) Particle {
     var p: Particle = undefined;
 
     p.angle_vel = t.rand.float(f32) * 0.05 - 0.025;
