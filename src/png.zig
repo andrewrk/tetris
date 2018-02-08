@@ -1,5 +1,5 @@
 const c = @import("c.zig");
-const mem = @import("mem.zig");
+const c_allocator = @import("std").heap.c_allocator;
 
 pub const PngImage = struct {
     width: u32,
@@ -8,10 +8,10 @@ pub const PngImage = struct {
     raw: []u8,
 
     pub fn destroy(pi: &PngImage) void {
-        mem.free(u8, pi.raw);
+        c_allocator.free(pi.raw);
     }
 
-    pub fn create(compressed_bytes: []const u8) %PngImage {
+    pub fn create(compressed_bytes: []const u8) !PngImage {
         var pi : PngImage = undefined;
 
         if (c.png_sig_cmp(&compressed_bytes[0], 0, 8) != 0) {
@@ -61,11 +61,11 @@ pub const PngImage = struct {
         if (color_type != PNG_COLOR_TYPE_RGBA) return error.InvalidFormat;
 
         pi.pitch = pi.width * bits_per_channel * channel_count / 8;
-        pi.raw = mem.alloc(u8, pi.height * pi.pitch) catch return error.NoMem;
-        errdefer mem.free(u8, pi.raw);
+        pi.raw = try c_allocator.alloc(u8, pi.height * pi.pitch);
+        errdefer c_allocator.free(pi.raw);
 
-        const row_ptrs = mem.alloc(c.png_bytep, pi.height) catch return error.NoMem;
-        defer mem.free(c.png_bytep, row_ptrs);
+        const row_ptrs = try c_allocator.alloc(c.png_bytep, pi.height);
+        defer c_allocator.free(row_ptrs);
 
         {var i: usize = 0; while (i < pi.height) : (i += 1) {
             const q = (pi.height - i - 1) * pi.pitch;
@@ -78,11 +78,6 @@ pub const PngImage = struct {
     }
 
 };
-
-error NotPngFile;
-error NoMem;
-error InvalidFormat;
-error NoPixels;
 
 const PngIo = struct {
     index: usize,

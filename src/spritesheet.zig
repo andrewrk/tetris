@@ -1,8 +1,8 @@
 const c = @import("c.zig");
 const AllShaders = @import("all_shaders.zig").AllShaders;
 const Mat4x4 = @import("math3d.zig").Mat4x4;
-const mem = @import("mem.zig");
 const PngImage = @import("png.zig").PngImage;
+const c_allocator = @import("std").heap.c_allocator;
 
 pub const Spritesheet = struct {
     img: PngImage,
@@ -32,7 +32,7 @@ pub const Spritesheet = struct {
     
     pub fn deinit(s: &Spritesheet) void {
         c.glDeleteBuffers(c.GLint(s.tex_coord_buffers.len), &s.tex_coord_buffers[0]);
-        mem.free(c.GLuint, s.tex_coord_buffers);
+        c_allocator.free(s.tex_coord_buffers);
         c.glDeleteBuffers(1, &s.vertex_buffer);
         c.glDeleteTextures(1, &s.texture_id);
 
@@ -40,9 +40,7 @@ pub const Spritesheet = struct {
     }
 };
 
-error NoMem;
-
-pub fn init(compressed_bytes: []const u8, w: usize, h: usize) %Spritesheet {
+pub fn init(compressed_bytes: []const u8, w: usize, h: usize) !Spritesheet {
     var s: Spritesheet = undefined;
 
     s.img = try PngImage.create(compressed_bytes);
@@ -77,8 +75,8 @@ pub fn init(compressed_bytes: []const u8, w: usize, h: usize) %Spritesheet {
     c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 3 * @sizeOf(c.GLfloat), @ptrCast(&c_void, &vertexes[0][0]), c.GL_STATIC_DRAW);
 
 
-    s.tex_coord_buffers = mem.alloc(c.GLuint, s.count) catch return error.NoMem;
-    errdefer mem.free(c.GLuint, s.tex_coord_buffers);
+    s.tex_coord_buffers = c_allocator.alloc(c.GLuint, s.count) catch return error.NoMem;
+    errdefer c_allocator.free(s.tex_coord_buffers);
 
     c.glGenBuffers(c.GLint(s.tex_coord_buffers.len), &s.tex_coord_buffers[0]);
     errdefer c.glDeleteBuffers(c.GLint(s.tex_coord_buffers.len), &s.tex_coord_buffers[0]);

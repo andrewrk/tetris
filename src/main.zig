@@ -135,7 +135,7 @@ var tetris_state : Tetris = undefined;
 
 const font_png = @embedFile("../assets/font.png");
 
-pub fn main() %void {
+pub fn main() !void {
     _ = c.glfwSetErrorCallback(error_callback);
 
     if (c.glfwInit() == c.GL_FALSE) {
@@ -278,7 +278,7 @@ fn draw_falling_block(t: &Tetris, p: &const Particle) void {
     fillRectMvp(t, p.color, mvp);
 }
 
-fn getRandomSeed() %u32 {
+fn getRandomSeed() !u32 {
     var seed : u32 = undefined;
     const seed_bytes = @ptrCast(&u8, &seed)[0..4];
     try os.getRandomBytes(seed_bytes);
