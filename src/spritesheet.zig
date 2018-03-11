@@ -72,7 +72,8 @@ pub fn init(compressed_bytes: []const u8, w: usize, h: usize) !Spritesheet {
     };
 
     c.glBindBuffer(c.GL_ARRAY_BUFFER, s.vertex_buffer);
-    c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 3 * @sizeOf(c.GLfloat), @ptrCast(&c_void, &vertexes[0][0]), c.GL_STATIC_DRAW);
+    c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 3 * @sizeOf(c.GLfloat),
+        @ptrCast(&const c_void, &vertexes[0][0]), c.GL_STATIC_DRAW);
 
 
     s.tex_coord_buffers = c_allocator.alloc(c.GLuint, s.count) catch return error.NoMem;
@@ -111,7 +112,8 @@ pub fn init(compressed_bytes: []const u8, w: usize, h: usize) !Spritesheet {
         };
 
         c.glBindBuffer(c.GL_ARRAY_BUFFER, tex_coord_buffer);
-        c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 2 * @sizeOf(c.GLfloat), @ptrCast(&c_void, &tex_coords[0][0]), c.GL_STATIC_DRAW);
+        c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 2 * @sizeOf(c.GLfloat),
+            @ptrCast(&const c_void, &tex_coords[0][0]), c.GL_STATIC_DRAW);
     }
 
     return s;
