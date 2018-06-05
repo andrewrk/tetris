@@ -110,7 +110,7 @@ extern fn error_callback(err: c_int, description: ?[*]const u8) void {
     os.abort();
 }
 
-extern fn key_callback(window: ?[*]c.GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) void {
+extern fn key_callback(window: ?*c.GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) void {
     if (action != c.GLFW_PRESS) return;
     const t = @ptrCast(*Tetris, @alignCast(@alignOf(Tetris), ??c.glfwGetWindowUserPointer(window)));
 
@@ -177,7 +177,7 @@ pub fn main() !void {
     assert(t.framebuffer_width >= window_width);
     assert(t.framebuffer_height >= window_height);
 
-    t.window = &window[0];
+    t.window = window;
 
     t.shaders = try all_shaders.createAllShaders();
     defer t.shaders.destroy();
@@ -203,7 +203,7 @@ pub fn main() !void {
     c.glPixelStorei(c.GL_UNPACK_ALIGNMENT, 1);
 
     c.glViewport(0, 0, t.framebuffer_width, t.framebuffer_height);
-    c.glfwSetWindowUserPointer(window, @ptrCast([*]c_void, t));
+    c.glfwSetWindowUserPointer(window, @ptrCast(*c_void, t));
 
     debug_gl.assertNoError();
 

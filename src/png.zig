@@ -41,7 +41,7 @@ pub const PngImage = struct {
             .index = 8,
             .buffer = compressed_bytes,
         };
-        c.png_set_read_fn(png_ptr, @ptrCast([*]c_void, &png_io), read_png_data);
+        c.png_set_read_fn(png_ptr, @ptrCast(*c_void, &png_io), read_png_data);
 
         c.png_read_info(png_ptr, info_ptr);
 

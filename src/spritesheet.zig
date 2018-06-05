@@ -57,7 +57,7 @@ pub fn init(compressed_bytes: []const u8, w: usize, h: usize) !Spritesheet {
     c.glTexParameteri(c.GL_TEXTURE_2D, c.GL_TEXTURE_WRAP_S, c.GL_CLAMP_TO_EDGE);
     c.glTexParameteri(c.GL_TEXTURE_2D, c.GL_TEXTURE_WRAP_T, c.GL_CLAMP_TO_EDGE);
     c.glPixelStorei(c.GL_PACK_ALIGNMENT, 4);
-    c.glTexImage2D(c.GL_TEXTURE_2D, 0, c.GL_RGBA, c_int(s.img.width), c_int(s.img.height), 0, c.GL_RGBA, c.GL_UNSIGNED_BYTE, @ptrCast([*]c_void, &s.img.raw[0]));
+    c.glTexImage2D(c.GL_TEXTURE_2D, 0, c.GL_RGBA, c_int(s.img.width), c_int(s.img.height), 0, c.GL_RGBA, c.GL_UNSIGNED_BYTE, @ptrCast(*c_void, &s.img.raw[0]));
 
     c.glGenBuffers(1, c.ptr(&s.vertex_buffer));
     errdefer c.glDeleteBuffers(1, c.ptr(&s.vertex_buffer));
@@ -70,7 +70,7 @@ pub fn init(compressed_bytes: []const u8, w: usize, h: usize) !Spritesheet {
     };
 
     c.glBindBuffer(c.GL_ARRAY_BUFFER, s.vertex_buffer);
-    c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 3 * @sizeOf(c.GLfloat), @ptrCast([*]const c_void, &vertexes[0][0]), c.GL_STATIC_DRAW);
+    c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 3 * @sizeOf(c.GLfloat), @ptrCast(*const c_void, &vertexes[0][0]), c.GL_STATIC_DRAW);
 
     s.tex_coord_buffers = c_allocator.alloc(c.GLuint, s.count) catch return error.NoMem;
     errdefer c_allocator.free(s.tex_coord_buffers);
@@ -108,7 +108,7 @@ pub fn init(compressed_bytes: []const u8, w: usize, h: usize) !Spritesheet {
         };
 
         c.glBindBuffer(c.GL_ARRAY_BUFFER, tex_coord_buffer);
-        c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 2 * @sizeOf(c.GLfloat), @ptrCast([*]const c_void, &tex_coords[0][0]), c.GL_STATIC_DRAW);
+        c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 2 * @sizeOf(c.GLfloat), @ptrCast(*const c_void, &tex_coords[0][0]), c.GL_STATIC_DRAW);
     }
 
     return s;
