@@ -11,7 +11,7 @@ pub const Spritesheet = struct {
     vertex_buffer: c.GLuint,
     tex_coord_buffers: []c.GLuint,
 
-    pub fn draw(s: &Spritesheet, shaders: &const AllShaders, index: usize, mvp: &const Mat4x4) void {
+    pub fn draw(s: *Spritesheet, shaders: *const AllShaders, index: usize, mvp: *const Mat4x4) void {
         shaders.texture.bind();
         shaders.texture.set_uniform_mat4x4(shaders.texture_uniform_mvp, mvp);
         shaders.texture.set_uniform_int(shaders.texture_uniform_tex, 0);
@@ -29,12 +29,12 @@ pub const Spritesheet = struct {
 
         c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 4);
     }
-    
-    pub fn deinit(s: &Spritesheet) void {
-        c.glDeleteBuffers(c.GLint(s.tex_coord_buffers.len), &s.tex_coord_buffers[0]);
+
+    pub fn deinit(s: *Spritesheet) void {
+        c.glDeleteBuffers(c.GLint(s.tex_coord_buffers.len), s.tex_coord_buffers.ptr);
         c_allocator.free(s.tex_coord_buffers);
-        c.glDeleteBuffers(1, &s.vertex_buffer);
-        c.glDeleteTextures(1, &s.texture_id);
+        c.glDeleteBuffers(1, c.ptr(&s.vertex_buffer));
+        c.glDeleteTextures(1, c.ptr(&s.texture_id));
 
         s.img.destroy();
     }
@@ -48,8 +48,8 @@ pub fn init(compressed_bytes: []const u8, w: usize, h: usize) !Spritesheet {
     const row_count = s.img.height / h;
     s.count = col_count * row_count;
 
-    c.glGenTextures(1, &s.texture_id);
-    errdefer c.glDeleteTextures(1, &s.texture_id);
+    c.glGenTextures(1, c.ptr(&s.texture_id));
+    errdefer c.glDeleteTextures(1, c.ptr(&s.texture_id));
 
     c.glBindTexture(c.GL_TEXTURE_2D, s.texture_id);
     c.glTexParameteri(c.GL_TEXTURE_2D, c.GL_TEXTURE_MAG_FILTER, c.GL_NEAREST);
@@ -57,29 +57,25 @@ pub fn init(compressed_bytes: []const u8, w: usize, h: usize) !Spritesheet {
     c.glTexParameteri(c.GL_TEXTURE_2D, c.GL_TEXTURE_WRAP_S, c.GL_CLAMP_TO_EDGE);
     c.glTexParameteri(c.GL_TEXTURE_2D, c.GL_TEXTURE_WRAP_T, c.GL_CLAMP_TO_EDGE);
     c.glPixelStorei(c.GL_PACK_ALIGNMENT, 4);
-    c.glTexImage2D(c.GL_TEXTURE_2D, 0, c.GL_RGBA,
-            c_int(s.img.width), c_int(s.img.height),
-            0, c.GL_RGBA, c.GL_UNSIGNED_BYTE, @ptrCast(&c_void, &s.img.raw[0]));
+    c.glTexImage2D(c.GL_TEXTURE_2D, 0, c.GL_RGBA, c_int(s.img.width), c_int(s.img.height), 0, c.GL_RGBA, c.GL_UNSIGNED_BYTE, @ptrCast([*]c_void, &s.img.raw[0]));
 
-    c.glGenBuffers(1, &s.vertex_buffer);
-    errdefer c.glDeleteBuffers(1, &s.vertex_buffer);
+    c.glGenBuffers(1, c.ptr(&s.vertex_buffer));
+    errdefer c.glDeleteBuffers(1, c.ptr(&s.vertex_buffer));
 
-    const vertexes = [][3]c.GLfloat {
-        []c.GLfloat{0.0,        0.0,        0.0},
-        []c.GLfloat{0.0,        c.GLfloat(h), 0.0},
-        []c.GLfloat{c.GLfloat(w), 0.0,        0.0},
-        []c.GLfloat{c.GLfloat(w), c.GLfloat(h), 0.0},
+    const vertexes = [][3]c.GLfloat{
+        []c.GLfloat{ 0.0, 0.0, 0.0 },
+        []c.GLfloat{ 0.0, c.GLfloat(h), 0.0 },
+        []c.GLfloat{ c.GLfloat(w), 0.0, 0.0 },
+        []c.GLfloat{ c.GLfloat(w), c.GLfloat(h), 0.0 },
     };
 
     c.glBindBuffer(c.GL_ARRAY_BUFFER, s.vertex_buffer);
-    c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 3 * @sizeOf(c.GLfloat),
-        @ptrCast(&const c_void, &vertexes[0][0]), c.GL_STATIC_DRAW);
-
+    c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 3 * @sizeOf(c.GLfloat), @ptrCast([*]const c_void, &vertexes[0][0]), c.GL_STATIC_DRAW);
 
     s.tex_coord_buffers = c_allocator.alloc(c.GLuint, s.count) catch return error.NoMem;
     errdefer c_allocator.free(s.tex_coord_buffers);
 
-    c.glGenBuffers(c.GLint(s.tex_coord_buffers.len), &s.tex_coord_buffers[0]);
+    c.glGenBuffers(c.GLint(s.tex_coord_buffers.len), s.tex_coord_buffers.ptr);
     errdefer c.glDeleteBuffers(c.GLint(s.tex_coord_buffers.len), &s.tex_coord_buffers[0]);
 
     for (s.tex_coord_buffers) |tex_coord_buffer, i| {
@@ -92,7 +88,7 @@ pub fn init(compressed_bytes: []const u8, w: usize, h: usize) !Spritesheet {
 
         const img_w = f32(s.img.width);
         const img_h = f32(s.img.height);
-        const tex_coords = [][2]c.GLfloat {
+        const tex_coords = [][2]c.GLfloat{
             []c.GLfloat{
                 x / img_w,
                 (y + f32(h)) / img_h,
@@ -112,8 +108,7 @@ pub fn init(compressed_bytes: []const u8, w: usize, h: usize) !Spritesheet {
         };
 
         c.glBindBuffer(c.GL_ARRAY_BUFFER, tex_coord_buffer);
-        c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 2 * @sizeOf(c.GLfloat),
-            @ptrCast(&const c_void, &tex_coords[0][0]), c.GL_STATIC_DRAW);
+        c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 2 * @sizeOf(c.GLfloat), @ptrCast([*]const c_void, &tex_coords[0][0]), c.GL_STATIC_DRAW);
     }
 
     return s;

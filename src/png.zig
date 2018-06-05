@@ -7,14 +7,14 @@ pub const PngImage = struct {
     pitch: u32,
     raw: []u8,
 
-    pub fn destroy(pi: &PngImage) void {
+    pub fn destroy(pi: *PngImage) void {
         c_allocator.free(pi.raw);
     }
 
     pub fn create(compressed_bytes: []const u8) !PngImage {
-        var pi : PngImage = undefined;
+        var pi: PngImage = undefined;
 
-        if (c.png_sig_cmp(&compressed_bytes[0], 0, 8) != 0) {
+        if (c.png_sig_cmp(compressed_bytes.ptr, 0, 8) != 0) {
             return error.NotPngFile;
         }
 
@@ -23,10 +23,10 @@ pub const PngImage = struct {
 
         var info_ptr = c.png_create_info_struct(png_ptr);
         if (info_ptr == null) {
-            c.png_destroy_read_struct(&png_ptr, null, null);
+            c.png_destroy_read_struct(c.ptr(&png_ptr), null, null);
             return error.NoMem;
         }
-        defer c.png_destroy_read_struct(&png_ptr, &info_ptr, null);
+        defer c.png_destroy_read_struct(c.ptr(&png_ptr), c.ptr(&info_ptr), null);
 
         //// don't call any png_* functions outside of this function.
         //// cursed is he who thought setjmp and longjmp was in any way acceptable to
@@ -37,15 +37,15 @@ pub const PngImage = struct {
 
         c.png_set_sig_bytes(png_ptr, 8);
 
-        var png_io = PngIo {
+        var png_io = PngIo{
             .index = 8,
             .buffer = compressed_bytes,
         };
-        c.png_set_read_fn(png_ptr, @ptrCast(&c_void, &png_io), read_png_data);
+        c.png_set_read_fn(png_ptr, @ptrCast([*]c_void, &png_io), read_png_data);
 
         c.png_read_info(png_ptr, info_ptr);
 
-        pi.width  = c.png_get_image_width(png_ptr, info_ptr);
+        pi.width = c.png_get_image_width(png_ptr, info_ptr);
         pi.height = c.png_get_image_height(png_ptr, info_ptr);
 
         if (pi.width <= 0 or pi.height <= 0) return error.NoPixels;
@@ -67,16 +67,18 @@ pub const PngImage = struct {
         const row_ptrs = try c_allocator.alloc(c.png_bytep, pi.height);
         defer c_allocator.free(row_ptrs);
 
-        {var i: usize = 0; while (i < pi.height) : (i += 1) {
-            const q = (pi.height - i - 1) * pi.pitch;
-            row_ptrs[i] = &pi.raw[q];
-        }}
+        {
+            var i: usize = 0;
+            while (i < pi.height) : (i += 1) {
+                const q = (pi.height - i - 1) * pi.pitch;
+                row_ptrs[i] = pi.raw.ptr + q;
+            }
+        }
 
-        c.png_read_image(png_ptr, &row_ptrs[0]);
+        c.png_read_image(png_ptr, row_ptrs.ptr);
 
         return pi;
     }
-
 };
 
 const PngIo = struct {
@@ -85,10 +87,10 @@ const PngIo = struct {
 };
 
 extern fn read_png_data(png_ptr: c.png_structp, data: c.png_bytep, length: c.png_size_t) void {
-    const png_io = @ptrCast(&PngIo, @alignCast(@alignOf(PngIo), ??c.png_get_io_ptr(png_ptr)));
+    const png_io = @ptrCast(*PngIo, @alignCast(@alignOf(PngIo), ??c.png_get_io_ptr(png_ptr)));
     const new_index = png_io.index + length;
     if (new_index > png_io.buffer.len) unreachable;
-    @memcpy(@ptrCast(&u8, ??data), &png_io.buffer[png_io.index], length);
+    @memcpy(@ptrCast([*]u8, ??data), png_io.buffer.ptr + png_io.index, length);
     png_io.index = new_index;
 }
 
