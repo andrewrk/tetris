@@ -112,7 +112,7 @@ extern fn error_callback(err: c_int, description: ?[*]const u8) void {
 
 extern fn key_callback(window: ?*c.GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) void {
     if (action != c.GLFW_PRESS) return;
-    const t = @ptrCast(*Tetris, @alignCast(@alignOf(Tetris), ??c.glfwGetWindowUserPointer(window)));
+    const t = @ptrCast(*Tetris, @alignCast(@alignOf(Tetris), c.glfwGetWindowUserPointer(window).?));
 
     switch (key) {
         c.GLFW_KEY_ESCAPE => c.glfwSetWindowShouldClose(window, c.GL_TRUE),
@@ -150,7 +150,7 @@ pub fn main() !void {
     c.glfwWindowHint(c.GLFW_STENCIL_BITS, 8);
     c.glfwWindowHint(c.GLFW_RESIZABLE, c.GL_FALSE);
 
-    var window = c.glfwCreateWindow(window_width, window_height, c"Tetris", null, null) ?? {
+    var window = c.glfwCreateWindow(window_width, window_height, c"Tetris", null, null) orelse {
         _ = c.printf(c"unable to create window\n");
         os.abort();
     };

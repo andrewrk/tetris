@@ -87,10 +87,10 @@ const PngIo = struct {
 };
 
 extern fn read_png_data(png_ptr: c.png_structp, data: c.png_bytep, length: c.png_size_t) void {
-    const png_io = @ptrCast(*PngIo, @alignCast(@alignOf(PngIo), ??c.png_get_io_ptr(png_ptr)));
+    const png_io = @ptrCast(*PngIo, @alignCast(@alignOf(PngIo), c.png_get_io_ptr(png_ptr).?));
     const new_index = png_io.index + length;
     if (new_index > png_io.buffer.len) unreachable;
-    @memcpy(@ptrCast([*]u8, ??data), png_io.buffer.ptr + png_io.index, length);
+    @memcpy(@ptrCast([*]u8, data.?), png_io.buffer.ptr + png_io.index, length);
     png_io.index = new_index;
 }
 
