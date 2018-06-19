@@ -184,7 +184,7 @@ pub fn createShader(
 
     var error_size: c.GLint = undefined;
     c.glGetProgramiv(sp.program_id, c.GL_INFO_LOG_LENGTH, c.ptr(&error_size));
-    const message = try c_allocator.alloc(u8, usize(error_size));
+    const message = try c_allocator.alloc(u8, @intCast(usize, error_size));
     c.glGetProgramInfoLog(sp.program_id, error_size, c.ptr(&error_size), message.ptr);
     _ = c.printf(c"Error linking shader program: %s\n", message.ptr);
     os.abort();
@@ -193,7 +193,7 @@ pub fn createShader(
 fn init_shader(source: []const u8, name: [*]const u8, kind: c.GLenum) !c.GLuint {
     const shader_id = c.glCreateShader(kind);
     const source_ptr: ?[*]const u8 = source.ptr;
-    const source_len = c.GLint(source.len);
+    const source_len = @intCast(c.GLint, source.len);
     c.glShaderSource(shader_id, 1, c.ptr(&source_ptr), c.ptr(&source_len));
     c.glCompileShader(shader_id);
 
@@ -204,7 +204,7 @@ fn init_shader(source: []const u8, name: [*]const u8, kind: c.GLenum) !c.GLuint 
     var error_size: c.GLint = undefined;
     c.glGetShaderiv(shader_id, c.GL_INFO_LOG_LENGTH, c.ptr(&error_size));
 
-    const message = try c_allocator.alloc(u8, usize(error_size));
+    const message = try c_allocator.alloc(u8, @intCast(usize, error_size));
     c.glGetShaderInfoLog(shader_id, error_size, c.ptr(&error_size), message.ptr);
     _ = c.printf(c"Error compiling %s shader:\n%s\n", name, message.ptr);
     os.abort();

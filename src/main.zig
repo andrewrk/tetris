@@ -234,8 +234,8 @@ fn fillRectMvp(t: *Tetris, color: *const Vec4, mvp: *const Mat4x4) void {
     t.shaders.primitive.set_uniform_mat4x4(t.shaders.primitive_uniform_mvp, mvp);
 
     c.glBindBuffer(c.GL_ARRAY_BUFFER, t.static_geometry.rect_2d_vertex_buffer);
-    c.glEnableVertexAttribArray(c.GLuint(t.shaders.primitive_attrib_position));
-    c.glVertexAttribPointer(c.GLuint(t.shaders.primitive_attrib_position), 3, c.GL_FLOAT, c.GL_FALSE, 0, null);
+    c.glEnableVertexAttribArray(@intCast(c.GLuint, t.shaders.primitive_attrib_position));
+    c.glVertexAttribPointer(@intCast(c.GLuint, t.shaders.primitive_attrib_position), 3, c.GL_FLOAT, c.GL_FALSE, 0, null);
 
     c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 4);
 }
@@ -256,8 +256,8 @@ fn draw_particle(t: *Tetris, p: *const Particle) void {
     t.shaders.primitive.set_uniform_mat4x4(t.shaders.primitive_uniform_mvp, mvp);
 
     c.glBindBuffer(c.GL_ARRAY_BUFFER, t.static_geometry.triangle_2d_vertex_buffer);
-    c.glEnableVertexAttribArray(c.GLuint(t.shaders.primitive_attrib_position));
-    c.glVertexAttribPointer(c.GLuint(t.shaders.primitive_attrib_position), 3, c.GL_FLOAT, c.GL_FALSE, 0, null);
+    c.glEnableVertexAttribArray(@intCast(c.GLuint, t.shaders.primitive_attrib_position));
+    c.glVertexAttribPointer(@intCast(c.GLuint, t.shaders.primitive_attrib_position), 3, c.GL_FLOAT, c.GL_FALSE, 0, null);
 
     c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 3);
 }
@@ -278,7 +278,7 @@ fn getRandomSeed() !u32 {
 }
 
 fn draw_centered_text(t: *Tetris, text: []const u8) void {
-    const label_width = font_char_width * i32(text.len);
+    const label_width = font_char_width * @intCast(i32, text.len);
     const draw_left = board_left + board_width / 2 - @divExact(label_width, 2);
     const draw_top = board_top + board_height / 2 - font_char_height / 2;
     draw_text(t, text, draw_left, draw_top, 1.0);
@@ -308,9 +308,16 @@ fn draw(t: *Tetris) void {
             for (row) |cell, x| {
                 switch (cell) {
                     Cell.Color => |color| {
-                        const cell_left = board_left + i32(x) * cell_size;
-                        const cell_top = board_top + i32(y) * cell_size;
-                        fillRect(t, color, f32(cell_left), f32(cell_top), cell_size, cell_size);
+                        const cell_left = board_left + @intCast(i32, x) * cell_size;
+                        const cell_top = board_top + @intCast(i32, y) * cell_size;
+                        fillRect(
+                            t,
+                            color,
+                            @intToFloat(f32, cell_left),
+                            @intToFloat(f32, cell_top),
+                            cell_size,
+                            cell_size,
+                        );
                     },
                     else => {},
                 }
@@ -320,26 +327,32 @@ fn draw(t: *Tetris) void {
 
     {
         const score_text = "SCORE:";
-        const score_label_width = font_char_width * i32(score_text.len);
-        draw_text(t, score_text, score_left + score_width / 2 - score_label_width / 2, score_top + margin_size, 1.0);
+        const score_label_width = font_char_width * @intCast(i32, score_text.len);
+        draw_text(
+            t,
+            score_text,
+            score_left + score_width / 2 - score_label_width / 2,
+            score_top + margin_size,
+            1.0,
+        );
     }
     {
         var score_text_buf: [20]u8 = undefined;
-        const len = usize(c.sprintf(score_text_buf[0..].ptr, c"%d", t.score));
+        const len = @intCast(usize, c.sprintf(score_text_buf[0..].ptr, c"%d", t.score));
         const score_text = score_text_buf[0..len];
-        const score_label_width = font_char_width * i32(score_text.len);
+        const score_label_width = font_char_width * @intCast(i32, score_text.len);
         draw_text(t, score_text, score_left + score_width / 2 - @divExact(score_label_width, 2), score_top + score_height / 2, 1.0);
     }
     {
         const text = "LEVEL:";
-        const text_width = font_char_width * i32(text.len);
+        const text_width = font_char_width * @intCast(i32, text.len);
         draw_text(t, text, level_display_left + level_display_width / 2 - text_width / 2, level_display_top + margin_size, 1.0);
     }
     {
         var text_buf: [20]u8 = undefined;
-        const len = usize(c.sprintf(text_buf[0..].ptr, c"%d", t.level));
+        const len = @intCast(usize, c.sprintf(text_buf[0..].ptr, c"%d", t.level));
         const text = text_buf[0..len];
-        const text_width = font_char_width * i32(text.len);
+        const text_width = font_char_width * @intCast(i32, text.len);
         draw_text(t, text, level_display_left + level_display_width / 2 - @divExact(text_width, 2), level_display_top + level_display_height / 2, 1.0);
     }
 
@@ -359,8 +372,8 @@ fn draw(t: *Tetris) void {
 fn draw_text(t: *Tetris, text: []const u8, left: i32, top: i32, size: f32) void {
     for (text) |col, i| {
         if (col <= '~') {
-            const char_left = f32(left) + f32(i * font_char_width) * size;
-            const model = mat4x4_identity.translate(char_left, f32(top), 0.0).scale(size, size, 0.0);
+            const char_left = @intToFloat(f32, left) + @intToFloat(f32, i * font_char_width) * size;
+            const model = mat4x4_identity.translate(char_left, @intToFloat(f32, top), 0.0).scale(size, size, 0.0);
             const mvp = t.projection.mult(model);
 
             t.font.draw(t.shaders, col, mvp);
@@ -378,8 +391,8 @@ fn draw_piece_with_color(t: *Tetris, piece: *const Piece, left: i32, top: i32, r
     for (piece.layout[rot]) |row, y| {
         for (row) |is_filled, x| {
             if (!is_filled) continue;
-            const abs_x = f32(left + i32(x) * cell_size);
-            const abs_y = f32(top + i32(y) * cell_size);
+            const abs_x = @intToFloat(f32, left + @intCast(i32, x) * cell_size);
+            const abs_y = @intToFloat(f32, top + @intCast(i32, y) * cell_size);
 
             fillRect(t, color, abs_x, abs_y, cell_size, cell_size);
         }
@@ -396,7 +409,7 @@ fn next_frame(t: *Tetris, elapsed: f64) void {
 
             p.angle += p.angle_vel;
 
-            if (p.pos.data[1] > f32(t.framebuffer_height)) {
+            if (p.pos.data[1] > @intToFloat(f32, t.framebuffer_height)) {
                 maybe_p.* = null;
             }
         }
@@ -409,7 +422,7 @@ fn next_frame(t: *Tetris, elapsed: f64) void {
 
             p.angle += p.angle_vel;
 
-            if (p.pos.data[1] > f32(window_height) + 10.0) {
+            if (p.pos.data[1] > @intToFloat(f32, window_height) + 10.0) {
                 maybe_p.* = null;
             }
         }
@@ -439,8 +452,13 @@ fn next_frame(t: *Tetris, elapsed: f64) void {
         } else {
             const rate = 8; // oscillations per sec
             const amplitude = 4; // pixels
-            const offset = f32(amplitude * -c.sin(2.0 * PI * t.screen_shake_elapsed * rate));
-            t.projection = mat4x4_ortho(0.0, f32(t.framebuffer_width), f32(t.framebuffer_height) + offset, offset);
+            const offset = @floatCast(f32, amplitude * -c.sin(2.0 * PI * t.screen_shake_elapsed * rate));
+            t.projection = mat4x4_ortho(
+                0.0,
+                @intToFloat(f32, t.framebuffer_width),
+                @intToFloat(f32, t.framebuffer_height) + offset,
+                offset,
+            );
         }
     }
 }
@@ -541,7 +559,7 @@ fn user_move_cur_piece(t: *Tetris, dir: i8) void {
 
 fn userRotateCurPiece(t: *Tetris, rot: i8) void {
     if (t.game_over or t.is_paused) return;
-    const new_rot = usize(@rem(isize(t.cur_piece_rot) + rot + 4, 4));
+    const new_rot = @intCast(usize, @rem(@intCast(isize, t.cur_piece_rot) + rot + 4, 4));
     if (piece_would_collide(t, t.cur_piece, t.cur_piece_x, t.cur_piece_y, new_rot)) {
         return;
     }
@@ -582,10 +600,10 @@ fn lock_piece(t: *Tetris) void {
             if (!is_filled) {
                 continue;
             }
-            const abs_x = t.cur_piece_x + i32(x);
-            const abs_y = t.cur_piece_y + i32(y);
+            const abs_x = t.cur_piece_x + @intCast(i32, x);
+            const abs_y = t.cur_piece_y + @intCast(i32, y);
             if (abs_x >= 0 and abs_y >= 0 and abs_x < grid_width and abs_y < grid_height) {
-                t.grid[usize(abs_y)][usize(abs_x)] = Cell{ .Color = t.cur_piece.color };
+                t.grid[@intCast(usize, abs_y)][@intCast(usize, abs_x)] = Cell{ .Color = t.cur_piece.color };
             }
         }
     }
@@ -609,8 +627,10 @@ fn lock_piece(t: *Tetris) void {
                     Cell.Empty => continue,
                     Cell.Color => |col| col,
                 };
-                const center_x = f32(board_left + x * cell_size) + f32(cell_size) / 2.0;
-                const center_y = f32(board_top + y * cell_size) + f32(cell_size) / 2.0;
+                const center_x = @intToFloat(f32, board_left + x * cell_size) +
+                    @intToFloat(f32, cell_size) / 2.0;
+                const center_y = @intToFloat(f32, board_top + y * cell_size) +
+                    @intToFloat(f32, cell_size) / 2.0;
                 add_explosion(t, color, center_x, center_y);
             }
         }
@@ -621,7 +641,7 @@ fn lock_piece(t: *Tetris) void {
     var y: i32 = grid_height - 1;
     while (y >= 0) {
         var all_filled: bool = true;
-        for (t.grid[usize(y)]) |cell| {
+        for (t.grid[@intCast(usize, y)]) |cell| {
             const filled = switch (cell) {
                 Cell.Empty => false,
                 else => true,
@@ -633,7 +653,7 @@ fn lock_piece(t: *Tetris) void {
         }
         if (all_filled) {
             rows_deleted += 1;
-            delete_row(t, usize(y));
+            delete_row(t, @intCast(usize, y));
         } else {
             y -= 1;
         }
@@ -648,7 +668,12 @@ fn lock_piece(t: *Tetris) void {
 }
 
 fn reset_projection(t: *Tetris) void {
-    t.projection = mat4x4_ortho(0.0, f32(t.framebuffer_width), f32(t.framebuffer_height), 0.0);
+    t.projection = mat4x4_ortho(
+        0.0,
+        @intToFloat(f32, t.framebuffer_width),
+        @intToFloat(f32, t.framebuffer_height),
+        0.0,
+    );
 }
 
 fn activate_screen_shake(t: *Tetris, duration: f64) void {
@@ -666,7 +691,7 @@ fn delete_row(t: *Tetris, del_index: usize) void {
 }
 
 fn cell_empty(t: *Tetris, x: i32, y: i32) bool {
-    return switch (t.grid[usize(y)][usize(x)]) {
+    return switch (t.grid[@intCast(usize, y)][@intCast(usize, x)]) {
         Cell.Empty => true,
         else => false,
     };
@@ -678,8 +703,8 @@ fn piece_would_collide(t: *Tetris, piece: *const Piece, grid_x: i32, grid_y: i32
             if (!is_filled) {
                 continue;
             }
-            const abs_x = grid_x + i32(x);
-            const abs_y = grid_y + i32(y);
+            const abs_x = grid_x + @intCast(i32, x);
+            const abs_y = grid_y + @intCast(i32, y);
             if (abs_x >= 0 and abs_y >= 0 and abs_x < grid_width and abs_y < grid_height) {
                 if (!cell_empty(t, abs_x, abs_y)) {
                     return true;
@@ -700,7 +725,7 @@ fn populate_next_piece(t: *Tetris) void {
         upper_bound += count;
     }
 
-    const rand_val = i32(t.rand.range(u32, 0, u32(upper_bound)));
+    const rand_val = t.rand.range(i32, 0, upper_bound);
     var this_piece_upper_bound: i32 = 0;
     var any_zero = false;
     for (t.piece_pool) |count, piece_index| {
@@ -733,8 +758,8 @@ fn do_game_over(t: *Tetris) void {
                 Cell.Empty => continue,
                 Cell.Color => |col| col,
             };
-            const left = f32(board_left + x * cell_size);
-            const top = f32(board_top + y * cell_size);
+            const left = @intToFloat(f32, board_left + x * cell_size);
+            const top = @intToFloat(f32, board_top + y * cell_size);
             t.falling_blocks[get_next_falling_block_index(t)] = create_block_particle(t, color, vec3(left, top, 0.0));
         }
     }
