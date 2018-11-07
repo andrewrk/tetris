@@ -6,7 +6,7 @@ const Vec4 = math3d.Vec4;
 const Mat4x4 = math3d.Mat4x4;
 const c_allocator = @import("std").heap.c_allocator;
 
-pub const AllShaders = struct {
+pub const AllShaders = struct.{
     primitive: ShaderProgram,
     primitive_attrib_position: c.GLint,
     primitive_uniform_mvp: c.GLint,
@@ -24,7 +24,7 @@ pub const AllShaders = struct {
     }
 };
 
-pub const ShaderProgram = struct {
+pub const ShaderProgram = struct.{
     program_id: c.GLuint,
     vertex_id: c.GLuint,
     fragment_id: c.GLuint,

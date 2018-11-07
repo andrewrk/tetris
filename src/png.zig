@@ -1,7 +1,7 @@
 const c = @import("c.zig");
 const c_allocator = @import("std").heap.c_allocator;
 
-pub const PngImage = struct {
+pub const PngImage = struct.{
     width: u32,
     height: u32,
     pitch: u32,
@@ -37,7 +37,7 @@ pub const PngImage = struct {
 
         c.png_set_sig_bytes(png_ptr, 8);
 
-        var png_io = PngIo{
+        var png_io = PngIo.{
             .index = 8,
             .buffer = compressed_bytes,
         };
@@ -81,7 +81,7 @@ pub const PngImage = struct {
     }
 };
 
-const PngIo = struct {
+const PngIo = struct.{
     index: usize,
     buffer: []const u8,
 };
