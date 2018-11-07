@@ -242,14 +242,14 @@ fn fillRectMvp(t: *Tetris, color: *const Vec4, mvp: *const Mat4x4) void {
 
 fn fillRect(t: *Tetris, color: *const Vec4, x: f32, y: f32, w: f32, h: f32) void {
     const model = mat4x4_identity.translate(x, y, 0.0).scale(w, h, 0.0);
-    const mvp = t.projection.mult(&model);
+    const mvp = t.projection.mult(model);
     fillRectMvp(t, color, &mvp);
 }
 
 fn draw_particle(t: *Tetris, p: *const Particle) void {
     const model = mat4x4_identity.translate_by_vec(&p.pos).rotate(p.angle, &p.axis).scale(p.scale_w, p.scale_h, 0.0);
 
-    const mvp = t.projection.mult(&model);
+    const mvp = t.projection.mult(model);
 
     t.shaders.primitive.bind();
     t.shaders.primitive.set_uniform_vec4(t.shaders.primitive_uniform_color, &p.color);
@@ -265,7 +265,7 @@ fn draw_particle(t: *Tetris, p: *const Particle) void {
 fn draw_falling_block(t: *Tetris, p: *const Particle) void {
     const model = mat4x4_identity.translate_by_vec(&p.pos).rotate(p.angle, &p.axis).scale(p.scale_w, p.scale_h, 0.0);
 
-    const mvp = t.projection.mult(&model);
+    const mvp = t.projection.mult(model);
 
     fillRectMvp(t, &p.color, &mvp);
 }
@@ -374,7 +374,7 @@ fn draw_text(t: *Tetris, text: []const u8, left: i32, top: i32, size: f32) void 
         if (col <= '~') {
             const char_left = @intToFloat(f32, left) + @intToFloat(f32, i * font_char_width) * size;
             const model = mat4x4_identity.translate(char_left, @intToFloat(f32, top), 0.0).scale(size, size, 0.0);
-            const mvp = t.projection.mult(&model);
+            const mvp = t.projection.mult(model);
 
             t.font.draw(&t.shaders, col, &mvp);
         } else {
