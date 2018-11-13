@@ -11,7 +11,7 @@ pub const Spritesheet = struct {
     vertex_buffer: c.GLuint,
     tex_coord_buffers: []c.GLuint,
 
-    pub fn draw(s: *Spritesheet, shaders: *const AllShaders, index: usize, mvp: *const Mat4x4) void {
+    pub fn draw(s: *Spritesheet, shaders: AllShaders, index: usize, mvp: Mat4x4) void {
         shaders.texture.bind();
         shaders.texture.set_uniform_mat4x4(shaders.texture_uniform_mvp, mvp);
         shaders.texture.set_uniform_int(shaders.texture_uniform_tex, 0);

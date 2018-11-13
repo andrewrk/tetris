@@ -228,7 +228,7 @@ pub fn main() !void {
     debug_gl.assertNoError();
 }
 
-fn fillRectMvp(t: *Tetris, color: *const Vec4, mvp: *const Mat4x4) void {
+fn fillRectMvp(t: *Tetris, color: Vec4, mvp: Mat4x4) void {
     t.shaders.primitive.bind();
     t.shaders.primitive.set_uniform_vec4(t.shaders.primitive_uniform_color, color);
     t.shaders.primitive.set_uniform_mat4x4(t.shaders.primitive_uniform_mvp, mvp);
@@ -240,13 +240,13 @@ fn fillRectMvp(t: *Tetris, color: *const Vec4, mvp: *const Mat4x4) void {
     c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 4);
 }
 
-fn fillRect(t: *Tetris, color: *const Vec4, x: f32, y: f32, w: f32, h: f32) void {
+fn fillRect(t: *Tetris, color: Vec4, x: f32, y: f32, w: f32, h: f32) void {
     const model = mat4x4_identity.translate(x, y, 0.0).scale(w, h, 0.0);
     const mvp = t.projection.mult(model);
     fillRectMvp(t, color, mvp);
 }
 
-fn draw_particle(t: *Tetris, p: *const Particle) void {
+fn draw_particle(t: *Tetris, p: Particle) void {
     const model = mat4x4_identity.translate_by_vec(p.pos).rotate(p.angle, p.axis).scale(p.scale_w, p.scale_h, 0.0);
 
     const mvp = t.projection.mult(model);
@@ -262,7 +262,7 @@ fn draw_particle(t: *Tetris, p: *const Particle) void {
     c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 3);
 }
 
-fn draw_falling_block(t: *Tetris, p: *const Particle) void {
+fn draw_falling_block(t: *Tetris, p: Particle) void {
     const model = mat4x4_identity.translate_by_vec(p.pos).rotate(p.angle, p.axis).scale(p.scale_w, p.scale_h, 0.0);
 
     const mvp = t.projection.mult(model);
@@ -297,12 +297,12 @@ fn draw(t: *Tetris) void {
     } else {
         const abs_x = board_left + t.cur_piece_x * cell_size;
         const abs_y = board_top + t.cur_piece_y * cell_size;
-        draw_piece(t, t.cur_piece, abs_x, abs_y, t.cur_piece_rot);
+        draw_piece(t, t.cur_piece.*, abs_x, abs_y, t.cur_piece_rot);
 
         const ghost_color = vec4(t.cur_piece.color.data[0], t.cur_piece.color.data[1], t.cur_piece.color.data[2], 0.2);
-        draw_piece_with_color(t, t.cur_piece, abs_x, t.ghost_y, t.cur_piece_rot, ghost_color);
+        draw_piece_with_color(t, t.cur_piece.*, abs_x, t.ghost_y, t.cur_piece_rot, ghost_color);
 
-        draw_piece(t, t.next_piece, next_piece_left + margin_size, next_piece_top + margin_size, 0);
+        draw_piece(t, t.next_piece.*, next_piece_left + margin_size, next_piece_top + margin_size, 0);
 
         for (t.grid) |row, y| {
             for (row) |cell, x| {
@@ -383,11 +383,11 @@ fn draw_text(t: *Tetris, text: []const u8, left: i32, top: i32, size: f32) void 
     }
 }
 
-fn draw_piece(t: *Tetris, piece: *const Piece, left: i32, top: i32, rot: usize) void {
+fn draw_piece(t: *Tetris, piece: Piece, left: i32, top: i32, rot: usize) void {
     draw_piece_with_color(t, piece, left, top, rot, piece.color);
 }
 
-fn draw_piece_with_color(t: *Tetris, piece: *const Piece, left: i32, top: i32, rot: usize, color: *const Vec4) void {
+fn draw_piece_with_color(t: *Tetris, piece: Piece, left: i32, top: i32, rot: usize, color: Vec4) void {
     for (piece.layout[rot]) |row, y| {
         for (row) |is_filled, x| {
             if (!is_filled) continue;
@@ -519,7 +519,7 @@ fn insert_garbage_row_at_bottom(t: *Tetris) void {
 
 fn compute_ghost(t: *Tetris) void {
     var off_y: i32 = 1;
-    while (!piece_would_collide(t, t.cur_piece, t.cur_piece_x, t.cur_piece_y + off_y, t.cur_piece_rot)) {
+    while (!piece_would_collide(t, t.cur_piece.*, t.cur_piece_x, t.cur_piece_y + off_y, t.cur_piece_rot)) {
         off_y += 1;
     }
     t.ghost_y = board_top + cell_size * (t.cur_piece_y + off_y - 1);
@@ -532,7 +532,7 @@ fn user_cur_piece_fall(t: *Tetris) void {
 
 fn cur_piece_fall(t: *Tetris) bool {
     // if it would hit something, make it stop instead
-    if (piece_would_collide(t, t.cur_piece, t.cur_piece_x, t.cur_piece_y + 1, t.cur_piece_rot)) {
+    if (piece_would_collide(t, t.cur_piece.*, t.cur_piece_x, t.cur_piece_y + 1, t.cur_piece_rot)) {
         lock_piece(t);
         drop_new_piece(t);
         return true;
@@ -551,7 +551,7 @@ fn user_drop_cur_piece(t: *Tetris) void {
 
 fn user_move_cur_piece(t: *Tetris, dir: i8) void {
     if (t.game_over or t.is_paused) return;
-    if (piece_would_collide(t, t.cur_piece, t.cur_piece_x + dir, t.cur_piece_y, t.cur_piece_rot)) {
+    if (piece_would_collide(t, t.cur_piece.*, t.cur_piece_x + dir, t.cur_piece_y, t.cur_piece_rot)) {
         return;
     }
     t.cur_piece_x += dir;
@@ -560,7 +560,7 @@ fn user_move_cur_piece(t: *Tetris, dir: i8) void {
 fn userRotateCurPiece(t: *Tetris, rot: i8) void {
     if (t.game_over or t.is_paused) return;
     const new_rot = @intCast(usize, @rem(@intCast(isize, t.cur_piece_rot) + rot + 4, 4));
-    if (piece_would_collide(t, t.cur_piece, t.cur_piece_x, t.cur_piece_y, new_rot)) {
+    if (piece_would_collide(t, t.cur_piece.*, t.cur_piece_x, t.cur_piece_y, new_rot)) {
         return;
     }
     t.cur_piece_rot = new_rot;
@@ -697,7 +697,7 @@ fn cell_empty(t: *Tetris, x: i32, y: i32) bool {
     };
 }
 
-fn piece_would_collide(t: *Tetris, piece: *const Piece, grid_x: i32, grid_y: i32, rot: usize) bool {
+fn piece_would_collide(t: *Tetris, piece: Piece, grid_x: i32, grid_y: i32, rot: usize) bool {
     for (piece.layout[rot]) |row, y| {
         for (row) |is_filled, x| {
             if (!is_filled) {
@@ -769,7 +769,7 @@ fn drop_new_piece(t: *Tetris) void {
     const start_x = 4;
     const start_y = -1;
     const start_rot = 0;
-    if (piece_would_collide(t, t.next_piece, start_x, start_y, start_rot)) {
+    if (piece_would_collide(t, t.next_piece.*, start_x, start_y, start_rot)) {
         do_game_over(t);
         return;
     }
@@ -808,7 +808,7 @@ fn get_next_falling_block_index(t: *Tetris) usize {
     return result;
 }
 
-fn add_explosion(t: *Tetris, color: *const Vec4, center_x: f32, center_y: f32) void {
+fn add_explosion(t: *Tetris, color: Vec4, center_x: f32, center_y: f32) void {
     const particle_count = 12;
     const particle_size = f32(cell_size) / 3.0;
     {
@@ -822,7 +822,7 @@ fn add_explosion(t: *Tetris, color: *const Vec4, center_x: f32, center_y: f32) v
     }
 }
 
-fn create_particle(t: *Tetris, color: *const Vec4, size: f32, pos: *const Vec3) Particle {
+fn create_particle(t: *Tetris, color: Vec4, size: f32, pos: Vec3) Particle {
     var p: Particle = undefined;
 
     p.angle_vel = t.rand.float(f32) * 0.1 - 0.05;
@@ -830,8 +830,8 @@ fn create_particle(t: *Tetris, color: *const Vec4, size: f32, pos: *const Vec3) 
     p.axis = vec3(0.0, 0.0, 1.0);
     p.scale_w = size * (0.8 + t.rand.float(f32) * 0.4);
     p.scale_h = size * (0.8 + t.rand.float(f32) * 0.4);
-    p.color = color.*;
-    p.pos = pos.*;
+    p.color = color;
+    p.pos = pos;
 
     const vel_x = t.rand.float(f32) * 2.0 - 1.0;
     const vel_y = -(2.0 + t.rand.float(f32) * 1.0);
@@ -840,7 +840,7 @@ fn create_particle(t: *Tetris, color: *const Vec4, size: f32, pos: *const Vec3) 
     return p;
 }
 
-fn create_block_particle(t: *Tetris, color: *const Vec4, pos: *const Vec3) Particle {
+fn create_block_particle(t: *Tetris, color: Vec4, pos: Vec3) Particle {
     var p: Particle = undefined;
 
     p.angle_vel = t.rand.float(f32) * 0.05 - 0.025;
@@ -848,8 +848,8 @@ fn create_block_particle(t: *Tetris, color: *const Vec4, pos: *const Vec3) Parti
     p.axis = vec3(0.0, 0.0, 1.0);
     p.scale_w = cell_size;
     p.scale_h = cell_size;
-    p.color = color.*;
-    p.pos = pos.*;
+    p.color = color;
+    p.pos = pos;
 
     const vel_x = t.rand.float(f32) * 0.5 - 0.25;
     const vel_y = -t.rand.float(f32) * 0.5;

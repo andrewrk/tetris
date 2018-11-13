@@ -30,11 +30,11 @@ pub const ShaderProgram = struct {
     fragment_id: c.GLuint,
     geometry_id: ?c.GLuint,
 
-    pub fn bind(sp: *const ShaderProgram) void {
+    pub fn bind(sp: ShaderProgram) void {
         c.glUseProgram(sp.program_id);
     }
 
-    pub fn attrib_location(sp: *const ShaderProgram, name: [*]const u8) c.GLint {
+    pub fn attrib_location(sp: ShaderProgram, name: [*]const u8) c.GLint {
         const id = c.glGetAttribLocation(sp.program_id, name);
         if (id == -1) {
             _ = c.printf(c"invalid attrib: %s\n", name);
@@ -43,7 +43,7 @@ pub const ShaderProgram = struct {
         return id;
     }
 
-    pub fn uniform_location(sp: *const ShaderProgram, name: [*]const u8) c.GLint {
+    pub fn uniform_location(sp: ShaderProgram, name: [*]const u8) c.GLint {
         const id = c.glGetUniformLocation(sp.program_id, name);
         if (id == -1) {
             _ = c.printf(c"invalid uniform: %s\n", name);
@@ -52,23 +52,23 @@ pub const ShaderProgram = struct {
         return id;
     }
 
-    pub fn set_uniform_int(sp: *const ShaderProgram, uniform_id: c.GLint, value: c_int) void {
+    pub fn set_uniform_int(sp: ShaderProgram, uniform_id: c.GLint, value: c_int) void {
         c.glUniform1i(uniform_id, value);
     }
 
-    pub fn set_uniform_float(sp: *const ShaderProgram, uniform_id: c.GLint, value: f32) void {
+    pub fn set_uniform_float(sp: ShaderProgram, uniform_id: c.GLint, value: f32) void {
         c.glUniform1f(uniform_id, value);
     }
 
-    pub fn set_uniform_vec3(sp: *const ShaderProgram, uniform_id: c.GLint, value: *const math3d.Vec3) void {
+    pub fn set_uniform_vec3(sp: ShaderProgram, uniform_id: c.GLint, value: math3d.Vec3) void {
         c.glUniform3fv(uniform_id, 1, value.data[0..].ptr);
     }
 
-    pub fn set_uniform_vec4(sp: *const ShaderProgram, uniform_id: c.GLint, value: *const Vec4) void {
+    pub fn set_uniform_vec4(sp: ShaderProgram, uniform_id: c.GLint, value: Vec4) void {
         c.glUniform4fv(uniform_id, 1, value.data[0..].ptr);
     }
 
-    pub fn set_uniform_mat4x4(sp: *const ShaderProgram, uniform_id: c.GLint, value: *const Mat4x4) void {
+    pub fn set_uniform_mat4x4(sp: ShaderProgram, uniform_id: c.GLint, value: Mat4x4) void {
         c.glUniformMatrix4fv(uniform_id, 1, c.GL_FALSE, value.data[0][0..].ptr);
     }
 
