@@ -23,10 +23,10 @@ pub const PngImage = struct {
 
         var info_ptr = c.png_create_info_struct(png_ptr);
         if (info_ptr == null) {
-            c.png_destroy_read_struct(c.ptr(&png_ptr), null, null);
+            c.png_destroy_read_struct(&png_ptr, 0, 0);
             return error.NoMem;
         }
-        defer c.png_destroy_read_struct(c.ptr(&png_ptr), c.ptr(&info_ptr), null);
+        defer c.png_destroy_read_struct(&png_ptr, &info_ptr, 0);
 
         //// don't call any png_* functions outside of this function.
         //// cursed is he who thought setjmp and longjmp was in any way acceptable to
@@ -90,7 +90,7 @@ extern fn read_png_data(png_ptr: c.png_structp, data: c.png_bytep, length: c.png
     const png_io = @ptrCast(*PngIo, @alignCast(@alignOf(PngIo), c.png_get_io_ptr(png_ptr).?));
     const new_index = png_io.index + length;
     if (new_index > png_io.buffer.len) unreachable;
-    @memcpy(@ptrCast([*]u8, data.?), png_io.buffer.ptr + png_io.index, length);
+    @memcpy(@ptrCast([*]u8, data), png_io.buffer.ptr + png_io.index, length);
     png_io.index = new_index;
 }
 

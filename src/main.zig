@@ -105,7 +105,7 @@ const time_per_level = 60.0;
 const empty_row = []Cell{Cell{ .Empty = {} }} ** grid_width;
 const empty_grid = [][grid_width]Cell{empty_row} ** grid_height;
 
-extern fn error_callback(err: c_int, description: ?[*]const u8) void {
+extern fn error_callback(err: c_int, description: [*c]const u8) void {
     _ = c.printf(c"Error: %s\n", description);
     os.abort();
 }
@@ -163,9 +163,9 @@ pub fn main() !void {
     // create and bind exactly one vertex array per context and use
     // glVertexAttribPointer etc every frame.
     var vertex_array_object: c.GLuint = undefined;
-    c.glGenVertexArrays(1, c.ptr(&vertex_array_object));
+    c.glGenVertexArrays(1, &vertex_array_object);
     c.glBindVertexArray(vertex_array_object);
-    defer c.glDeleteVertexArrays(1, c.ptr(&vertex_array_object));
+    defer c.glDeleteVertexArrays(1, &vertex_array_object);
 
     const rand_seed = getRandomSeed() catch {
         _ = c.printf(c"unable to get random seed\n");
@@ -173,7 +173,7 @@ pub fn main() !void {
     };
 
     const t = &tetris_state;
-    c.glfwGetFramebufferSize(window, c.ptr(&t.framebuffer_width), c.ptr(&t.framebuffer_height));
+    c.glfwGetFramebufferSize(window, &t.framebuffer_width, &t.framebuffer_height);
     assert(t.framebuffer_width >= window_width);
     assert(t.framebuffer_height >= window_height);
 

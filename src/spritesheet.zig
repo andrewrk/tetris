@@ -33,8 +33,8 @@ pub const Spritesheet = struct {
     pub fn deinit(s: *Spritesheet) void {
         c.glDeleteBuffers(@intCast(c.GLint, s.tex_coord_buffers.len), s.tex_coord_buffers.ptr);
         c_allocator.free(s.tex_coord_buffers);
-        c.glDeleteBuffers(1, c.ptr(&s.vertex_buffer));
-        c.glDeleteTextures(1, c.ptr(&s.texture_id));
+        c.glDeleteBuffers(1, &s.vertex_buffer);
+        c.glDeleteTextures(1, &s.texture_id);
 
         s.img.destroy();
     }
@@ -48,8 +48,8 @@ pub fn init(compressed_bytes: []const u8, w: usize, h: usize) !Spritesheet {
     const row_count = s.img.height / h;
     s.count = col_count * row_count;
 
-    c.glGenTextures(1, c.ptr(&s.texture_id));
-    errdefer c.glDeleteTextures(1, c.ptr(&s.texture_id));
+    c.glGenTextures(1, &s.texture_id);
+    errdefer c.glDeleteTextures(1, &s.texture_id);
 
     c.glBindTexture(c.GL_TEXTURE_2D, s.texture_id);
     c.glTexParameteri(c.GL_TEXTURE_2D, c.GL_TEXTURE_MAG_FILTER, c.GL_NEAREST);
@@ -69,8 +69,8 @@ pub fn init(compressed_bytes: []const u8, w: usize, h: usize) !Spritesheet {
         @ptrCast(*c_void, &s.img.raw[0]),
     );
 
-    c.glGenBuffers(1, c.ptr(&s.vertex_buffer));
-    errdefer c.glDeleteBuffers(1, c.ptr(&s.vertex_buffer));
+    c.glGenBuffers(1, &s.vertex_buffer);
+    errdefer c.glDeleteBuffers(1, &s.vertex_buffer);
 
     const vertexes = [][3]c.GLfloat{
         []c.GLfloat{ 0.0, 0.0, 0.0 },
