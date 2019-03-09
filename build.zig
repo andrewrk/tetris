@@ -9,7 +9,7 @@ pub fn build(b: *Builder) void {
     exe.setBuildMode(mode);
 
     if (windows) {
-        exe.setTarget(builtin.Arch.x86_64, builtin.Os.windows, builtin.Environ.gnu);
+        exe.setTarget(builtin.Arch.x86_64, builtin.Os.windows, builtin.Abi.gnu);
     }
 
     exe.linkSystemLibrary("c");
@@ -24,7 +24,6 @@ pub fn build(b: *Builder) void {
     b.installArtifact(exe);
 
     const play = b.step("play", "Play the game");
-    const run = b.addCommand(".", b.env_map, [][]const u8{exe.getOutputPath()});
+    const run = exe.run();
     play.dependOn(&run.step);
-    run.step.dependOn(&exe.step);
 }
