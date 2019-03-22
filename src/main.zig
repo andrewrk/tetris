@@ -1,6 +1,6 @@
 const std = @import("std");
 const os = std.os;
-const warn = std.debug.warn;
+const panic = std.debug.panic;
 const assert = std.debug.assert;
 const bufPrint = std.fmt.bufPrint;
 const c = @import("c.zig");
@@ -108,8 +108,7 @@ const empty_row = []Cell{Cell{ .Empty = {} }} ** grid_width;
 const empty_grid = [][grid_width]Cell{empty_row} ** grid_height;
 
 extern fn errorCallback(err: c_int, description: [*c]const u8) void {
-    warn("Error: {}\n", description);
-    os.abort();
+    panic("Error: {}\n", description);
 }
 
 extern fn keyCallback(window: ?*c.GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) void {
@@ -138,8 +137,7 @@ pub fn main() !void {
     _ = c.glfwSetErrorCallback(errorCallback);
 
     if (c.glfwInit() == c.GL_FALSE) {
-        warn("GLFW init failure\n");
-        os.abort();
+        panic("GLFW init failure\n");
     }
     defer c.glfwTerminate();
 
@@ -153,8 +151,7 @@ pub fn main() !void {
     c.glfwWindowHint(c.GLFW_RESIZABLE, c.GL_FALSE);
 
     var window = c.glfwCreateWindow(window_width, window_height, c"Tetris", null, null) orelse {
-        warn("unable to create window\n");
-        os.abort();
+        panic("unable to create window\n");
     };
     defer c.glfwDestroyWindow(window);
 
@@ -170,8 +167,7 @@ pub fn main() !void {
     defer c.glDeleteVertexArrays(1, &vertex_array_object);
 
     const rand_seed = getRandomSeed() catch {
-        warn("unable to get random seed\n");
-        os.abort();
+        panic("unable to get random seed\n");
     };
 
     const t = &tetris_state;
@@ -188,8 +184,7 @@ pub fn main() !void {
     defer t.static_geometry.destroy();
 
     t.font = spritesheet.init(font_png, font_char_width, font_char_height) catch {
-        warn("unable to read assets\n");
-        os.abort();
+        panic("unable to read assets\n");
     };
     defer t.font.deinit();
 
