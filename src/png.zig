@@ -41,7 +41,7 @@ pub const PngImage = struct {
             .index = 8,
             .buffer = compressed_bytes,
         };
-        c.png_set_read_fn(png_ptr, @ptrCast(*c_void, &png_io), read_png_data);
+        c.png_set_read_fn(png_ptr, @ptrCast(*c_void, &png_io), readPngData);
 
         c.png_read_info(png_ptr, info_ptr);
 
@@ -86,7 +86,7 @@ const PngIo = struct {
     buffer: []const u8,
 };
 
-extern fn read_png_data(png_ptr: c.png_structp, data: c.png_bytep, length: c.png_size_t) void {
+extern fn readPngData(png_ptr: c.png_structp, data: c.png_bytep, length: c.png_size_t) void {
     const png_io = @ptrCast(*PngIo, @alignCast(@alignOf(PngIo), c.png_get_io_ptr(png_ptr).?));
     const new_index = png_io.index + length;
     if (new_index > png_io.buffer.len) unreachable;

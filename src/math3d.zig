@@ -90,7 +90,7 @@ pub const Mat4x4 = struct {
         } };
     }
 
-    pub fn translate_by_vec(m: Mat4x4, v: Vec3) Mat4x4 {
+    pub fn translateByVec(m: Mat4x4, v: Vec3) Mat4x4 {
         return m.translate(v.data[0], v.data[1], v.data[2]);
     }
 
@@ -123,7 +123,7 @@ pub const mat4x4_identity = Mat4x4{ .data = [][4]f32{
 } };
 
 /// Creates a matrix for an orthographic parallel viewing volume.
-pub fn mat4x4_ortho(left: f32, right: f32, bottom: f32, top: f32) Mat4x4 {
+pub fn mat4x4Ortho(left: f32, right: f32, bottom: f32, top: f32) Mat4x4 {
     var m = mat4x4_identity;
     m.data[0][0] = 2.0 / (right - left);
     m.data[1][1] = 2.0 / (top - bottom);
@@ -250,12 +250,12 @@ fn testOrtho() void {
     assert_matrix_eq(m, expected);
 }
 
-fn assert_f_eq(left: f32, right: f32) void {
+fn assertFEq(left: f32, right: f32) void {
     const diff = c.fabsf(left - right);
     assert(diff < 0.01);
 }
 
-fn assert_matrix_eq(left: Mat4x4, right: Mat4x4) void {
+fn assertMatrixEq(left: Mat4x4, right: Mat4x4) void {
     assert_f_eq(left.data[0][0], right.data[0][0]);
     assert_f_eq(left.data[0][1], right.data[0][1]);
     assert_f_eq(left.data[0][2], right.data[0][2]);

@@ -13,8 +13,8 @@ pub const Spritesheet = struct {
 
     pub fn draw(s: *Spritesheet, shaders: AllShaders, index: usize, mvp: Mat4x4) void {
         shaders.texture.bind();
-        shaders.texture.set_uniform_mat4x4(shaders.texture_uniform_mvp, mvp);
-        shaders.texture.set_uniform_int(shaders.texture_uniform_tex, 0);
+        shaders.texture.setUniformMat4x4(shaders.texture_uniform_mvp, mvp);
+        shaders.texture.setUniformInt(shaders.texture_uniform_tex, 0);
 
         c.glBindBuffer(c.GL_ARRAY_BUFFER, s.vertex_buffer);
         c.glEnableVertexAttribArray(@intCast(c.GLuint, shaders.texture_attrib_position));
