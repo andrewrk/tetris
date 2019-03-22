@@ -1,4 +1,6 @@
-const os = @import("std").os;
+const std = @import("std");
+const os = std.os;
+const panic = std.debug.panic;
 const c = @import("c.zig");
 const math3d = @import("math3d.zig");
 const debug_gl = @import("debug_gl.zig");
@@ -37,8 +39,7 @@ pub const ShaderProgram = struct {
     pub fn attribLocation(sp: ShaderProgram, name: [*]const u8) c.GLint {
         const id = c.glGetAttribLocation(sp.program_id, name);
         if (id == -1) {
-            _ = c.printf(c"invalid attrib: %s\n", name);
-            os.abort();
+            panic("invalid attrib: {}\n", name);
         }
         return id;
     }
@@ -46,8 +47,7 @@ pub const ShaderProgram = struct {
     pub fn uniformLocation(sp: ShaderProgram, name: [*]const u8) c.GLint {
         const id = c.glGetUniformLocation(sp.program_id, name);
         if (id == -1) {
-            _ = c.printf(c"invalid uniform: %s\n", name);
-            os.abort();
+            panic("invalid uniform: {}\n", name);
         }
         return id;
     }
@@ -186,8 +186,7 @@ pub fn createShader(
     c.glGetProgramiv(sp.program_id, c.GL_INFO_LOG_LENGTH, &error_size);
     const message = try c_allocator.alloc(u8, @intCast(usize, error_size));
     c.glGetProgramInfoLog(sp.program_id, error_size, &error_size, message.ptr);
-    _ = c.printf(c"Error linking shader program: %s\n", message.ptr);
-    os.abort();
+    panic("Error linking shader program: {}\n", message.ptr);
 }
 
 fn initShader(source: []const u8, name: [*]const u8, kind: c.GLenum) !c.GLuint {
@@ -206,6 +205,5 @@ fn initShader(source: []const u8, name: [*]const u8, kind: c.GLenum) !c.GLuint {
 
     const message = try c_allocator.alloc(u8, @intCast(usize, error_size));
     c.glGetShaderInfoLog(shader_id, error_size, &error_size, message.ptr);
-    _ = c.printf(c"Error compiling %s shader:\n%s\n", name, message.ptr);
-    os.abort();
+    panic("Error compiling {} shader:\n{}\n", name, message.ptr);
 }

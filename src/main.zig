@@ -1,6 +1,8 @@
 const std = @import("std");
 const os = std.os;
+const panic = std.debug.panic;
 const assert = std.debug.assert;
+const bufPrint = std.fmt.bufPrint;
 const c = @import("c.zig");
 const debug_gl = @import("debug_gl.zig");
 use @import("math3d.zig");
@@ -106,8 +108,7 @@ const empty_row = []Cell{Cell{ .Empty = {} }} ** grid_width;
 const empty_grid = [][grid_width]Cell{empty_row} ** grid_height;
 
 extern fn errorCallback(err: c_int, description: [*c]const u8) void {
-    _ = c.printf(c"Error: %s\n", description);
-    os.abort();
+    panic("Error: {}\n", description);
 }
 
 extern fn keyCallback(window: ?*c.GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) void {
@@ -136,8 +137,7 @@ pub fn main() !void {
     _ = c.glfwSetErrorCallback(errorCallback);
 
     if (c.glfwInit() == c.GL_FALSE) {
-        _ = c.printf(c"GLFW init failure\n");
-        os.abort();
+        panic("GLFW init failure\n");
     }
     defer c.glfwTerminate();
 
@@ -151,8 +151,7 @@ pub fn main() !void {
     c.glfwWindowHint(c.GLFW_RESIZABLE, c.GL_FALSE);
 
     var window = c.glfwCreateWindow(window_width, window_height, c"Tetris", null, null) orelse {
-        _ = c.printf(c"unable to create window\n");
-        os.abort();
+        panic("unable to create window\n");
     };
     defer c.glfwDestroyWindow(window);
 
@@ -168,8 +167,7 @@ pub fn main() !void {
     defer c.glDeleteVertexArrays(1, &vertex_array_object);
 
     const rand_seed = getRandomSeed() catch {
-        _ = c.printf(c"unable to get random seed\n");
-        os.abort();
+        panic("unable to get random seed\n");
     };
 
     const t = &tetris_state;
@@ -186,8 +184,7 @@ pub fn main() !void {
     defer t.static_geometry.destroy();
 
     t.font = spritesheet.init(font_png, font_char_width, font_char_height) catch {
-        _ = c.printf(c"unable to read assets\n");
-        os.abort();
+        panic("unable to read assets\n");
     };
     defer t.font.deinit();
 
@@ -338,8 +335,7 @@ fn draw(t: *Tetris) void {
     }
     {
         var score_text_buf: [20]u8 = undefined;
-        const len = @intCast(usize, c.sprintf(score_text_buf[0..].ptr, c"%d", t.score));
-        const score_text = score_text_buf[0..len];
+        const score_text = bufPrint(score_text_buf[0..], "{}", t.score) catch unreachable;
         const score_label_width = font_char_width * @intCast(i32, score_text.len);
         drawText(t, score_text, score_left + score_width / 2 - @divExact(score_label_width, 2), score_top + score_height / 2, 1.0);
     }
@@ -350,8 +346,7 @@ fn draw(t: *Tetris) void {
     }
     {
         var text_buf: [20]u8 = undefined;
-        const len = @intCast(usize, c.sprintf(text_buf[0..].ptr, c"%d", t.level));
-        const text = text_buf[0..len];
+        const text = bufPrint(text_buf[0..], "{}", t.level) catch unreachable;
         const text_width = font_char_width * @intCast(i32, text.len);
         drawText(t, text, level_display_left + level_display_width / 2 - @divExact(text_width, 2), level_display_top + level_display_height / 2, 1.0);
     }
