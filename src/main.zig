@@ -216,7 +216,7 @@ pub fn main() !void {
 
         nextFrame(t, elapsed);
 
-        try draw(t);
+        draw(t);
         c.glfwSwapBuffers(window);
 
         c.glfwPollEvents();
@@ -281,7 +281,7 @@ fn drawCenteredText(t: *Tetris, text: []const u8) void {
     drawText(t, text, draw_left, draw_top, 1.0);
 }
 
-fn draw(t: *Tetris) !void {
+fn draw(t: *Tetris) void {
     fillRect(t, board_color, board_left, board_top, board_width, board_height);
     fillRect(t, board_color, next_piece_left, next_piece_top, next_piece_width, next_piece_height);
     fillRect(t, board_color, score_left, score_top, score_width, score_height);
@@ -335,7 +335,7 @@ fn draw(t: *Tetris) !void {
     }
     {
         var score_text_buf: [20]u8 = undefined;
-        const score_text = try bufPrint(score_text_buf[0..], "{}", t.score);
+        const score_text = bufPrint(score_text_buf[0..], "{}", t.score) catch unreachable;
         const score_label_width = font_char_width * @intCast(i32, score_text.len);
         drawText(t, score_text, score_left + score_width / 2 - @divExact(score_label_width, 2), score_top + score_height / 2, 1.0);
     }
@@ -346,7 +346,7 @@ fn draw(t: *Tetris) !void {
     }
     {
         var text_buf: [20]u8 = undefined;
-        const text = try bufPrint(text_buf[0..], "{}", t.level);
+        const text = bufPrint(text_buf[0..], "{}", t.level) catch unreachable;
         const text_width = font_char_width * @intCast(i32, text.len);
         drawText(t, text, level_display_left + level_display_width / 2 - @divExact(text_width, 2), level_display_top + level_display_height / 2, 1.0);
     }
