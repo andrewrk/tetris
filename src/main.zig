@@ -417,7 +417,7 @@ fn nextFrame(t: *Tetris, elapsed: f64) void {
 
             p.angle += p.angle_vel;
 
-            if (p.pos.data[1] > @intToFloat(f32, window_height) + 10.0) {
+            if (p.pos.data[1] > @intToFloat(f32, t.framebuffer_height)) {
                 maybe_p.* = null;
             }
         }
