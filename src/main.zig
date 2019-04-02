@@ -23,6 +23,8 @@ const Tetris = struct {
     delay_left: f64,
     grid: [grid_height][grid_width]Cell,
     next_piece: *const Piece,
+    hold_piece: ?*const Piece,
+    hold_was_set: bool,
     cur_piece: *const Piece,
     cur_piece_x: i32,
     cur_piece_y: i32,
@@ -89,6 +91,11 @@ const level_display_height = next_piece_height;
 const level_display_left = next_piece_left;
 const level_display_top = score_top - margin_size - level_display_height;
 
+const hold_piece_width = next_piece_width;
+const hold_piece_height = next_piece_height;
+const hold_piece_left = next_piece_left;
+const hold_piece_top = level_display_top - margin_size - hold_piece_height;
+
 const window_width = next_piece_left + next_piece_width + margin_size;
 const window_height = board_top + board_height + margin_size;
 
@@ -125,6 +132,7 @@ extern fn keyCallback(window: ?*c.GLFWwindow, key: c_int, scancode: c_int, actio
         c.GLFW_KEY_LEFT_SHIFT, c.GLFW_KEY_RIGHT_SHIFT => userRotateCurPiece(t, -1),
         c.GLFW_KEY_R => restartGame(t),
         c.GLFW_KEY_P => userTogglePause(t),
+        c.GLFW_KEY_LEFT_CONTROL, c.GLFW_KEY_RIGHT_CONTROL => userSetHoldPiece(t),
         else => {},
     }
 }
@@ -286,6 +294,7 @@ fn draw(t: *Tetris) void {
     fillRect(t, board_color, next_piece_left, next_piece_top, next_piece_width, next_piece_height);
     fillRect(t, board_color, score_left, score_top, score_width, score_height);
     fillRect(t, board_color, level_display_left, level_display_top, level_display_width, level_display_height);
+    fillRect(t, board_color, hold_piece_left, hold_piece_top, hold_piece_width, hold_piece_height);
 
     if (t.game_over) {
         drawCenteredText(t, "GAME OVER");
@@ -300,6 +309,14 @@ fn draw(t: *Tetris) void {
         drawPieceWithColor(t, t.cur_piece.*, abs_x, t.ghost_y, t.cur_piece_rot, ghost_color);
 
         drawPiece(t, t.next_piece.*, next_piece_left + margin_size, next_piece_top + margin_size, 0);
+        if (t.hold_piece) |piece| {
+            if (!t.hold_was_set) {
+                drawPiece(t, piece.*, hold_piece_left + margin_size, hold_piece_top + margin_size, 0);
+            } else {
+                const grey = vec4(0.65, 0.65, 0.65, 1.0);
+                drawPieceWithColor(t, piece.*, hold_piece_left + margin_size, hold_piece_top + margin_size, 0, grey);
+            }
+        }
 
         for (t.grid) |row, y| {
             for (row) |cell, x| {
@@ -349,6 +366,11 @@ fn draw(t: *Tetris) void {
         const text = bufPrint(text_buf[0..], "{}", t.level) catch unreachable;
         const text_width = font_char_width * @intCast(i32, text.len);
         drawText(t, text, level_display_left + level_display_width / 2 - @divExact(text_width, 2), level_display_top + level_display_height / 2, 1.0);
+    }
+    {
+        const text = "HOLD:";
+        const text_width = font_char_width * @intCast(i32, text.len);
+        drawText(t, text, hold_piece_left + hold_piece_width / 2 - text_width / 2, hold_piece_top + margin_size, 1.0);
     }
 
     for (t.falling_blocks) |maybe_particle| {
@@ -529,7 +551,7 @@ fn curPieceFall(t: *Tetris) bool {
     // if it would hit something, make it stop instead
     if (pieceWouldCollide(t, t.cur_piece.*, t.cur_piece_x, t.cur_piece_y + 1, t.cur_piece_rot)) {
         lockPiece(t);
-        dropNewPiece(t);
+        dropNextPiece(t);
         return true;
     } else {
         t.cur_piece_y += 1;
@@ -577,6 +599,8 @@ fn restartGame(t: *Tetris) void {
     t.level = 1;
     t.time_till_next_level = time_per_level;
     t.is_paused = false;
+    t.hold_was_set = false;
+    t.hold_piece = null;
 
     t.piece_pool = []i32{1} ** pieces.pieces.len;
 
@@ -584,7 +608,7 @@ fn restartGame(t: *Tetris) void {
     t.grid = empty_grid;
 
     populateNextPiece(t);
-    dropNewPiece(t);
+    dropNextPiece(t);
 }
 
 fn lockPiece(t: *Tetris) void {
@@ -760,22 +784,40 @@ fn doGameOver(t: *Tetris) void {
     }
 }
 
-fn dropNewPiece(t: *Tetris) void {
+fn userSetHoldPiece(t: *Tetris) void {
+    if (t.game_over or t.is_paused or t.hold_was_set) return;
+    var next_cur: *const Piece = undefined;
+    if (t.hold_piece) |hold_piece| {
+        next_cur = hold_piece;
+    } else {
+        next_cur = t.next_piece;
+        populateNextPiece(t);
+    }
+    t.hold_piece = t.cur_piece;
+    t.hold_was_set = true;
+    dropNewPiece(t, next_cur);
+}
+
+fn dropNewPiece(t: *Tetris, p: *const Piece) void {
     const start_x = 4;
     const start_y = -1;
     const start_rot = 0;
-    if (pieceWouldCollide(t, t.next_piece.*, start_x, start_y, start_rot)) {
+    if (pieceWouldCollide(t, p.*, start_x, start_y, start_rot)) {
         doGameOver(t);
         return;
     }
 
     t.delay_left = t.piece_delay;
 
-    t.cur_piece = t.next_piece;
+    t.cur_piece = p;
     t.cur_piece_x = start_x;
     t.cur_piece_y = start_y;
     t.cur_piece_rot = start_rot;
+}
 
+fn dropNextPiece(t: *Tetris) void {
+    t.hold_was_set = false;
+    dropNewPiece(t, t.next_piece);
     populateNextPiece(t);
 }
 
