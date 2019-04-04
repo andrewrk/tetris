@@ -10,7 +10,7 @@ const all_shaders = @import("all_shaders.zig");
 const static_geometry = @import("static_geometry.zig");
 const pieces = @import("pieces.zig");
 const Piece = pieces.Piece;
-const spritesheet = @import("spritesheet.zig");
+const Spritesheet = @import("spritesheet.zig").Spritesheet;
 
 const Tetris = struct {
     window: *c.GLFWwindow,
@@ -33,7 +33,7 @@ const Tetris = struct {
     game_over: bool,
     next_particle_index: usize,
     next_falling_block_index: usize,
-    font: spritesheet.Spritesheet,
+    font: Spritesheet,
     ghost_y: i32,
     framebuffer_width: c_int,
     framebuffer_height: c_int,
@@ -191,7 +191,7 @@ pub fn main() !void {
     t.static_geometry = static_geometry.createStaticGeometry();
     defer t.static_geometry.destroy();
 
-    t.font = spritesheet.init(font_png, font_char_width, font_char_height) catch {
+    t.font.init(font_png, font_char_width, font_char_height) catch {
         panic("unable to read assets\n");
     };
     defer t.font.deinit();
