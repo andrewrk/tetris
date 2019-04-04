@@ -6,16 +6,17 @@ const bufPrint = std.fmt.bufPrint;
 const c = @import("c.zig");
 const debug_gl = @import("debug_gl.zig");
 use @import("math3d.zig");
-const all_shaders = @import("all_shaders.zig");
+const AllShaders = @import("all_shaders.zig").AllShaders;
 const static_geometry = @import("static_geometry.zig");
+const StaticGeometry = static_geometry.StaticGeometry;
 const pieces = @import("pieces.zig");
 const Piece = pieces.Piece;
 const Spritesheet = @import("spritesheet.zig").Spritesheet;
 
 const Tetris = struct {
     window: *c.GLFWwindow,
-    shaders: all_shaders.AllShaders,
-    static_geometry: static_geometry.StaticGeometry,
+    all_shaders: AllShaders,
+    static_geometry: StaticGeometry,
     projection: Mat4x4,
     prng: std.rand.DefaultPrng,
     rand: *std.rand.Random,
@@ -185,10 +186,10 @@ pub fn main() !void {
 
     t.window = window;
 
-    t.shaders = try all_shaders.createAllShaders();
-    defer t.shaders.destroy();
+    t.all_shaders = try AllShaders.create();
+    defer t.all_shaders.destroy();
 
-    t.static_geometry = static_geometry.createStaticGeometry();
+    t.static_geometry = StaticGeometry.create();
     defer t.static_geometry.destroy();
 
     t.font.init(font_png, font_char_width, font_char_height) catch {
@@ -234,13 +235,13 @@ pub fn main() !void {
 }
 
 fn fillRectMvp(t: *Tetris, color: Vec4, mvp: Mat4x4) void {
-    t.shaders.primitive.bind();
-    t.shaders.primitive.setUniformVec4(t.shaders.primitive_uniform_color, color);
-    t.shaders.primitive.setUniformMat4x4(t.shaders.primitive_uniform_mvp, mvp);
+    t.all_shaders.primitive.bind();
+    t.all_shaders.primitive.setUniformVec4(t.all_shaders.primitive_uniform_color, color);
+    t.all_shaders.primitive.setUniformMat4x4(t.all_shaders.primitive_uniform_mvp, mvp);
 
     c.glBindBuffer(c.GL_ARRAY_BUFFER, t.static_geometry.rect_2d_vertex_buffer);
-    c.glEnableVertexAttribArray(@intCast(c.GLuint, t.shaders.primitive_attrib_position));
-    c.glVertexAttribPointer(@intCast(c.GLuint, t.shaders.primitive_attrib_position), 3, c.GL_FLOAT, c.GL_FALSE, 0, null);
+    c.glEnableVertexAttribArray(@intCast(c.GLuint, t.all_shaders.primitive_attrib_position));
+    c.glVertexAttribPointer(@intCast(c.GLuint, t.all_shaders.primitive_attrib_position), 3, c.GL_FLOAT, c.GL_FALSE, 0, null);
 
     c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 4);
 }
@@ -256,13 +257,13 @@ fn drawParticle(t: *Tetris, p: Particle) void {
 
     const mvp = t.projection.mult(model);
 
-    t.shaders.primitive.bind();
-    t.shaders.primitive.setUniformVec4(t.shaders.primitive_uniform_color, p.color);
-    t.shaders.primitive.setUniformMat4x4(t.shaders.primitive_uniform_mvp, mvp);
+    t.all_shaders.primitive.bind();
+    t.all_shaders.primitive.setUniformVec4(t.all_shaders.primitive_uniform_color, p.color);
+    t.all_shaders.primitive.setUniformMat4x4(t.all_shaders.primitive_uniform_mvp, mvp);
 
     c.glBindBuffer(c.GL_ARRAY_BUFFER, t.static_geometry.triangle_2d_vertex_buffer);
-    c.glEnableVertexAttribArray(@intCast(c.GLuint, t.shaders.primitive_attrib_position));
-    c.glVertexAttribPointer(@intCast(c.GLuint, t.shaders.primitive_attrib_position), 3, c.GL_FLOAT, c.GL_FALSE, 0, null);
+    c.glEnableVertexAttribArray(@intCast(c.GLuint, t.all_shaders.primitive_attrib_position));
+    c.glVertexAttribPointer(@intCast(c.GLuint, t.all_shaders.primitive_attrib_position), 3, c.GL_FLOAT, c.GL_FALSE, 0, null);
 
     c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 3);
 }
@@ -393,7 +394,7 @@ fn drawText(t: *Tetris, text: []const u8, left: i32, top: i32, size: f32) void {
             const model = mat4x4_identity.translate(char_left, @intToFloat(f32, top), 0.0).scale(size, size, 0.0);
             const mvp = t.projection.mult(model);
 
-            t.font.draw(t.shaders, col, mvp);
+            t.font.draw(t.all_shaders, col, mvp);
         } else {
             unreachable;
         }
