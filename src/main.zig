@@ -191,10 +191,10 @@ pub fn main() !void {
     t.static_geometry = static_geometry.createStaticGeometry();
     defer t.static_geometry.destroy();
 
-    t.font = Spritesheet.create(font_png, font_char_width, font_char_height) catch {
+    t.font.init(font_png, font_char_width, font_char_height) catch {
         panic("unable to read assets\n");
     };
-    defer t.font.destroy();
+    defer t.font.deinit();
 
     resetProjection(t);
     t.prng = std.rand.DefaultPrng.init(rand_seed);

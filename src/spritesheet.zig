@@ -30,9 +30,7 @@ pub const Spritesheet = struct {
         c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 4);
     }
 
-    pub fn create(compressed_bytes: []const u8, w: usize, h: usize) !Spritesheet {
-        var s: Spritesheet = undefined;
-
+    pub fn init(s: *Spritesheet, compressed_bytes: []const u8, w: usize, h: usize) !void {
         s.img = try PngImage.create(compressed_bytes);
         const col_count = s.img.width / w;
         const row_count = s.img.height / h;
@@ -110,11 +108,9 @@ pub const Spritesheet = struct {
             c.glBindBuffer(c.GL_ARRAY_BUFFER, tex_coord_buffer);
             c.glBufferData(c.GL_ARRAY_BUFFER, 4 * 2 * @sizeOf(c.GLfloat), @ptrCast(*const c_void, &tex_coords[0][0]), c.GL_STATIC_DRAW);
         }
-
-        return s;
     }
 
-    pub fn destroy(s: *Spritesheet) void {
+    pub fn deinit(s: *Spritesheet) void {
         c.glDeleteBuffers(@intCast(c.GLint, s.tex_coord_buffers.len), s.tex_coord_buffers.ptr);
         c_allocator.free(s.tex_coord_buffers);
         c.glDeleteBuffers(1, &s.vertex_buffer);
