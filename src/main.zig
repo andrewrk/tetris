@@ -8,6 +8,7 @@ const debug_gl = @import("debug_gl.zig");
 use @import("math3d.zig");
 const AllShaders = @import("all_shaders.zig").AllShaders;
 const static_geometry = @import("static_geometry.zig");
+const StaticGeometry = static_geometry.StaticGeometry;
 const pieces = @import("pieces.zig");
 const Piece = pieces.Piece;
 const Spritesheet = @import("spritesheet.zig").Spritesheet;
@@ -15,7 +16,7 @@ const Spritesheet = @import("spritesheet.zig").Spritesheet;
 const Tetris = struct {
     window: *c.GLFWwindow,
     all_shaders: AllShaders,
-    static_geometry: static_geometry.StaticGeometry,
+    static_geometry: StaticGeometry,
     projection: Mat4x4,
     prng: std.rand.DefaultPrng,
     rand: *std.rand.Random,
@@ -188,7 +189,7 @@ pub fn main() !void {
     t.all_shaders = try AllShaders.create();
     defer t.all_shaders.destroy();
 
-    t.static_geometry = static_geometry.createStaticGeometry();
+    t.static_geometry = StaticGeometry.create();
     defer t.static_geometry.destroy();
 
     t.font.init(font_png, font_char_width, font_char_height) catch {
