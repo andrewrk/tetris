@@ -6,7 +6,7 @@ const bufPrint = std.fmt.bufPrint;
 const c = @import("c.zig");
 const debug_gl = @import("debug_gl.zig");
 use @import("math3d.zig");
-const all_shaders = @import("all_shaders.zig");
+const AllShaders = @import("all_shaders.zig").AllShaders;
 const static_geometry = @import("static_geometry.zig");
 const pieces = @import("pieces.zig");
 const Piece = pieces.Piece;
@@ -14,7 +14,7 @@ const Spritesheet = @import("spritesheet.zig").Spritesheet;
 
 const Tetris = struct {
     window: *c.GLFWwindow,
-    all_shaders: all_shaders.AllShaders,
+    all_shaders: AllShaders,
     static_geometry: static_geometry.StaticGeometry,
     projection: Mat4x4,
     prng: std.rand.DefaultPrng,
@@ -185,7 +185,7 @@ pub fn main() !void {
 
     t.window = window;
 
-    t.all_shaders = try all_shaders.createAllShaders();
+    t.all_shaders = try AllShaders.create();
     defer t.all_shaders.destroy();
 
     t.static_geometry = static_geometry.createStaticGeometry();
