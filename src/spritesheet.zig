@@ -11,18 +11,18 @@ pub const Spritesheet = struct {
     vertex_buffer: c.GLuint,
     tex_coord_buffers: []c.GLuint,
 
-    pub fn draw(s: *Spritesheet, shaders: AllShaders, index: usize, mvp: Mat4x4) void {
-        shaders.texture.bind();
-        shaders.texture.setUniformMat4x4(shaders.texture_uniform_mvp, mvp);
-        shaders.texture.setUniformInt(shaders.texture_uniform_tex, 0);
+    pub fn draw(s: *Spritesheet, as: AllShaders, index: usize, mvp: Mat4x4) void {
+        as.texture.bind();
+        as.texture.setUniformMat4x4(as.texture_uniform_mvp, mvp);
+        as.texture.setUniformInt(as.texture_uniform_tex, 0);
 
         c.glBindBuffer(c.GL_ARRAY_BUFFER, s.vertex_buffer);
-        c.glEnableVertexAttribArray(@intCast(c.GLuint, shaders.texture_attrib_position));
-        c.glVertexAttribPointer(@intCast(c.GLuint, shaders.texture_attrib_position), 3, c.GL_FLOAT, c.GL_FALSE, 0, null);
+        c.glEnableVertexAttribArray(@intCast(c.GLuint, as.texture_attrib_position));
+        c.glVertexAttribPointer(@intCast(c.GLuint, as.texture_attrib_position), 3, c.GL_FLOAT, c.GL_FALSE, 0, null);
 
         c.glBindBuffer(c.GL_ARRAY_BUFFER, s.tex_coord_buffers[index]);
-        c.glEnableVertexAttribArray(@intCast(c.GLuint, shaders.texture_attrib_tex_coord));
-        c.glVertexAttribPointer(@intCast(c.GLuint, shaders.texture_attrib_tex_coord), 2, c.GL_FLOAT, c.GL_FALSE, 0, null);
+        c.glEnableVertexAttribArray(@intCast(c.GLuint, as.texture_attrib_tex_coord));
+        c.glVertexAttribPointer(@intCast(c.GLuint, as.texture_attrib_tex_coord), 2, c.GL_FLOAT, c.GL_FALSE, 0, null);
 
         c.glActiveTexture(c.GL_TEXTURE0);
         c.glBindTexture(c.GL_TEXTURE_2D, s.texture_id);
