@@ -6,17 +6,16 @@ const bufPrint = std.fmt.bufPrint;
 const c = @import("c.zig");
 const debug_gl = @import("debug_gl.zig");
 use @import("math3d.zig");
-const AllShaders = @import("all_shaders.zig").AllShaders;
+const all_shaders = @import("all_shaders.zig");
 const static_geometry = @import("static_geometry.zig");
-const StaticGeometry = static_geometry.StaticGeometry;
 const pieces = @import("pieces.zig");
 const Piece = pieces.Piece;
 const Spritesheet = @import("spritesheet.zig").Spritesheet;
 
 const Tetris = struct {
     window: *c.GLFWwindow,
-    all_shaders: AllShaders,
-    static_geometry: StaticGeometry,
+    shaders: all_shaders.AllShaders,
+    static_geometry: static_geometry.StaticGeometry,
     projection: Mat4x4,
     prng: std.rand.DefaultPrng,
     rand: *std.rand.Random,
@@ -175,10 +174,6 @@ pub fn main() !void {
     c.glBindVertexArray(vertex_array_object);
     defer c.glDeleteVertexArrays(1, &vertex_array_object);
 
-    const rand_seed = getRandomSeed() catch {
-        panic("unable to get random seed\n");
-    };
-
     const t = &tetris_state;
     c.glfwGetFramebufferSize(window, &t.framebuffer_width, &t.framebuffer_height);
     assert(t.framebuffer_width >= window_width);
@@ -186,10 +181,10 @@ pub fn main() !void {
 
     t.window = window;
 
-    t.all_shaders = try AllShaders.create();
-    defer t.all_shaders.destroy();
+    t.shaders = try all_shaders.createAllShaders();
+    defer t.shaders.destroy();
 
-    t.static_geometry = StaticGeometry.create();
+    t.static_geometry = static_geometry.createStaticGeometry();
     defer t.static_geometry.destroy();
 
     t.font.init(font_png, font_char_width, font_char_height) catch {
@@ -197,9 +192,15 @@ pub fn main() !void {
     };
     defer t.font.deinit();
 
-    resetProjection(t);
-    t.prng = std.rand.DefaultPrng.init(rand_seed);
+    var seed_bytes: [@sizeOf(u64)]u8 = undefined;
+    os.getRandomBytes(seed_bytes[0..]) catch |err| {
+        panic("unable to seed random number generator: {}", err);
+    };
+    const seed = std.mem.readIntNative(u64, &seed_bytes);
+    t.prng = std.rand.DefaultPrng.init(seed);
     t.rand = &t.prng.random;
+
+    resetProjection(t);
 
     restartGame(t);
 
@@ -235,13 +236,13 @@ pub fn main() !void {
 }
 
 fn fillRectMvp(t: *Tetris, color: Vec4, mvp: Mat4x4) void {
-    t.all_shaders.primitive.bind();
-    t.all_shaders.primitive.setUniformVec4(t.all_shaders.primitive_uniform_color, color);
-    t.all_shaders.primitive.setUniformMat4x4(t.all_shaders.primitive_uniform_mvp, mvp);
+    t.shaders.primitive.bind();
+    t.shaders.primitive.setUniformVec4(t.shaders.primitive_uniform_color, color);
+    t.shaders.primitive.setUniformMat4x4(t.shaders.primitive_uniform_mvp, mvp);
 
     c.glBindBuffer(c.GL_ARRAY_BUFFER, t.static_geometry.rect_2d_vertex_buffer);
-    c.glEnableVertexAttribArray(@intCast(c.GLuint, t.all_shaders.primitive_attrib_position));
-    c.glVertexAttribPointer(@intCast(c.GLuint, t.all_shaders.primitive_attrib_position), 3, c.GL_FLOAT, c.GL_FALSE, 0, null);
+    c.glEnableVertexAttribArray(@intCast(c.GLuint, t.shaders.primitive_attrib_position));
+    c.glVertexAttribPointer(@intCast(c.GLuint, t.shaders.primitive_attrib_position), 3, c.GL_FLOAT, c.GL_FALSE, 0, null);
 
     c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 4);
 }
@@ -257,13 +258,13 @@ fn drawParticle(t: *Tetris, p: Particle) void {
 
     const mvp = t.projection.mult(model);
 
-    t.all_shaders.primitive.bind();
-    t.all_shaders.primitive.setUniformVec4(t.all_shaders.primitive_uniform_color, p.color);
-    t.all_shaders.primitive.setUniformMat4x4(t.all_shaders.primitive_uniform_mvp, mvp);
+    t.shaders.primitive.bind();
+    t.shaders.primitive.setUniformVec4(t.shaders.primitive_uniform_color, p.color);
+    t.shaders.primitive.setUniformMat4x4(t.shaders.primitive_uniform_mvp, mvp);
 
     c.glBindBuffer(c.GL_ARRAY_BUFFER, t.static_geometry.triangle_2d_vertex_buffer);
-    c.glEnableVertexAttribArray(@intCast(c.GLuint, t.all_shaders.primitive_attrib_position));
-    c.glVertexAttribPointer(@intCast(c.GLuint, t.all_shaders.primitive_attrib_position), 3, c.GL_FLOAT, c.GL_FALSE, 0, null);
+    c.glEnableVertexAttribArray(@intCast(c.GLuint, t.shaders.primitive_attrib_position));
+    c.glVertexAttribPointer(@intCast(c.GLuint, t.shaders.primitive_attrib_position), 3, c.GL_FLOAT, c.GL_FALSE, 0, null);
 
     c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 3);
 }
@@ -274,13 +275,6 @@ fn drawFallingBlock(t: *Tetris, p: Particle) void {
     const mvp = t.projection.mult(model);
 
     fillRectMvp(t, p.color, mvp);
-}
-
-fn getRandomSeed() !u32 {
-    var seed: u32 = undefined;
-    const seed_bytes = @ptrCast([*]u8, &seed)[0..4];
-    try os.getRandomBytes(seed_bytes);
-    return seed;
 }
 
 fn drawCenteredText(t: *Tetris, text: []const u8) void {
@@ -394,7 +388,7 @@ fn drawText(t: *Tetris, text: []const u8, left: i32, top: i32, size: f32) void {
             const model = mat4x4_identity.translate(char_left, @intToFloat(f32, top), 0.0).scale(size, size, 0.0);
             const mvp = t.projection.mult(model);
 
-            t.font.draw(t.all_shaders, col, mvp);
+            t.font.draw(t.shaders, col, mvp);
         } else {
             unreachable;
         }
