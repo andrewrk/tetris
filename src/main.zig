@@ -175,10 +175,6 @@ pub fn main() !void {
     c.glBindVertexArray(vertex_array_object);
     defer c.glDeleteVertexArrays(1, &vertex_array_object);
 
-    const rand_seed = getRandomSeed() catch {
-        panic("unable to get random seed\n");
-    };
-
     const t = &tetris_state;
     c.glfwGetFramebufferSize(window, &t.framebuffer_width, &t.framebuffer_height);
     assert(t.framebuffer_width >= window_width);
@@ -197,9 +193,14 @@ pub fn main() !void {
     };
     defer t.font.deinit();
 
-    resetProjection(t);
-    t.prng = std.rand.DefaultPrng.init(rand_seed);
+    var seed_bytes: [@sizeOf(u64)]u8 = undefined;
+    os.getRandomBytes(seed_bytes[0..]) catch |err| {
+        panic("unable to seed random number generator: {}", err);
+    };
+    t.prng = std.rand.DefaultPrng.init(std.mem.readIntNative(u64, &seed_bytes));
     t.rand = &t.prng.random;
+
+    resetProjection(t);
 
     restartGame(t);
 
@@ -274,13 +275,6 @@ fn drawFallingBlock(t: *Tetris, p: Particle) void {
     const mvp = t.projection.mult(model);
 
     fillRectMvp(t, p.color, mvp);
-}
-
-fn getRandomSeed() !u32 {
-    var seed: u32 = undefined;
-    const seed_bytes = @ptrCast([*]u8, &seed)[0..4];
-    try os.getRandomBytes(seed_bytes);
-    return seed;
 }
 
 fn drawCenteredText(t: *Tetris, text: []const u8) void {
