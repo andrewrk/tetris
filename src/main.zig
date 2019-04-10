@@ -109,7 +109,7 @@ const level_delay_increment = 0.05;
 const font_char_width = 18;
 const font_char_height = 32;
 
-const gravity = 0.14;
+const gravity = 1000.0;
 const time_per_level = 60.0;
 
 const empty_row = []Cell{Cell{ .Empty = {} }} ** grid_width;
@@ -414,31 +414,8 @@ fn drawPieceWithColor(t: *Tetris, piece: Piece, left: i32, top: i32, rot: usize,
 fn nextFrame(t: *Tetris, elapsed: f64) void {
     if (t.is_paused) return;
 
-    for (t.falling_blocks) |*maybe_p| {
-        if (maybe_p.*) |*p| {
-            p.pos = p.pos.add(p.vel);
-            p.vel = p.vel.add(vec3(0, gravity, 0));
-
-            p.angle += p.angle_vel;
-
-            if (p.pos.data[1] > @intToFloat(f32, t.framebuffer_height)) {
-                maybe_p.* = null;
-            }
-        }
-    }
-
-    for (t.particles) |*maybe_p| {
-        if (maybe_p.*) |*p| {
-            p.pos = p.pos.add(p.vel);
-            p.vel = p.vel.add(vec3(0, gravity, 0));
-
-            p.angle += p.angle_vel;
-
-            if (p.pos.data[1] > @intToFloat(f32, t.framebuffer_height)) {
-                maybe_p.* = null;
-            }
-        }
-    }
+    updateKineticMotion(t, elapsed, &t.falling_blocks[0..]);
+    updateKineticMotion(t, elapsed, &t.particles[0..]);
 
     if (!t.game_over) {
         t.delay_left -= elapsed;
@@ -471,6 +448,21 @@ fn nextFrame(t: *Tetris, elapsed: f64) void {
                 @intToFloat(f32, t.framebuffer_height) + offset,
                 offset,
             );
+        }
+    }
+}
+
+fn updateKineticMotion(t: *Tetris, elapsed: f64, some_particles: *[]?Particle) void {
+    for (some_particles.*) |*maybe_p| {
+        if (maybe_p.*) |*p| {
+            p.pos.data[1] += @floatCast(f32, elapsed) * p.vel.data[1];
+            p.vel.data[1] += @floatCast(f32, elapsed) * gravity;
+
+            p.angle += p.angle_vel;
+
+            if (p.pos.data[1] > @intToFloat(f32, t.framebuffer_height)) {
+                maybe_p.* = null;
+            }
         }
     }
 }
