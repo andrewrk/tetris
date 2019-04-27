@@ -107,53 +107,53 @@ const empty_grid = [][grid_width]Cell{empty_row} ** grid_height;
 
 var tetris_state: Tetris = undefined;
 
-fn fillRect(t: *Tetris, color: Vec4, x: f32, y: f32, w: f32, h: f32) void {
+fn fillRect(t: *Tetris, comptime g: type, color: Vec4, x: f32, y: f32, w: f32, h: f32) void {
     const model = mat4x4_identity.translate(x, y, 0.0).scale(w, h, 0.0);
     const mvp = t.projection.mult(model);
-    fillRectMvp(t, color, mvp);
+    g.fillRectMvp(t, color, mvp);
 }
 
-fn drawFallingBlock(t: *Tetris, p: Particle) void {
+fn drawFallingBlock(t: *Tetris, comptime g: type,  p: Particle) void {
     const model = mat4x4_identity.translateByVec(p.pos).rotate(p.angle, p.axis).scale(p.scale_w, p.scale_h, 0.0);
 
     const mvp = t.projection.mult(model);
 
-    fillRectMvp(t, p.color, mvp);
+    g.fillRectMvp(t, p.color, mvp);
 }
 
-fn drawCenteredText(t: *Tetris, text: []const u8) void {
+fn drawCenteredText(t: *Tetris, comptime g: type, text: []const u8) void {
     const label_width = font_char_width * @intCast(i32, text.len);
     const draw_left = board_left + board_width / 2 - @divExact(label_width, 2);
     const draw_top = board_top + board_height / 2 - font_char_height / 2;
-    drawText(t, text, draw_left, draw_top, 1.0);
+    g.drawText(t, text, draw_left, draw_top, 1.0);
 }
 
-pub fn draw(t: *Tetris) void {
-    fillRect(t, board_color, board_left, board_top, board_width, board_height);
-    fillRect(t, board_color, next_piece_left, next_piece_top, next_piece_width, next_piece_height);
-    fillRect(t, board_color, score_left, score_top, score_width, score_height);
-    fillRect(t, board_color, level_display_left, level_display_top, level_display_width, level_display_height);
-    fillRect(t, board_color, hold_piece_left, hold_piece_top, hold_piece_width, hold_piece_height);
+pub fn draw(t: *Tetris, comptime g: type) void {
+    fillRect(t, g, board_color, board_left, board_top, board_width, board_height);
+    fillRect(t, g, board_color, next_piece_left, next_piece_top, next_piece_width, next_piece_height);
+    fillRect(t, g, board_color, score_left, score_top, score_width, score_height);
+    fillRect(t, g, board_color, level_display_left, level_display_top, level_display_width, level_display_height);
+    fillRect(t, g, board_color, hold_piece_left, hold_piece_top, hold_piece_width, hold_piece_height);
 
     if (t.game_over) {
-        drawCenteredText(t, "GAME OVER");
+        drawCenteredText(t, g, "GAME OVER");
     } else if (t.is_paused) {
-        drawCenteredText(t, "PAUSED");
+        drawCenteredText(t, g, "PAUSED");
     } else {
         const abs_x = board_left + t.cur_piece_x * cell_size;
         const abs_y = board_top + t.cur_piece_y * cell_size;
-        drawPiece(t, t.cur_piece.*, abs_x, abs_y, t.cur_piece_rot);
+        drawPiece(t, g, t.cur_piece.*, abs_x, abs_y, t.cur_piece_rot);
 
         const ghost_color = vec4(t.cur_piece.color.data[0], t.cur_piece.color.data[1], t.cur_piece.color.data[2], 0.2);
-        drawPieceWithColor(t, t.cur_piece.*, abs_x, t.ghost_y, t.cur_piece_rot, ghost_color);
+        drawPieceWithColor(t, g, t.cur_piece.*, abs_x, t.ghost_y, t.cur_piece_rot, ghost_color);
 
-        drawPiece(t, t.next_piece.*, next_piece_left + margin_size, next_piece_top + margin_size, 0);
+        drawPiece(t, g, t.next_piece.*, next_piece_left + margin_size, next_piece_top + margin_size, 0);
         if (t.hold_piece) |piece| {
             if (!t.hold_was_set) {
-                drawPiece(t, piece.*, hold_piece_left + margin_size, hold_piece_top + margin_size, 0);
+                drawPiece(t, g, piece.*, hold_piece_left + margin_size, hold_piece_top + margin_size, 0);
             } else {
                 const grey = vec4(0.65, 0.65, 0.65, 1.0);
-                drawPieceWithColor(t, piece.*, hold_piece_left + margin_size, hold_piece_top + margin_size, 0, grey);
+                drawPieceWithColor(t, g, piece.*, hold_piece_left + margin_size, hold_piece_top + margin_size, 0, grey);
             }
         }
 
@@ -165,6 +165,7 @@ pub fn draw(t: *Tetris) void {
                         const cell_top = board_top + @intCast(i32, y) * cell_size;
                         fillRect(
                             t,
+                            g,
                             color,
                             @intToFloat(f32, cell_left),
                             @intToFloat(f32, cell_top),
@@ -181,7 +182,7 @@ pub fn draw(t: *Tetris) void {
     {
         const score_text = "SCORE:";
         const score_label_width = font_char_width * @intCast(i32, score_text.len);
-        drawText(
+        g.drawText(
             t,
             score_text,
             score_left + score_width / 2 - score_label_width / 2,
@@ -193,50 +194,50 @@ pub fn draw(t: *Tetris) void {
         var score_text_buf: [20]u8 = undefined;
         const score_text = bufPrint(score_text_buf[0..], "{}", t.score) catch unreachable;
         const score_label_width = font_char_width * @intCast(i32, score_text.len);
-        drawText(t, score_text, score_left + score_width / 2 - @divExact(score_label_width, 2), score_top + score_height / 2, 1.0);
+        g.drawText(t, score_text, score_left + score_width / 2 - @divExact(score_label_width, 2), score_top + score_height / 2, 1.0);
     }
     {
         const text = "LEVEL:";
         const text_width = font_char_width * @intCast(i32, text.len);
-        drawText(t, text, level_display_left + level_display_width / 2 - text_width / 2, level_display_top + margin_size, 1.0);
+        g.drawText(t, text, level_display_left + level_display_width / 2 - text_width / 2, level_display_top + margin_size, 1.0);
     }
     {
         var text_buf: [20]u8 = undefined;
         const text = bufPrint(text_buf[0..], "{}", t.level) catch unreachable;
         const text_width = font_char_width * @intCast(i32, text.len);
-        drawText(t, text, level_display_left + level_display_width / 2 - @divExact(text_width, 2), level_display_top + level_display_height / 2, 1.0);
+        g.drawText(t, text, level_display_left + level_display_width / 2 - @divExact(text_width, 2), level_display_top + level_display_height / 2, 1.0);
     }
     {
         const text = "HOLD:";
         const text_width = font_char_width * @intCast(i32, text.len);
-        drawText(t, text, hold_piece_left + hold_piece_width / 2 - text_width / 2, hold_piece_top + margin_size, 1.0);
+        g.drawText(t, text, hold_piece_left + hold_piece_width / 2 - text_width / 2, hold_piece_top + margin_size, 1.0);
     }
 
     for (t.falling_blocks) |maybe_particle| {
         if (maybe_particle) |particle| {
-            drawFallingBlock(t, particle);
+            drawFallingBlock(t, g, particle);
         }
     }
 
     for (t.particles) |maybe_particle| {
         if (maybe_particle) |particle| {
-            drawParticle(t, particle);
+            g.drawParticle(t, particle);
         }
     }
 }
 
-fn drawPiece(t: *Tetris, piece: Piece, left: i32, top: i32, rot: usize) void {
-    drawPieceWithColor(t, piece, left, top, rot, piece.color);
+fn drawPiece(t: *Tetris, comptime g: type, piece: Piece, left: i32, top: i32, rot: usize) void {
+    drawPieceWithColor(t, g, piece, left, top, rot, piece.color);
 }
 
-fn drawPieceWithColor(t: *Tetris, piece: Piece, left: i32, top: i32, rot: usize, color: Vec4) void {
+fn drawPieceWithColor(t: *Tetris, comptime g: type, piece: Piece, left: i32, top: i32, rot: usize, color: Vec4) void {
     for (piece.layout[rot]) |row, y| {
         for (row) |is_filled, x| {
             if (!is_filled) continue;
             const abs_x = @intToFloat(f32, left + @intCast(i32, x) * cell_size);
             const abs_y = @intToFloat(f32, top + @intCast(i32, y) * cell_size);
 
-            fillRect(t, color, abs_x, abs_y, cell_size, cell_size);
+            fillRect(t, g, color, abs_x, abs_y, cell_size, cell_size);
         }
     }
 }
