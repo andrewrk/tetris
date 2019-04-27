@@ -7,7 +7,7 @@ use @import("math3d.zig");
 const pieces = @import("pieces.zig");
 const Piece = pieces.Piece;
 
-const Tetris = struct {
+pub const Tetris = struct {
     projection: Mat4x4,
     prng: std.rand.DefaultPrng,
     rand: *std.rand.Random,
@@ -44,7 +44,7 @@ const Cell = union(enum) {
     Color: Vec4,
 };
 
-const Particle = struct {
+pub const Particle = struct {
     color: Vec4,
     pos: Vec3,
     vel: Vec3,
@@ -128,7 +128,7 @@ fn drawCenteredText(t: *Tetris, text: []const u8) void {
     drawText(t, text, draw_left, draw_top, 1.0);
 }
 
-fn draw(t: *Tetris) void {
+pub fn draw(t: *Tetris) void {
     fillRect(t, board_color, board_left, board_top, board_width, board_height);
     fillRect(t, board_color, next_piece_left, next_piece_top, next_piece_width, next_piece_height);
     fillRect(t, board_color, score_left, score_top, score_width, score_height);
@@ -241,7 +241,7 @@ fn drawPieceWithColor(t: *Tetris, piece: Piece, left: i32, top: i32, rot: usize,
     }
 }
 
-fn nextFrame(t: *Tetris, elapsed: f64) void {
+pub fn nextFrame(t: *Tetris, elapsed: f64) void {
     if (t.is_paused) return;
 
     updateKineticMotion(t, elapsed, &t.falling_blocks[0..]);
@@ -359,7 +359,7 @@ fn computeGhost(t: *Tetris) void {
     t.ghost_y = board_top + cell_size * (t.cur_piece_y + off_y - 1);
 }
 
-fn userCurPieceFall(t: *Tetris) void {
+pub fn userCurPieceFall(t: *Tetris) void {
     if (t.game_over or t.is_paused) return;
     _ = curPieceFall(t);
 }
@@ -376,14 +376,14 @@ fn curPieceFall(t: *Tetris) bool {
     }
 }
 
-fn userDropCurPiece(t: *Tetris) void {
+pub fn userDropCurPiece(t: *Tetris) void {
     if (t.game_over or t.is_paused) return;
     while (!curPieceFall(t)) {
         t.score += 1;
     }
 }
 
-fn userMoveCurPiece(t: *Tetris, dir: i8) void {
+pub fn userMoveCurPiece(t: *Tetris, dir: i8) void {
     if (t.game_over or t.is_paused) return;
     if (pieceWouldCollide(t, t.cur_piece.*, t.cur_piece_x + dir, t.cur_piece_y, t.cur_piece_rot)) {
         return;
@@ -391,7 +391,7 @@ fn userMoveCurPiece(t: *Tetris, dir: i8) void {
     t.cur_piece_x += dir;
 }
 
-fn userRotateCurPiece(t: *Tetris, rot: i8) void {
+pub fn userRotateCurPiece(t: *Tetris, rot: i8) void {
     if (t.game_over or t.is_paused) return;
     const new_rot = @intCast(usize, @rem(@intCast(isize, t.cur_piece_rot) + rot + 4, 4));
     if (pieceWouldCollide(t, t.cur_piece.*, t.cur_piece_x, t.cur_piece_y, new_rot)) {
@@ -400,13 +400,13 @@ fn userRotateCurPiece(t: *Tetris, rot: i8) void {
     t.cur_piece_rot = new_rot;
 }
 
-fn userTogglePause(t: *Tetris) void {
+pub fn userTogglePause(t: *Tetris) void {
     if (t.game_over) return;
 
     t.is_paused = !t.is_paused;
 }
 
-fn restartGame(t: *Tetris) void {
+pub fn restartGame(t: *Tetris) void {
     t.piece_delay = init_piece_delay;
     t.delay_left = init_piece_delay;
     t.score = 0;
@@ -503,7 +503,7 @@ fn lockPiece(t: *Tetris) void {
     }
 }
 
-fn resetProjection(t: *Tetris) void {
+pub fn resetProjection(t: *Tetris) void {
     t.projection = mat4x4Ortho(
         0.0,
         @intToFloat(f32, t.framebuffer_width),
@@ -601,7 +601,7 @@ fn doGameOver(t: *Tetris) void {
     }
 }
 
-fn userSetHoldPiece(t: *Tetris) void {
+pub fn userSetHoldPiece(t: *Tetris) void {
     if (t.game_over or t.is_paused or t.hold_was_set) return;
     var next_cur: *const Piece = undefined;
     if (t.hold_piece) |hold_piece| {
