@@ -87,8 +87,8 @@ const hold_piece_height = next_piece_height;
 const hold_piece_left = next_piece_left;
 const hold_piece_top = level_display_top - margin_size - hold_piece_height;
 
-const window_width = next_piece_left + next_piece_width + margin_size;
-const window_height = board_top + board_height + margin_size;
+pub const window_width = next_piece_left + next_piece_width + margin_size;
+pub const window_height = board_top + board_height + margin_size;
 
 const board_color = Vec4{ .data = []f32{ 72.0 / 255.0, 72.0 / 255.0, 72.0 / 255.0, 1.0 } };
 
@@ -96,8 +96,8 @@ const init_piece_delay = 0.5;
 const min_piece_delay = 0.05;
 const level_delay_increment = 0.05;
 
-const font_char_width = 18;
-const font_char_height = 32;
+pub const font_char_width = 18;
+pub const font_char_height = 32;
 
 const gravity = 1000.0;
 const time_per_level = 60.0;
