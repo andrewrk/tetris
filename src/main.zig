@@ -7,16 +7,17 @@ const c = @import("c.zig");
 const debug_gl = @import("debug_gl.zig");
 use @import("math3d.zig");
 const AllShaders = @import("all_shaders.zig").AllShaders;
-const static_geometry = @import("static_geometry.zig");
-const StaticGeometry = static_geometry.StaticGeometry;
+const StaticGeometry = @import("static_geometry.zig").StaticGeometry;
 const pieces = @import("pieces.zig");
 const Piece = pieces.Piece;
 const Spritesheet = @import("spritesheet.zig").Spritesheet;
 
+var window: *c.GLFWwindow = undefined;
+var all_shaders: AllShaders = undefined;
+var static_geometry: StaticGeometry = undefined;
+var font: Spritesheet = undefined;
+
 const Tetris = struct {
-    window: *c.GLFWwindow,
-    all_shaders: AllShaders,
-    static_geometry: StaticGeometry,
     projection: Mat4x4,
     prng: std.rand.DefaultPrng,
     rand: *std.rand.Random,
@@ -34,7 +35,6 @@ const Tetris = struct {
     game_over: bool,
     next_particle_index: usize,
     next_falling_block_index: usize,
-    font: Spritesheet,
     ghost_y: i32,
     framebuffer_width: c_int,
     framebuffer_height: c_int,
@@ -119,12 +119,12 @@ extern fn errorCallback(err: c_int, description: [*c]const u8) void {
     panic("Error: {}\n", description);
 }
 
-extern fn keyCallback(window: ?*c.GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) void {
+extern fn keyCallback(win: ?*c.GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) void {
     if (action != c.GLFW_PRESS) return;
-    const t = @ptrCast(*Tetris, @alignCast(@alignOf(Tetris), c.glfwGetWindowUserPointer(window).?));
+    const t = @ptrCast(*Tetris, @alignCast(@alignOf(Tetris), c.glfwGetWindowUserPointer(win).?));
 
     switch (key) {
-        c.GLFW_KEY_ESCAPE => c.glfwSetWindowShouldClose(window, c.GL_TRUE),
+        c.GLFW_KEY_ESCAPE => c.glfwSetWindowShouldClose(win, c.GL_TRUE),
         c.GLFW_KEY_SPACE => userDropCurPiece(t),
         c.GLFW_KEY_DOWN => userCurPieceFall(t),
         c.GLFW_KEY_LEFT => userMoveCurPiece(t, -1),
@@ -159,7 +159,7 @@ pub fn main() !void {
     c.glfwWindowHint(c.GLFW_STENCIL_BITS, 8);
     c.glfwWindowHint(c.GLFW_RESIZABLE, c.GL_FALSE);
 
-    var window = c.glfwCreateWindow(window_width, window_height, c"Tetris", null, null) orelse {
+    window = c.glfwCreateWindow(window_width, window_height, c"Tetris", null, null) orelse {
         panic("unable to create window\n");
     };
     defer c.glfwDestroyWindow(window);
@@ -180,18 +180,16 @@ pub fn main() !void {
     assert(t.framebuffer_width >= window_width);
     assert(t.framebuffer_height >= window_height);
 
-    t.window = window;
+    all_shaders = try AllShaders.create();
+    defer all_shaders.destroy();
 
-    t.all_shaders = try AllShaders.create();
-    defer t.all_shaders.destroy();
+    static_geometry = StaticGeometry.create();
+    defer static_geometry.destroy();
 
-    t.static_geometry = StaticGeometry.create();
-    defer t.static_geometry.destroy();
-
-    t.font.init(font_png, font_char_width, font_char_height) catch {
+    font.init(font_png, font_char_width, font_char_height) catch {
         panic("unable to read assets\n");
     };
-    defer t.font.deinit();
+    defer font.deinit();
 
     var seed_bytes: [@sizeOf(u64)]u8 = undefined;
     os.getRandomBytes(seed_bytes[0..]) catch |err| {
@@ -236,13 +234,13 @@ pub fn main() !void {
 }
 
 fn fillRectMvp(t: *Tetris, color: Vec4, mvp: Mat4x4) void {
-    t.all_shaders.primitive.bind();
-    t.all_shaders.primitive.setUniformVec4(t.all_shaders.primitive_uniform_color, color);
-    t.all_shaders.primitive.setUniformMat4x4(t.all_shaders.primitive_uniform_mvp, mvp);
+    all_shaders.primitive.bind();
+    all_shaders.primitive.setUniformVec4(all_shaders.primitive_uniform_color, color);
+    all_shaders.primitive.setUniformMat4x4(all_shaders.primitive_uniform_mvp, mvp);
 
-    c.glBindBuffer(c.GL_ARRAY_BUFFER, t.static_geometry.rect_2d_vertex_buffer);
-    c.glEnableVertexAttribArray(@intCast(c.GLuint, t.all_shaders.primitive_attrib_position));
-    c.glVertexAttribPointer(@intCast(c.GLuint, t.all_shaders.primitive_attrib_position), 3, c.GL_FLOAT, c.GL_FALSE, 0, null);
+    c.glBindBuffer(c.GL_ARRAY_BUFFER, static_geometry.rect_2d_vertex_buffer);
+    c.glEnableVertexAttribArray(@intCast(c.GLuint, all_shaders.primitive_attrib_position));
+    c.glVertexAttribPointer(@intCast(c.GLuint, all_shaders.primitive_attrib_position), 3, c.GL_FLOAT, c.GL_FALSE, 0, null);
 
     c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 4);
 }
@@ -258,13 +256,13 @@ fn drawParticle(t: *Tetris, p: Particle) void {
 
     const mvp = t.projection.mult(model);
 
-    t.all_shaders.primitive.bind();
-    t.all_shaders.primitive.setUniformVec4(t.all_shaders.primitive_uniform_color, p.color);
-    t.all_shaders.primitive.setUniformMat4x4(t.all_shaders.primitive_uniform_mvp, mvp);
+    all_shaders.primitive.bind();
+    all_shaders.primitive.setUniformVec4(all_shaders.primitive_uniform_color, p.color);
+    all_shaders.primitive.setUniformMat4x4(all_shaders.primitive_uniform_mvp, mvp);
 
-    c.glBindBuffer(c.GL_ARRAY_BUFFER, t.static_geometry.triangle_2d_vertex_buffer);
-    c.glEnableVertexAttribArray(@intCast(c.GLuint, t.all_shaders.primitive_attrib_position));
-    c.glVertexAttribPointer(@intCast(c.GLuint, t.all_shaders.primitive_attrib_position), 3, c.GL_FLOAT, c.GL_FALSE, 0, null);
+    c.glBindBuffer(c.GL_ARRAY_BUFFER, static_geometry.triangle_2d_vertex_buffer);
+    c.glEnableVertexAttribArray(@intCast(c.GLuint, all_shaders.primitive_attrib_position));
+    c.glVertexAttribPointer(@intCast(c.GLuint, all_shaders.primitive_attrib_position), 3, c.GL_FLOAT, c.GL_FALSE, 0, null);
 
     c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 3);
 }
@@ -388,7 +386,7 @@ fn drawText(t: *Tetris, text: []const u8, left: i32, top: i32, size: f32) void {
             const model = mat4x4_identity.translate(char_left, @intToFloat(f32, top), 0.0).scale(size, size, 0.0);
             const mvp = t.projection.mult(model);
 
-            t.font.draw(t.all_shaders, col, mvp);
+            font.draw(all_shaders, col, mvp);
         } else {
             unreachable;
         }
