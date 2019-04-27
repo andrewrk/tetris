@@ -1,3 +1,6 @@
+use @import("math3d.zig");
+use @import("tetris.zig");
+
 const std = @import("std");
 const os = std.os;
 const panic = std.debug.panic;
@@ -5,7 +8,6 @@ const assert = std.debug.assert;
 const bufPrint = std.fmt.bufPrint;
 const c = @import("c.zig");
 const debug_gl = @import("debug_gl.zig");
-use @import("math3d.zig");
 const AllShaders = @import("all_shaders.zig").AllShaders;
 const StaticGeometry = @import("static_geometry.zig").StaticGeometry;
 const pieces = @import("pieces.zig");
@@ -126,7 +128,7 @@ pub fn main() !void {
 
         nextFrame(t, elapsed);
 
-        draw(t);
+        draw(t, @This());
         c.glfwSwapBuffers(window);
 
         c.glfwPollEvents();
@@ -135,7 +137,7 @@ pub fn main() !void {
     debug_gl.assertNoError();
 }
 
-fn fillRectMvp(t: *Tetris, color: Vec4, mvp: Mat4x4) void {
+pub fn fillRectMvp(t: *Tetris, color: Vec4, mvp: Mat4x4) void {
     all_shaders.primitive.bind();
     all_shaders.primitive.setUniformVec4(all_shaders.primitive_uniform_color, color);
     all_shaders.primitive.setUniformMat4x4(all_shaders.primitive_uniform_mvp, mvp);
@@ -153,7 +155,7 @@ fn fillRect(t: *Tetris, color: Vec4, x: f32, y: f32, w: f32, h: f32) void {
     fillRectMvp(t, color, mvp);
 }
 
-fn drawParticle(t: *Tetris, p: Particle) void {
+pub fn drawParticle(t: *Tetris, p: Particle) void {
     const model = mat4x4_identity.translateByVec(p.pos).rotate(p.angle, p.axis).scale(p.scale_w, p.scale_h, 0.0);
 
     const mvp = t.projection.mult(model);
@@ -169,7 +171,7 @@ fn drawParticle(t: *Tetris, p: Particle) void {
     c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 3);
 }
 
-fn drawText(t: *Tetris, text: []const u8, left: i32, top: i32, size: f32) void {
+pub fn drawText(t: *Tetris, text: []const u8, left: i32, top: i32, size: f32) void {
     for (text) |col, i| {
         if (col <= '~') {
             const char_left = @intToFloat(f32, left) + @intToFloat(f32, i * font_char_width) * size;
