@@ -25,7 +25,6 @@ A simple tetris clone written in
  * [Zig compiler](https://github.com/andrewrk/zig) - use the debug build.
  * [libepoxy](https://github.com/anholt/libepoxy)
  * [GLFW](http://www.glfw.org/)
- * [libpng](http://www.libpng.org/pub/png/libpng.html)
 
 ## Building and Running
 
