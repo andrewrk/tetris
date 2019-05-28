@@ -2,7 +2,6 @@ use @import("math3d.zig");
 use @import("tetris.zig");
 
 const std = @import("std");
-const os = std.os;
 const panic = std.debug.panic;
 const assert = std.debug.assert;
 const bufPrint = std.fmt.bufPrint;
@@ -96,7 +95,7 @@ pub fn main() !void {
     defer font.deinit();
 
     var seed_bytes: [@sizeOf(u64)]u8 = undefined;
-    os.getRandomBytes(seed_bytes[0..]) catch |err| {
+    std.crypto.randomBytes(seed_bytes[0..]) catch |err| {
         panic("unable to seed random number generator: {}", err);
     };
     t.prng = std.rand.DefaultPrng.init(std.mem.readIntNative(u64, &seed_bytes));
