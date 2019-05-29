@@ -91,6 +91,7 @@ pub const window_width = next_piece_left + next_piece_width + margin_size;
 pub const window_height = board_top + board_height + margin_size;
 
 const board_color = Vec4{ .data = []f32{ 72.0 / 255.0, 72.0 / 255.0, 72.0 / 255.0, 1.0 } };
+const back_color = Vec4{ .data = []f32{ 0.0, 0.0, 0.0, 1.0 } };
 
 const init_piece_delay = 0.5;
 const min_piece_delay = 0.05;
@@ -224,6 +225,8 @@ pub fn draw(t: *Tetris, comptime g: type) void {
             g.drawParticle(t, particle);
         }
     }
+
+    fillRect(t, g, back_color, board_left, board_top + board_height, board_width, margin_size);
 }
 
 fn drawPiece(t: *Tetris, comptime g: type, piece: Piece, left: i32, top: i32, rot: usize) void {
