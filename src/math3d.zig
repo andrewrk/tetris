@@ -1,4 +1,4 @@
-const c = @import("c.zig");
+const math = @import("std").math;
 const assert = @import("std").debug.assert;
 
 pub const Mat4x4 = struct {
@@ -39,8 +39,8 @@ pub const Mat4x4 = struct {
     /// angle: Rotation angle expressed in radians.
     /// axis: Rotation axis, recommended to be normalized.
     pub fn rotate(m: Mat4x4, angle: f32, axis_unnormalized: Vec3) Mat4x4 {
-        const cos = c.cosf(angle);
-        const s = c.sinf(angle);
+        const cos = math.cos(angle);
+        const s = math.sin(angle);
         const axis = axis_unnormalized.normalize();
         const temp = axis.scale(1.0 - cos);
 
@@ -137,7 +137,7 @@ pub const Vec3 = struct {
     data: [3]f32,
 
     pub fn normalize(v: Vec3) Vec3 {
-        return v.scale(1.0 / c.sqrtf(v.dot(v)));
+        return v.scale(1.0 / math.sqrt(v.dot(v)));
     }
 
     pub fn scale(v: Vec3, scalar: f32) Vec3 {
@@ -155,7 +155,7 @@ pub const Vec3 = struct {
     }
 
     pub fn length(v: Vec3) f32 {
-        return c.sqrtf(v.dot(v));
+        return math.sqrt(v.dot(v));
     }
 
     /// returns the cross product
