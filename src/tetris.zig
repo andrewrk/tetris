@@ -2,7 +2,7 @@ const std = @import("std");
 const panic = std.debug.panic;
 const assert = std.debug.assert;
 const bufPrint = std.fmt.bufPrint;
-const c = @import("c.zig");
+const math = std.math;
 use @import("math3d.zig");
 const pieces = @import("pieces.zig");
 const Piece = pieces.Piece;
@@ -61,7 +61,7 @@ const max_falling_block_count = grid_width * grid_height;
 const margin_size = 10;
 const grid_width = 10;
 const grid_height = 20;
-const cell_size = 32;
+pub const cell_size = 32;
 const board_width = grid_width * cell_size;
 const board_height = grid_height * cell_size;
 const board_left = margin_size;
@@ -272,7 +272,7 @@ pub fn nextFrame(t: *Tetris, elapsed: f64) void {
         } else {
             const rate = 8; // oscillations per sec
             const amplitude = 4; // pixels
-            const offset = @floatCast(f32, amplitude * -c.sin(2.0 * PI * t.screen_shake_elapsed * rate));
+            const offset = @floatCast(f32, amplitude * -math.sin(2.0 * PI * t.screen_shake_elapsed * rate));
             t.projection = mat4x4Ortho(
                 0.0,
                 @intToFloat(f32, t.framebuffer_width),
