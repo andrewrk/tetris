@@ -148,12 +148,6 @@ pub fn fillRectMvp(t: *Tetris, color: Vec4, mvp: Mat4x4) void {
     c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 4);
 }
 
-fn fillRect(t: *Tetris, color: Vec4, x: f32, y: f32, w: f32, h: f32) void {
-    const model = mat4x4_identity.translate(x, y, 0.0).scale(w, h, 0.0);
-    const mvp = t.projection.mult(model);
-    fillRectMvp(t, color, mvp);
-}
-
 pub fn drawParticle(t: *Tetris, p: Particle) void {
     const model = mat4x4_identity.translateByVec(p.pos).rotate(p.angle, p.axis).scale(p.scale_w, p.scale_h, 0.0);
 
