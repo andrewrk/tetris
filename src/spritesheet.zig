@@ -1,4 +1,4 @@
-const c = @import("c.zig");
+const c = @import("c_with_glfw.zig");
 const AllShaders = @import("all_shaders.zig").AllShaders;
 const Mat4x4 = @import("math3d.zig").Mat4x4;
 const PngImage = @import("png.zig").PngImage;

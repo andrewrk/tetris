@@ -1,4 +1,4 @@
-const c = @import("c.zig");
+const c = @import("c_with_glfw.zig");
 const std = @import("std");
 const os = std.os;
 const panic = std.debug.panic;

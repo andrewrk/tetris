@@ -1,4 +1,4 @@
-const c = @import("c.zig");
+const c = @import("c_with_glfw.zig");
 
 pub const PngImage = struct {
     width: u32,
