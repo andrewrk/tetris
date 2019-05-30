@@ -16,7 +16,6 @@ pub fn build(b: *Builder) void {
     exe.addIncludeDir("stb_image-2.22");
 
     exe.linkSystemLibrary("c");
-    exe.linkSystemLibrary("m");
     exe.linkSystemLibrary("glfw");
     exe.linkSystemLibrary("epoxy");
 
