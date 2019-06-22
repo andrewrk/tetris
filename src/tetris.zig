@@ -90,7 +90,7 @@ const hold_piece_top = level_display_top - margin_size - hold_piece_height;
 pub const window_width = next_piece_left + next_piece_width + margin_size;
 pub const window_height = board_top + board_height + margin_size;
 
-const board_color = Vec4{ .data = []f32{ 72.0 / 255.0, 72.0 / 255.0, 72.0 / 255.0, 1.0 } };
+const board_color = Vec4{ .data = [_]f32{ 72.0 / 255.0, 72.0 / 255.0, 72.0 / 255.0, 1.0 } };
 
 const init_piece_delay = 0.5;
 const min_piece_delay = 0.05;
@@ -102,8 +102,8 @@ pub const font_char_height = 32;
 const gravity = 1000.0;
 const time_per_level = 60.0;
 
-const empty_row = []Cell{Cell{ .Empty = {} }} ** grid_width;
-const empty_grid = [][grid_width]Cell{empty_row} ** grid_height;
+const empty_row = [_]Cell{Cell{ .Empty = {} }} ** grid_width;
+const empty_grid = [_][grid_width]Cell{empty_row} ** grid_height;
 
 var tetris_state: Tetris = undefined;
 
@@ -420,7 +420,7 @@ pub fn restartGame(t: *Tetris) void {
     t.hold_was_set = false;
     t.hold_piece = null;
 
-    t.piece_pool = []i32{1} ** pieces.pieces.len;
+    t.piece_pool = [_]i32{1} ** pieces.pieces.len;
 
     clearParticles(t);
     t.grid = empty_grid;
@@ -496,7 +496,7 @@ fn lockPiece(t: *Tetris) void {
         }
     }
 
-    const score_per_rows_deleted = []c_int{ 0, 10, 30, 50, 70 };
+    const score_per_rows_deleted = [_]c_int{ 0, 10, 30, 50, 70 };
     t.score += score_per_rows_deleted[rows_deleted];
 
     if (rows_deleted > 0) {

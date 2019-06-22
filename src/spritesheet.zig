@@ -60,11 +60,11 @@ pub const Spritesheet = struct {
         c.glGenBuffers(1, &s.vertex_buffer);
         errdefer c.glDeleteBuffers(1, &s.vertex_buffer);
 
-        const vertexes = [][3]c.GLfloat{
-            []c.GLfloat{ 0.0, 0.0, 0.0 },
-            []c.GLfloat{ 0.0, @intToFloat(c.GLfloat, h), 0.0 },
-            []c.GLfloat{ @intToFloat(c.GLfloat, w), 0.0, 0.0 },
-            []c.GLfloat{ @intToFloat(c.GLfloat, w), @intToFloat(c.GLfloat, h), 0.0 },
+        const vertexes = [_][3]c.GLfloat{
+            [_]c.GLfloat{ 0.0, 0.0, 0.0 },
+            [_]c.GLfloat{ 0.0, @intToFloat(c.GLfloat, h), 0.0 },
+            [_]c.GLfloat{ @intToFloat(c.GLfloat, w), 0.0, 0.0 },
+            [_]c.GLfloat{ @intToFloat(c.GLfloat, w), @intToFloat(c.GLfloat, h), 0.0 },
         };
 
         c.glBindBuffer(c.GL_ARRAY_BUFFER, s.vertex_buffer);
@@ -86,20 +86,20 @@ pub const Spritesheet = struct {
 
             const img_w = @intToFloat(f32, s.img.width);
             const img_h = @intToFloat(f32, s.img.height);
-            const tex_coords = [][2]c.GLfloat{
-                []c.GLfloat{
+            const tex_coords = [_][2]c.GLfloat{
+                [_]c.GLfloat{
                     x / img_w,
                     (y + @intToFloat(f32, h)) / img_h,
                 },
-                []c.GLfloat{
+                [_]c.GLfloat{
                     x / img_w,
                     y / img_h,
                 },
-                []c.GLfloat{
+                [_]c.GLfloat{
                     (x + @intToFloat(f32, w)) / img_w,
                     (y + @intToFloat(f32, h)) / img_h,
                 },
-                []c.GLfloat{
+                [_]c.GLfloat{
                     (x + @intToFloat(f32, w)) / img_w,
                     y / img_h,
                 },
