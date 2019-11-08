@@ -38,7 +38,7 @@ pub const PngImage = struct {
         if (image_data == null) return error.NoMem;
 
         pi.pitch = pi.width * bits_per_channel * channel_count / 8;
-        pi.raw = image_data[0..pi.height * pi.pitch];
+        pi.raw = image_data[0 .. pi.height * pi.pitch];
 
         return pi;
     }

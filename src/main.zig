@@ -1,5 +1,5 @@
-use @import("math3d.zig");
-use @import("tetris.zig");
+usingnamespace @import("math3d.zig");
+usingnamespace @import("tetris.zig");
 
 const std = @import("std");
 const panic = std.debug.panic;

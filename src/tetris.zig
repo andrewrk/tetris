@@ -3,7 +3,7 @@ const panic = std.debug.panic;
 const assert = std.debug.assert;
 const bufPrint = std.fmt.bufPrint;
 const math = std.math;
-use @import("math3d.zig");
+usingnamespace @import("math3d.zig");
 const pieces = @import("pieces.zig");
 const Piece = pieces.Piece;
 
@@ -113,7 +113,7 @@ fn fillRect(t: *Tetris, comptime g: type, color: Vec4, x: f32, y: f32, w: f32, h
     g.fillRectMvp(t, color, mvp);
 }
 
-fn drawFallingBlock(t: *Tetris, comptime g: type,  p: Particle) void {
+fn drawFallingBlock(t: *Tetris, comptime g: type, p: Particle) void {
     const model = mat4x4_identity.translateByVec(p.pos).rotate(p.angle, p.axis).scale(p.scale_w, p.scale_h, 0.0);
 
     const mvp = t.projection.mult(model);
@@ -665,12 +665,12 @@ fn getNextFallingBlockIndex(t: *Tetris) usize {
 
 fn addExplosion(t: *Tetris, color: Vec4, center_x: f32, center_y: f32) void {
     const particle_count = 12;
-    const particle_size = f32(cell_size) / 3.0;
+    const particle_size = @as(f32, cell_size) / 3.0;
     {
         var i: i32 = 0;
         while (i < particle_count) : (i += 1) {
-            const off_x = t.rand.float(f32) * f32(cell_size) / 2.0;
-            const off_y = t.rand.float(f32) * f32(cell_size) / 2.0;
+            const off_x = t.rand.float(f32) * @as(f32, cell_size) / 2.0;
+            const off_y = t.rand.float(f32) * @as(f32, cell_size) / 2.0;
             const pos = vec3(center_x + off_x, center_y + off_y, 0.0);
             t.particles[getNextParticleIndex(t)] = createParticle(t, color, particle_size, pos);
         }
