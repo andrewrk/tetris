@@ -62,7 +62,7 @@ pub fn main() !void {
     c.glfwWindowHint(c.GLFW_STENCIL_BITS, 8);
     c.glfwWindowHint(c.GLFW_RESIZABLE, c.GL_FALSE);
 
-    window = c.glfwCreateWindow(window_width, window_height, c"Tetris", null, null) orelse {
+    window = c.glfwCreateWindow(window_width, window_height, "Tetris", null, null) orelse {
         panic("unable to create window\n");
     };
     defer c.glfwDestroyWindow(window);

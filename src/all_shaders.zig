@@ -45,9 +45,9 @@ pub const AllShaders = struct {
             \\}
         , null);
 
-        as.primitive_attrib_position = as.primitive.attribLocation(c"VertexPosition");
-        as.primitive_uniform_mvp = as.primitive.uniformLocation(c"MVP");
-        as.primitive_uniform_color = as.primitive.uniformLocation(c"Color");
+        as.primitive_attrib_position = as.primitive.attribLocation("VertexPosition");
+        as.primitive_uniform_mvp = as.primitive.uniformLocation("MVP");
+        as.primitive_uniform_color = as.primitive.uniformLocation("Color");
 
         as.texture = try ShaderProgram.create(
             \\#version 150 core
@@ -78,10 +78,10 @@ pub const AllShaders = struct {
             \\}
         , null);
 
-        as.texture_attrib_tex_coord = as.texture.attribLocation(c"TexCoord");
-        as.texture_attrib_position = as.texture.attribLocation(c"VertexPosition");
-        as.texture_uniform_mvp = as.texture.uniformLocation(c"MVP");
-        as.texture_uniform_tex = as.texture.uniformLocation(c"Tex");
+        as.texture_attrib_tex_coord = as.texture.attribLocation("TexCoord");
+        as.texture_attrib_position = as.texture.attribLocation("VertexPosition");
+        as.texture_uniform_mvp = as.texture.uniformLocation("MVP");
+        as.texture_uniform_tex = as.texture.uniformLocation("Tex");
 
         debug_gl.assertNoError();
 
@@ -146,10 +146,10 @@ pub const ShaderProgram = struct {
         maybe_geometry_source: ?[]u8,
     ) !ShaderProgram {
         var sp: ShaderProgram = undefined;
-        sp.vertex_id = try initGlShader(vertex_source, c"vertex", c.GL_VERTEX_SHADER);
-        sp.fragment_id = try initGlShader(frag_source, c"fragment", c.GL_FRAGMENT_SHADER);
+        sp.vertex_id = try initGlShader(vertex_source, "vertex", c.GL_VERTEX_SHADER);
+        sp.fragment_id = try initGlShader(frag_source, "fragment", c.GL_FRAGMENT_SHADER);
         sp.maybe_geometry_id = if (maybe_geometry_source) |geo_source|
-            try initGlShader(geo_source, c"geometry", c.GL_GEOMETRY_SHADER)
+            try initGlShader(geo_source, "geometry", c.GL_GEOMETRY_SHADER)
         else
             null;
 
