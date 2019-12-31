@@ -6,7 +6,7 @@ pub fn build(b: *Builder) void {
     const windows = b.option(bool, "windows", "create windows build") orelse false;
 
     var exe = b.addExecutable("tetris", "src/main.zig");
-    exe.addCSourceFile("stb_image-2.22/stb_image_impl.c", [_][]const u8{"-std=c99"});
+    exe.addCSourceFile("stb_image-2.22/stb_image_impl.c", &[_][]const u8{"-std=c99"});
     exe.setBuildMode(mode);
 
     if (windows) {

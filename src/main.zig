@@ -19,7 +19,7 @@ var static_geometry: StaticGeometry = undefined;
 var font: Spritesheet = undefined;
 
 extern fn errorCallback(err: c_int, description: [*c]const u8) void {
-    panic("Error: {}\n", description);
+    panic("Error: {}\n", .{description});
 }
 
 extern fn keyCallback(win: ?*c.GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) void {
@@ -49,7 +49,7 @@ pub fn main() !void {
     _ = c.glfwSetErrorCallback(errorCallback);
 
     if (c.glfwInit() == c.GL_FALSE) {
-        panic("GLFW init failure\n");
+        panic("GLFW init failure\n", .{});
     }
     defer c.glfwTerminate();
 
@@ -63,7 +63,7 @@ pub fn main() !void {
     c.glfwWindowHint(c.GLFW_RESIZABLE, c.GL_FALSE);
 
     window = c.glfwCreateWindow(window_width, window_height, "Tetris", null, null) orelse {
-        panic("unable to create window\n");
+        panic("unable to create window\n", .{});
     };
     defer c.glfwDestroyWindow(window);
 
@@ -90,13 +90,13 @@ pub fn main() !void {
     defer static_geometry.destroy();
 
     font.init(font_png, font_char_width, font_char_height) catch {
-        panic("unable to read assets\n");
+        panic("unable to read assets\n", .{});
     };
     defer font.deinit();
 
     var seed_bytes: [@sizeOf(u64)]u8 = undefined;
     std.crypto.randomBytes(seed_bytes[0..]) catch |err| {
-        panic("unable to seed random number generator: {}", err);
+        panic("unable to seed random number generator: {}", .{err});
     };
     t.prng = std.rand.DefaultPrng.init(std.mem.readIntNative(u64, &seed_bytes));
     t.rand = &t.prng.random;

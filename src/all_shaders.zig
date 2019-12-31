@@ -107,7 +107,7 @@ pub const ShaderProgram = struct {
     pub fn attribLocation(sp: ShaderProgram, name: [*]const u8) c.GLint {
         const id = c.glGetAttribLocation(sp.program_id, name);
         if (id == -1) {
-            panic("invalid attrib: {}\n", name);
+            panic("invalid attrib: {}\n", .{name});
         }
         return id;
     }
@@ -115,7 +115,7 @@ pub const ShaderProgram = struct {
     pub fn uniformLocation(sp: ShaderProgram, name: [*]const u8) c.GLint {
         const id = c.glGetUniformLocation(sp.program_id, name);
         if (id == -1) {
-            panic("invalid uniform: {}\n", name);
+            panic("invalid uniform: {}\n", .{name});
         }
         return id;
     }
@@ -169,7 +169,7 @@ pub const ShaderProgram = struct {
         c.glGetProgramiv(sp.program_id, c.GL_INFO_LOG_LENGTH, &error_size);
         const message = try c_allocator.alloc(u8, @intCast(usize, error_size));
         c.glGetProgramInfoLog(sp.program_id, error_size, &error_size, message.ptr);
-        panic("Error linking shader program: {}\n", message.ptr);
+        panic("Error linking shader program: {}\n", .{message.ptr});
     }
 
     pub fn destroy(sp: *ShaderProgram) void {
@@ -205,5 +205,5 @@ fn initGlShader(source: []const u8, name: [*]const u8, kind: c.GLenum) !c.GLuint
 
     const message = try c_allocator.alloc(u8, @intCast(usize, error_size));
     c.glGetShaderInfoLog(shader_id, error_size, &error_size, message.ptr);
-    panic("Error compiling {} shader:\n{}\n", name, message.ptr);
+    panic("Error compiling {} shader:\n{}\n", .{ name, message.ptr });
 }
