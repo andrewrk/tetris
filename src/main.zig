@@ -18,11 +18,11 @@ var all_shaders: AllShaders = undefined;
 var static_geometry: StaticGeometry = undefined;
 var font: Spritesheet = undefined;
 
-extern fn errorCallback(err: c_int, description: [*c]const u8) void {
+fn errorCallback(err: c_int, description: [*c]const u8) callconv(.C) void {
     panic("Error: {}\n", .{description});
 }
 
-extern fn keyCallback(win: ?*c.GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) void {
+fn keyCallback(win: ?*c.GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) callconv(.C) void {
     if (action != c.GLFW_PRESS) return;
     const t = @ptrCast(*Tetris, @alignCast(@alignOf(Tetris), c.glfwGetWindowUserPointer(win).?));
 
