@@ -10,7 +10,11 @@ pub fn build(b: *Builder) void {
     exe.setBuildMode(mode);
 
     if (windows) {
-        exe.setTarget(builtin.Arch.x86_64, builtin.Os.windows, builtin.Abi.gnu);
+        exe.setTarget(.{
+            .cpu_arch = .x86_64,
+            .os_tag = .windows,
+            .abi = .gnu,
+        });
     }
 
     exe.addIncludeDir("stb_image-2.22");
