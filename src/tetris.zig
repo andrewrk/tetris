@@ -245,8 +245,8 @@ fn drawPieceWithColor(t: *Tetris, comptime g: type, piece: Piece, left: i32, top
 pub fn nextFrame(t: *Tetris, elapsed: f64) void {
     if (t.is_paused) return;
 
-    updateKineticMotion(t, elapsed, &t.falling_blocks[0..]);
-    updateKineticMotion(t, elapsed, &t.particles[0..]);
+    updateKineticMotion(t, elapsed, t.falling_blocks[0..]);
+    updateKineticMotion(t, elapsed, t.particles[0..]);
 
     if (!t.game_over) {
         t.delay_left -= elapsed;
@@ -283,8 +283,8 @@ pub fn nextFrame(t: *Tetris, elapsed: f64) void {
     }
 }
 
-fn updateKineticMotion(t: *Tetris, elapsed: f64, some_particles: *[]?Particle) void {
-    for (some_particles.*) |*maybe_p| {
+fn updateKineticMotion(t: *Tetris, elapsed: f64, some_particles: []?Particle) void {
+    for (some_particles) |*maybe_p| {
         if (maybe_p.*) |*p| {
             p.pos.data[1] += @floatCast(f32, elapsed) * p.vel.data[1];
             p.vel.data[1] += @floatCast(f32, elapsed) * gravity;

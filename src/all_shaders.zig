@@ -129,15 +129,15 @@ pub const ShaderProgram = struct {
     }
 
     pub fn setUniformVec3(sp: ShaderProgram, uniform_id: c.GLint, value: math3d.Vec3) void {
-        c.glUniform3fv(uniform_id, 1, value.data[0..].ptr);
+        c.glUniform3fv(uniform_id, 1, &value.data[0]);
     }
 
     pub fn setUniformVec4(sp: ShaderProgram, uniform_id: c.GLint, value: Vec4) void {
-        c.glUniform4fv(uniform_id, 1, value.data[0..].ptr);
+        c.glUniform4fv(uniform_id, 1, &value.data[0]);
     }
 
     pub fn setUniformMat4x4(sp: ShaderProgram, uniform_id: c.GLint, value: Mat4x4) void {
-        c.glUniformMatrix4fv(uniform_id, 1, c.GL_FALSE, value.data[0][0..].ptr);
+        c.glUniformMatrix4fv(uniform_id, 1, c.GL_FALSE, &value.data[0][0]);
     }
 
     pub fn create(
