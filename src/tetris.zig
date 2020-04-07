@@ -245,8 +245,8 @@ fn drawPieceWithColor(t: *Tetris, comptime g: type, piece: Piece, left: i32, top
 pub fn nextFrame(t: *Tetris, elapsed: f64) void {
     if (t.is_paused) return;
 
-    updateKineticMotion(t, elapsed, &t.falling_blocks[0..]);
-    updateKineticMotion(t, elapsed, &t.particles[0..]);
+    updateKineticMotion(t, elapsed, t.falling_blocks[0..]);
+    updateKineticMotion(t, elapsed, t.particles[0..]);
 
     if (!t.game_over) {
         t.delay_left -= elapsed;
@@ -283,8 +283,8 @@ pub fn nextFrame(t: *Tetris, elapsed: f64) void {
     }
 }
 
-fn updateKineticMotion(t: *Tetris, elapsed: f64, some_particles: *[]?Particle) void {
-    for (some_particles.*) |*maybe_p| {
+fn updateKineticMotion(t: *Tetris, elapsed: f64, some_particles: []?Particle) void {
+    for (some_particles) |*maybe_p| {
         if (maybe_p.*) |*p| {
             p.pos.data[1] += @floatCast(f32, elapsed) * p.vel.data[1];
             p.vel.data[1] += @floatCast(f32, elapsed) * gravity;
@@ -338,9 +338,9 @@ fn insertGarbageRowAtBottom(t: *Tetris) void {
         var all_filled = true;
         const bottom_y = grid_height - 1;
         for (t.grid[bottom_y]) |_, x| {
-            const filled = t.rand.scalar(bool);
+            const filled = t.rand.boolean();
             if (filled) {
-                const index = t.rand.range(usize, 0, pieces.pieces.len);
+                const index = t.rand.intRangeLessThan(usize, 0, pieces.pieces.len);
                 t.grid[bottom_y][x] = Cell{ .Color = pieces.pieces[index].color };
                 all_empty = false;
             } else {
@@ -562,7 +562,7 @@ fn populateNextPiece(t: *Tetris) void {
         upper_bound += count;
     }
 
-    const rand_val = t.rand.range(i32, 0, upper_bound);
+    const rand_val = t.rand.intRangeLessThan(i32, 0, upper_bound);
     var this_piece_upper_bound: i32 = 0;
     var any_zero = false;
     for (t.piece_pool) |count, piece_index| {
