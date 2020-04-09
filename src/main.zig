@@ -19,7 +19,7 @@ var static_geometry: StaticGeometry = undefined;
 var font: Spritesheet = undefined;
 
 fn errorCallback(err: c_int, description: [*c]const u8) callconv(.C) void {
-    panic("Error: {}\n", .{description});
+    panic("Error: {}\n", .{@as([*:0]const u8, description)});
 }
 
 fn keyCallback(win: ?*c.GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) callconv(.C) void {
