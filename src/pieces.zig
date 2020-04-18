@@ -43,7 +43,7 @@ pub const pieces = [_]Piece{
         },
     },
     Piece{
-        .name = 'T',
+        .name = 'O',
         .color = Vec4{
             .data = [_]f32{ 255.0 / 255.0, 255.0 / 255.0, 0.0 / 255.0, 1.0 },
         },
