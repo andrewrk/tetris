@@ -23,21 +23,48 @@ fn errorCallback(err: c_int, description: [*c]const u8) callconv(.C) void {
 }
 
 fn keyCallback(win: ?*c.GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) callconv(.C) void {
-    if (action != c.GLFW_PRESS) return;
     const t = @ptrCast(*Tetris, @alignCast(@alignOf(Tetris), c.glfwGetWindowUserPointer(win).?));
+    const first_delay = 0.3;
 
-    switch (key) {
-        c.GLFW_KEY_ESCAPE => c.glfwSetWindowShouldClose(win, c.GL_TRUE),
-        c.GLFW_KEY_SPACE => userDropCurPiece(t),
-        c.GLFW_KEY_DOWN => userCurPieceFall(t),
-        c.GLFW_KEY_LEFT => userMoveCurPiece(t, -1),
-        c.GLFW_KEY_RIGHT => userMoveCurPiece(t, 1),
-        c.GLFW_KEY_UP => userRotateCurPiece(t, 1),
-        c.GLFW_KEY_LEFT_SHIFT, c.GLFW_KEY_RIGHT_SHIFT => userRotateCurPiece(t, -1),
-        c.GLFW_KEY_R => restartGame(t),
-        c.GLFW_KEY_P => userTogglePause(t),
-        c.GLFW_KEY_LEFT_CONTROL, c.GLFW_KEY_RIGHT_CONTROL => userSetHoldPiece(t),
-        else => {},
+    if (action == c.GLFW_PRESS) {
+        switch (key) {
+            c.GLFW_KEY_ESCAPE => c.glfwSetWindowShouldClose(win, c.GL_TRUE),
+            c.GLFW_KEY_SPACE => userDropCurPiece(t),
+            c.GLFW_KEY_DOWN => {
+                t.down_key_held = true;
+                t.down_move_time = c.glfwGetTime() + first_delay;
+                userCurPieceFall(t);
+            },
+            c.GLFW_KEY_LEFT => {
+                t.left_key_held = true;
+                t.left_move_time = c.glfwGetTime() + first_delay;
+                userMoveCurPiece(t, -1);
+            },
+            c.GLFW_KEY_RIGHT => {
+                t.right_key_held = true;
+                t.right_move_time = c.glfwGetTime() + first_delay;
+                userMoveCurPiece(t, 1);
+            },
+            c.GLFW_KEY_UP => userRotateCurPiece(t, 1),
+            c.GLFW_KEY_LEFT_SHIFT, c.GLFW_KEY_RIGHT_SHIFT => userRotateCurPiece(t, -1),
+            c.GLFW_KEY_R => restartGame(t),
+            c.GLFW_KEY_P => userTogglePause(t),
+            c.GLFW_KEY_LEFT_CONTROL, c.GLFW_KEY_RIGHT_CONTROL => userSetHoldPiece(t),
+            else => {},
+        }
+    } else if (action == c.GLFW_RELEASE) {
+        switch (key) {
+            c.GLFW_KEY_DOWN => {
+                t.down_key_held = false;
+            },
+            c.GLFW_KEY_LEFT => {
+                t.left_key_held = false;
+            },
+            c.GLFW_KEY_RIGHT => {
+                t.right_key_held = false;
+            },
+            else => {},
+        }
     }
 }
 
@@ -125,6 +152,7 @@ pub fn main() !void {
         const elapsed = now_time - prev_time;
         prev_time = now_time;
 
+        doBiosKeys(t, now_time);
         nextFrame(t, elapsed);
 
         draw(t, @This());
