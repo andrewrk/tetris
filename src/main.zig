@@ -24,7 +24,7 @@ fn errorCallback(err: c_int, description: [*c]const u8) callconv(.C) void {
 
 fn keyCallback(win: ?*c.GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) callconv(.C) void {
     const t = @ptrCast(*Tetris, @alignCast(@alignOf(Tetris), c.glfwGetWindowUserPointer(win).?));
-    const first_delay = 0.3;
+    const first_delay = 0.2;
 
     if (action == c.GLFW_PRESS) {
         switch (key) {

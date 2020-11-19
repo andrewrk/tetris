@@ -414,7 +414,7 @@ pub fn userMoveCurPiece(t: *Tetris, dir: i8) void {
 }
 
 pub fn doBiosKeys(t: *Tetris, now_time: f64) void {
-    const next_move_delay: f64 = 0.03;
+    const next_move_delay: f64 = 0.025;
     while (t.down_key_held and t.down_move_time <= now_time) {
         userCurPieceFall(t);
         t.down_move_time += next_move_delay;
