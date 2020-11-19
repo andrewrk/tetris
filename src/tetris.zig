@@ -360,6 +360,9 @@ fn insertGarbageRowAtBottom(t: *Tetris) void {
         }
         if (!all_empty and !all_filled) break;
     }
+    if (pieceWouldCollide(t, t.cur_piece.*, t.cur_piece_x, t.cur_piece_y, t.cur_piece_rot)) {
+        t.cur_piece_y += 1;
+    }
 }
 
 fn computeGhost(t: *Tetris) void {
@@ -430,6 +433,7 @@ pub fn userRotateCurPiece(t: *Tetris, rot: i8) void {
     if (t.game_over or t.is_paused) return;
     const new_rot = @intCast(usize, @rem(@intCast(isize, t.cur_piece_rot) + rot + 4, 4));
     const old_x = t.cur_piece_x;
+    const old_y = t.cur_piece_y;
     if (pieceWouldCollide(t, t.cur_piece.*, t.cur_piece_x, t.cur_piece_y, new_rot)) {
         switch (pieceWouldCollideWithWalls(t, t.cur_piece.*, t.cur_piece_x, t.cur_piece_y, new_rot)) {
             .left => {
