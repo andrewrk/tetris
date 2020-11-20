@@ -361,7 +361,7 @@ fn insertGarbageRowAtBottom(t: *Tetris) void {
         if (!all_empty and !all_filled) break;
     }
     if (pieceWouldCollide(t, t.cur_piece.*, t.cur_piece_x, t.cur_piece_y, t.cur_piece_rot)) {
-        t.cur_piece_y += 1;
+        t.cur_piece_y -= 1;
     }
 }
 
