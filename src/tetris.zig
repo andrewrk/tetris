@@ -393,6 +393,7 @@ fn curPieceFall(t: *Tetris) bool {
         }
     } else {
         t.cur_piece_y += 1;
+        t.lock_until = -1;
         return false;
     }
 }
@@ -402,6 +403,7 @@ pub fn userDropCurPiece(t: *Tetris) void {
     t.lock_until = 0;
     while (!curPieceFall(t)) {
         t.score += 1;
+        t.lock_until = 0;
     }
 }
 
