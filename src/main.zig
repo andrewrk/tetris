@@ -95,9 +95,7 @@ pub fn main() !void {
     defer font.deinit();
 
     var seed_bytes: [@sizeOf(u64)]u8 = undefined;
-    std.crypto.randomBytes(seed_bytes[0..]) catch |err| {
-        panic("unable to seed random number generator: {}", .{err});
-    };
+    std.crypto.random.bytes(seed_bytes[0..]);
     t.prng = std.rand.DefaultPrng.init(std.mem.readIntNative(u64, &seed_bytes));
     t.rand = &t.prng.random;
 
