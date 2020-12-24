@@ -32,3 +32,10 @@ A simple tetris clone written in
 ```
 zig build play
 ```
+
+## Building on windows using vcpkg
+
+* Install vcpkg https://github.com/microsoft/vcpkg
+* Install dependencies using `x64-windows` triplet
+* Use the flags `-Dwindows -Dvcpkg` when building the project
+
