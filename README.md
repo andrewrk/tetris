@@ -16,6 +16,7 @@ A simple tetris clone written in
  * Up Arrow - Rotate piece clockwise.
  * Shift - Rotate piece counter clockwise.
  * Space - Drop piece immediately.
+ * Left Ctrl - Hold piece.
  * R - Start new game.
  * P - Pause and unpause game.
  * Escape - Quit.
