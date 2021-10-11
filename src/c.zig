@@ -1,4 +1,5 @@
 pub usingnamespace @cImport({
+    @cInclude("math.h");
     @cInclude("epoxy/gl.h");
     @cInclude("GLFW/glfw3.h");
     @cDefine("STBI_ONLY_PNG", "");
