@@ -5,6 +5,15 @@ const c = @import("c.zig");
 pub const Mat4x4 = struct {
     data: [4][4]f32,
 
+    pub const identity = Mat4x4{
+        .data = [_][4]f32{
+            [_]f32{ 1.0, 0.0, 0.0, 0.0 },
+            [_]f32{ 0.0, 1.0, 0.0, 0.0 },
+            [_]f32{ 0.0, 0.0, 1.0, 0.0 },
+            [_]f32{ 0.0, 0.0, 0.0, 1.0 },
+        },
+    };
+
     /// matrix multiplication
     pub fn mult(m: Mat4x4, other: Mat4x4) Mat4x4 {
         return Mat4x4{
@@ -126,30 +135,27 @@ pub const Mat4x4 = struct {
             },
         };
     }
-};
 
-pub const mat4x4_identity = Mat4x4{
-    .data = [_][4]f32{
-        [_]f32{ 1.0, 0.0, 0.0, 0.0 },
-        [_]f32{ 0.0, 1.0, 0.0, 0.0 },
-        [_]f32{ 0.0, 0.0, 1.0, 0.0 },
-        [_]f32{ 0.0, 0.0, 0.0, 1.0 },
-    },
+    /// Creates a matrix for an orthographic parallel viewing volume.
+    pub fn ortho(left: f32, right: f32, bottom: f32, top: f32) Mat4x4 {
+        var m = identity;
+        m.data[0][0] = 2.0 / (right - left);
+        m.data[1][1] = 2.0 / (top - bottom);
+        m.data[2][2] = -1.0;
+        m.data[0][3] = -(right + left) / (right - left);
+        m.data[1][3] = -(top + bottom) / (top - bottom);
+        return m;
+    }
 };
-
-/// Creates a matrix for an orthographic parallel viewing volume.
-pub fn mat4x4Ortho(left: f32, right: f32, bottom: f32, top: f32) Mat4x4 {
-    var m = mat4x4_identity;
-    m.data[0][0] = 2.0 / (right - left);
-    m.data[1][1] = 2.0 / (top - bottom);
-    m.data[2][2] = -1.0;
-    m.data[0][3] = -(right + left) / (right - left);
-    m.data[1][3] = -(top + bottom) / (top - bottom);
-    return m;
-}
 
 pub const Vec3 = struct {
     data: [3]f32,
+
+    pub fn init(x: f32, y: f32, z: f32) Vec3 {
+        return Vec3{
+            .data = [_]f32{ x, y, z },
+        };
+    }
 
     pub fn normalize(v: Vec3) Vec3 {
         return v.scale(1.0 / c.sqrtf(v.dot(v)));
@@ -197,21 +203,15 @@ pub const Vec3 = struct {
     }
 };
 
-pub fn vec3(x: f32, y: f32, z: f32) Vec3 {
-    return Vec3{
-        .data = [_]f32{ x, y, z },
-    };
-}
-
 pub const Vec4 = struct {
     data: [4]f32,
-};
 
-pub fn vec4(xa: f32, xb: f32, xc: f32, xd: f32) Vec4 {
-    return Vec4{
-        .data = [_]f32{ xa, xb, xc, xd },
-    };
-}
+    pub fn init(xa: f32, xb: f32, xc: f32, xd: f32) Vec4 {
+        return Vec4{
+            .data = [_]f32{ xa, xb, xc, xd },
+        };
+    }
+};
 
 test "scale" {
     const m = Mat4x4{
@@ -256,7 +256,7 @@ test "translate" {
 }
 
 test "ortho" {
-    const m = mat4x4Ortho(0.840188, 0.394383, 0.783099, 0.79844);
+    const m = Mat4x4.ortho(0.840188, 0.394383, 0.783099, 0.79844);
 
     const expected = Mat4x4{
         .data = [_][4]f32{
@@ -337,7 +337,7 @@ test "rotate" {
     };
     const angle = 0.635712;
 
-    const axis = vec3(0.606969, 0.141603, 0.717297);
+    const axis = Vec3.init(0.606969, 0.141603, 0.717297);
 
     const expected = Mat4x4{
         .data = [_][4]f32{

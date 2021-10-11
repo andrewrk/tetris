@@ -1,8 +1,11 @@
-usingnamespace @import("math3d.zig");
-usingnamespace @import("tetris.zig");
+const math3d = @import("math3d.zig");
+const Mat4x4 = math3d.Mat4x4;
+const Vec3 = math3d.Vec3;
+const Vec4 = math3d.Vec4;
+
+const Tetris = @import("tetris.zig").Tetris;
 
 const std = @import("std");
-const panic = std.debug.panic;
 const assert = std.debug.assert;
 const bufPrint = std.fmt.bufPrint;
 const c = @import("c.zig");
@@ -19,24 +22,34 @@ var static_geometry: StaticGeometry = undefined;
 var font: Spritesheet = undefined;
 
 fn errorCallback(err: c_int, description: [*c]const u8) callconv(.C) void {
-    panic("Error: {}\n", .{@as([*:0]const u8, description)});
+    _ = err;
+    _ = c.printf("Error: %s\n", description);
+    c.abort();
 }
 
-fn keyCallback(win: ?*c.GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) callconv(.C) void {
+fn keyCallback(
+    win: ?*c.GLFWwindow,
+    key: c_int,
+    scancode: c_int,
+    action: c_int,
+    mods: c_int,
+) callconv(.C) void {
+    _ = mods;
+    _ = scancode;
     if (action != c.GLFW_PRESS) return;
     const t = @ptrCast(*Tetris, @alignCast(@alignOf(Tetris), c.glfwGetWindowUserPointer(win).?));
 
     switch (key) {
         c.GLFW_KEY_ESCAPE => c.glfwSetWindowShouldClose(win, c.GL_TRUE),
-        c.GLFW_KEY_SPACE => userDropCurPiece(t),
-        c.GLFW_KEY_DOWN => userCurPieceFall(t),
-        c.GLFW_KEY_LEFT => userMoveCurPiece(t, -1),
-        c.GLFW_KEY_RIGHT => userMoveCurPiece(t, 1),
-        c.GLFW_KEY_UP => userRotateCurPiece(t, 1),
-        c.GLFW_KEY_LEFT_SHIFT, c.GLFW_KEY_RIGHT_SHIFT => userRotateCurPiece(t, -1),
-        c.GLFW_KEY_R => restartGame(t),
-        c.GLFW_KEY_P => userTogglePause(t),
-        c.GLFW_KEY_LEFT_CONTROL, c.GLFW_KEY_RIGHT_CONTROL => userSetHoldPiece(t),
+        c.GLFW_KEY_SPACE => t.userDropCurPiece(),
+        c.GLFW_KEY_DOWN => t.userCurPieceFall(),
+        c.GLFW_KEY_LEFT => t.userMoveCurPiece(-1),
+        c.GLFW_KEY_RIGHT => t.userMoveCurPiece(1),
+        c.GLFW_KEY_UP => t.userRotateCurPiece(1),
+        c.GLFW_KEY_LEFT_SHIFT, c.GLFW_KEY_RIGHT_SHIFT => t.userRotateCurPiece(-1),
+        c.GLFW_KEY_R => t.restartGame(),
+        c.GLFW_KEY_P => t.userTogglePause(),
+        c.GLFW_KEY_LEFT_CONTROL, c.GLFW_KEY_RIGHT_CONTROL => t.userSetHoldPiece(),
         else => {},
     }
 }
@@ -48,9 +61,7 @@ const font_png = @embedFile("../assets/font.png");
 pub fn main() !void {
     _ = c.glfwSetErrorCallback(errorCallback);
 
-    if (c.glfwInit() == c.GL_FALSE) {
-        panic("GLFW init failure\n", .{});
-    }
+    if (c.glfwInit() == c.GL_FALSE) @panic("GLFW init failure");
     defer c.glfwTerminate();
 
     c.glfwWindowHint(c.GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -62,9 +73,8 @@ pub fn main() !void {
     c.glfwWindowHint(c.GLFW_STENCIL_BITS, 8);
     c.glfwWindowHint(c.GLFW_RESIZABLE, c.GL_FALSE);
 
-    window = c.glfwCreateWindow(window_width, window_height, "Tetris", null, null) orelse {
-        panic("unable to create window\n", .{});
-    };
+    window = c.glfwCreateWindow(Tetris.window_width, Tetris.window_height, "Tetris", null, null) orelse
+        @panic("unable to create window");
     defer c.glfwDestroyWindow(window);
 
     _ = c.glfwSetKeyCallback(window, keyCallback);
@@ -80,8 +90,8 @@ pub fn main() !void {
 
     const t = &tetris_state;
     c.glfwGetFramebufferSize(window, &t.framebuffer_width, &t.framebuffer_height);
-    assert(t.framebuffer_width >= window_width);
-    assert(t.framebuffer_height >= window_height);
+    assert(t.framebuffer_width >= Tetris.window_width);
+    assert(t.framebuffer_height >= Tetris.window_height);
 
     all_shaders = try AllShaders.create();
     defer all_shaders.destroy();
@@ -89,21 +99,14 @@ pub fn main() !void {
     static_geometry = StaticGeometry.create();
     defer static_geometry.destroy();
 
-    font.init(font_png, font_char_width, font_char_height) catch {
-        panic("unable to read assets\n", .{});
-    };
+    font.init(font_png, Tetris.font_char_width, Tetris.font_char_height) catch @panic("unable to read assets");
     defer font.deinit();
 
-    var seed_bytes: [@sizeOf(u64)]u8 = undefined;
-    std.crypto.randomBytes(seed_bytes[0..]) catch |err| {
-        panic("unable to seed random number generator: {}", .{err});
-    };
-    t.prng = std.rand.DefaultPrng.init(std.mem.readIntNative(u64, &seed_bytes));
-    t.rand = &t.prng.random;
+    c.srand(@truncate(c_uint, @bitCast(c_ulong, c.time(null))));
 
-    resetProjection(t);
+    t.resetProjection();
 
-    restartGame(t);
+    t.restartGame();
 
     c.glClearColor(0.0, 0.0, 0.0, 1.0);
     c.glEnable(c.GL_BLEND);
@@ -125,9 +128,9 @@ pub fn main() !void {
         const elapsed = now_time - prev_time;
         prev_time = now_time;
 
-        nextFrame(t, elapsed);
+        t.nextFrame(elapsed);
 
-        draw(t, @This());
+        t.draw(@This());
         c.glfwSwapBuffers(window);
 
         c.glfwPollEvents();
@@ -136,7 +139,7 @@ pub fn main() !void {
     debug_gl.assertNoError();
 }
 
-pub fn fillRectMvp(t: *Tetris, color: Vec4, mvp: Mat4x4) void {
+pub fn fillRectMvp(color: Vec4, mvp: Mat4x4) void {
     all_shaders.primitive.bind();
     all_shaders.primitive.setUniformVec4(all_shaders.primitive_uniform_color, color);
     all_shaders.primitive.setUniformMat4x4(all_shaders.primitive_uniform_mvp, mvp);
@@ -148,8 +151,8 @@ pub fn fillRectMvp(t: *Tetris, color: Vec4, mvp: Mat4x4) void {
     c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 4);
 }
 
-pub fn drawParticle(t: *Tetris, p: Particle) void {
-    const model = mat4x4_identity.translateByVec(p.pos).rotate(p.angle, p.axis).scale(p.scale_w, p.scale_h, 0.0);
+pub fn drawParticle(t: *Tetris, p: Tetris.Particle) void {
+    const model = Mat4x4.identity.translateByVec(p.pos).rotate(p.angle, p.axis).scale(p.scale_w, p.scale_h, 0.0);
 
     const mvp = t.projection.mult(model);
 
@@ -167,8 +170,8 @@ pub fn drawParticle(t: *Tetris, p: Particle) void {
 pub fn drawText(t: *Tetris, text: []const u8, left: i32, top: i32, size: f32) void {
     for (text) |col, i| {
         if (col <= '~') {
-            const char_left = @intToFloat(f32, left) + @intToFloat(f32, i * font_char_width) * size;
-            const model = mat4x4_identity.translate(char_left, @intToFloat(f32, top), 0.0).scale(size, size, 0.0);
+            const char_left = @intToFloat(f32, left) + @intToFloat(f32, i * Tetris.font_char_width) * size;
+            const model = Mat4x4.identity.translate(char_left, @intToFloat(f32, top), 0.0).scale(size, size, 0.0);
             const mvp = t.projection.mult(model);
 
             font.draw(all_shaders, col, mvp);
