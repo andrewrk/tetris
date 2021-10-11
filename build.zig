@@ -1,5 +1,5 @@
-const Builder = @import("std").build.Builder;
-const builtin = @import("builtin");
+const std = @import("std");
+const Builder = std.build.Builder;
 
 pub fn build(b: *Builder) void {
     const mode = b.standardReleaseOptions();
@@ -16,19 +16,16 @@ pub fn build(b: *Builder) void {
             .os_tag = .windows,
             .abi = .gnu,
         });
-
-        exe.linkSystemLibrary("glfw3dll");
-    } else {
-        exe.linkSystemLibrary("glfw");
     }
 
     if (vcpkg) {
-        exe.addVcpkgPaths(builtin.LinkMode.Dynamic) catch @panic("Cannot add vcpkg paths.");
+        exe.addVcpkgPaths(.static) catch @panic("Cannot add vcpkg paths.");
     }
 
     exe.addIncludeDir("stb_image-2.22");
 
     exe.linkSystemLibrary("c");
+    exe.linkSystemLibrary("glfw");
     exe.linkSystemLibrary("epoxy");
     exe.install();
 
