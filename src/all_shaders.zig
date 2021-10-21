@@ -5,7 +5,6 @@ const math3d = @import("math3d.zig");
 const debug_gl = @import("debug_gl.zig");
 const Vec4 = math3d.Vec4;
 const Mat4x4 = math3d.Mat4x4;
-const c_allocator = @import("std").heap.c_allocator;
 
 pub const AllShaders = struct {
     primitive: ShaderProgram,

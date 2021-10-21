@@ -58,7 +58,11 @@ var tetris_state: Tetris = undefined;
 
 const font_png = @embedFile("../assets/font.png");
 
-pub fn main() !void {
+pub fn main() void {
+    main2() catch c.abort();
+}
+
+pub fn main2() !void {
     _ = c.glfwSetErrorCallback(errorCallback);
 
     if (c.glfwInit() == c.GL_FALSE) @panic("GLFW init failure");
