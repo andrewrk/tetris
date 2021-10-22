@@ -4,8 +4,9 @@ const bufPrint = std.fmt.bufPrint;
 const math = std.math;
 const pieces = @import("pieces.zig");
 const Piece = pieces.Piece;
-
 const c = @import("c.zig");
+
+const lock_delay: f64 = 0.4;
 
 const Vec3 = @import("math3d.zig").Vec3;
 const Vec4 = @import("math3d.zig").Vec4;
@@ -36,6 +37,13 @@ pub const Tetris = struct {
     time_till_next_level: f64,
     piece_pool: [pieces.pieces.len]i32,
     is_paused: bool,
+    down_key_held: bool,
+    down_move_time: f64,
+    left_key_held: bool,
+    left_move_time: f64,
+    right_key_held: bool,
+    right_move_time: f64,
+    lock_until: f64 = -1,
 
     particles: [max_particle_count]?Particle,
     falling_blocks: [max_falling_block_count]?Particle,
@@ -283,6 +291,10 @@ pub const Tetris = struct {
             }
             if (!all_empty and !all_filled) break;
         }
+
+        if (pieceWouldCollide(t, t.cur_piece.*, t.cur_piece_x, t.cur_piece_y, t.cur_piece_rot)) {
+            t.cur_piece_y -= 1;
+        }
     }
 
     fn computeGhost(t: *Tetris) void {
@@ -301,19 +313,29 @@ pub const Tetris = struct {
     fn curPieceFall(t: *Tetris) bool {
         // if it would hit something, make it stop instead
         if (pieceWouldCollide(t, t.cur_piece.*, t.cur_piece_x, t.cur_piece_y + 1, t.cur_piece_rot)) {
-            lockPiece(t);
-            dropNextPiece(t);
-            return true;
+            if (t.lock_until < 0) {
+                t.lock_until = c.glfwGetTime() + lock_delay;
+                return false;
+            } else if (c.glfwGetTime() < t.lock_until) {
+                return false;
+            } else {
+                lockPiece(t);
+                dropNextPiece(t);
+                return true;
+            }
         } else {
             t.cur_piece_y += 1;
+            t.lock_until = -1;
             return false;
         }
     }
 
     pub fn userDropCurPiece(t: *Tetris) void {
         if (t.game_over or t.is_paused) return;
+        t.lock_until = 0;
         while (!curPieceFall(t)) {
             t.score += 1;
+            t.lock_until = 0;
         }
     }
 
@@ -325,10 +347,42 @@ pub const Tetris = struct {
         t.cur_piece_x += dir;
     }
 
+    pub fn doBiosKeys(t: *Tetris, now_time: f64) void {
+        const next_move_delay: f64 = 0.025;
+        while (t.down_key_held and t.down_move_time <= now_time) {
+            userCurPieceFall(t);
+            t.down_move_time += next_move_delay;
+        }
+        while (t.left_key_held and t.left_move_time <= now_time) {
+            userMoveCurPiece(t, -1);
+            t.left_move_time += next_move_delay;
+        }
+        while (t.right_key_held and t.right_move_time <= now_time) {
+            userMoveCurPiece(t, 1);
+            t.right_move_time += next_move_delay;
+        }
+    }
+
     pub fn userRotateCurPiece(t: *Tetris, rot: i8) void {
         if (t.game_over or t.is_paused) return;
         const new_rot = @intCast(usize, @rem(@intCast(isize, t.cur_piece_rot) + rot + 4, 4));
+        const old_x = t.cur_piece_x;
+
         if (pieceWouldCollide(t, t.cur_piece.*, t.cur_piece_x, t.cur_piece_y, new_rot)) {
+            switch (pieceWouldCollideWithWalls(t.cur_piece.*, t.cur_piece_x, t.cur_piece_y, new_rot)) {
+                .left => {
+                    t.cur_piece_x += 1;
+                    while (pieceWouldCollideWithWalls(t.cur_piece.*, t.cur_piece_x, t.cur_piece_y, new_rot) == Wall.left) t.cur_piece_x += 1;
+                },
+                .right => {
+                    t.cur_piece_x -= 1;
+                    while (pieceWouldCollideWithWalls(t.cur_piece.*, t.cur_piece_x, t.cur_piece_y, new_rot) == Wall.right) t.cur_piece_x -= 1;
+                },
+                else => {},
+            }
+        }
+        if (pieceWouldCollide(t, t.cur_piece.*, t.cur_piece_x, t.cur_piece_y, new_rot)) {
+            t.cur_piece_x = old_x;
             return;
         }
         t.cur_piece_rot = new_rot;
@@ -519,6 +573,36 @@ pub const Tetris = struct {
         }
     }
 
+    const Wall = enum {
+        left,
+        right,
+        top,
+        bottom,
+        none,
+    };
+
+    fn pieceWouldCollideWithWalls(piece: Piece, grid_x: i32, grid_y: i32, rot: usize) Wall {
+        for (piece.layout[rot]) |row, y| {
+            for (row) |is_filled, x| {
+                if (!is_filled) {
+                    continue;
+                }
+                const abs_x = grid_x + @intCast(i32, x);
+                const abs_y = grid_y + @intCast(i32, y);
+                if (abs_x < 0) {
+                    return Wall.left;
+                } else if (abs_x >= grid_width) {
+                    return Wall.right;
+                } else if (abs_y < 0) {
+                    return Wall.top;
+                } else if (abs_y >= grid_height) {
+                    return Wall.top;
+                }
+            }
+        }
+        return Wall.none;
+    }
+
     fn doGameOver(t: *Tetris) void {
         t.game_over = true;
 
@@ -554,6 +638,9 @@ pub const Tetris = struct {
         const start_x = 4;
         const start_y = -1;
         const start_rot = 0;
+
+        t.lock_until = -1;
+
         if (pieceWouldCollide(t, p.*, start_x, start_y, start_rot)) {
             doGameOver(t);
             return;
