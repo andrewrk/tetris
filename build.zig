@@ -1,9 +1,10 @@
-const Builder = @import("std").build.Builder;
-const builtin = @import("builtin");
+const std = @import("std");
+const Builder = std.build.Builder;
 
 pub fn build(b: *Builder) void {
     const mode = b.standardReleaseOptions();
     const windows = b.option(bool, "windows", "create windows build") orelse false;
+    const vcpkg = b.option(bool, "vcpkg", "Add vcpkg paths to the build") orelse false;
 
     var exe = b.addExecutable("tetris", "src/main.zig");
     exe.addCSourceFile("stb_image-2.22/stb_image_impl.c", &[_][]const u8{"-std=c99"});
@@ -15,6 +16,10 @@ pub fn build(b: *Builder) void {
             .os_tag = .windows,
             .abi = .gnu,
         });
+    }
+
+    if (vcpkg) {
+        exe.addVcpkgPaths(.static) catch @panic("Cannot add vcpkg paths.");
     }
 
     exe.addIncludeDir("stb_image-2.22");

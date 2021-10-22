@@ -1,8 +1,18 @@
-const math = @import("std").math;
-const assert = @import("std").debug.assert;
+const std = @import("std");
+const assert = std.debug.assert;
+const c = @import("c.zig");
 
 pub const Mat4x4 = struct {
     data: [4][4]f32,
+
+    pub const identity = Mat4x4{
+        .data = [_][4]f32{
+            [_]f32{ 1.0, 0.0, 0.0, 0.0 },
+            [_]f32{ 0.0, 1.0, 0.0, 0.0 },
+            [_]f32{ 0.0, 0.0, 1.0, 0.0 },
+            [_]f32{ 0.0, 0.0, 0.0, 1.0 },
+        },
+    };
 
     /// matrix multiplication
     pub fn mult(m: Mat4x4, other: Mat4x4) Mat4x4 {
@@ -41,8 +51,8 @@ pub const Mat4x4 = struct {
     /// angle: Rotation angle expressed in radians.
     /// axis: Rotation axis, recommended to be normalized.
     pub fn rotate(m: Mat4x4, angle: f32, axis_unnormalized: Vec3) Mat4x4 {
-        const cos = math.cos(angle);
-        const s = math.sin(angle);
+        const cos = c.cosf(angle);
+        const s = c.sinf(angle);
         const axis = axis_unnormalized.normalize();
         const temp = axis.scale(1.0 - cos);
 
@@ -125,33 +135,30 @@ pub const Mat4x4 = struct {
             },
         };
     }
-};
 
-pub const mat4x4_identity = Mat4x4{
-    .data = [_][4]f32{
-        [_]f32{ 1.0, 0.0, 0.0, 0.0 },
-        [_]f32{ 0.0, 1.0, 0.0, 0.0 },
-        [_]f32{ 0.0, 0.0, 1.0, 0.0 },
-        [_]f32{ 0.0, 0.0, 0.0, 1.0 },
-    },
+    /// Creates a matrix for an orthographic parallel viewing volume.
+    pub fn ortho(left: f32, right: f32, bottom: f32, top: f32) Mat4x4 {
+        var m = identity;
+        m.data[0][0] = 2.0 / (right - left);
+        m.data[1][1] = 2.0 / (top - bottom);
+        m.data[2][2] = -1.0;
+        m.data[0][3] = -(right + left) / (right - left);
+        m.data[1][3] = -(top + bottom) / (top - bottom);
+        return m;
+    }
 };
-
-/// Creates a matrix for an orthographic parallel viewing volume.
-pub fn mat4x4Ortho(left: f32, right: f32, bottom: f32, top: f32) Mat4x4 {
-    var m = mat4x4_identity;
-    m.data[0][0] = 2.0 / (right - left);
-    m.data[1][1] = 2.0 / (top - bottom);
-    m.data[2][2] = -1.0;
-    m.data[0][3] = -(right + left) / (right - left);
-    m.data[1][3] = -(top + bottom) / (top - bottom);
-    return m;
-}
 
 pub const Vec3 = struct {
     data: [3]f32,
 
+    pub fn init(x: f32, y: f32, z: f32) Vec3 {
+        return Vec3{
+            .data = [_]f32{ x, y, z },
+        };
+    }
+
     pub fn normalize(v: Vec3) Vec3 {
-        return v.scale(1.0 / math.sqrt(v.dot(v)));
+        return v.scale(1.0 / c.sqrtf(v.dot(v)));
     }
 
     pub fn scale(v: Vec3, scalar: f32) Vec3 {
@@ -171,7 +178,7 @@ pub const Vec3 = struct {
     }
 
     pub fn length(v: Vec3) f32 {
-        return math.sqrt(v.dot(v));
+        return c.sqrtf(v.dot(v));
     }
 
     /// returns the cross product
@@ -196,34 +203,17 @@ pub const Vec3 = struct {
     }
 };
 
-pub fn vec3(x: f32, y: f32, z: f32) Vec3 {
-    return Vec3{
-        .data = [_]f32{
-            x,
-            y,
-            z,
-        },
-    };
-}
-
 pub const Vec4 = struct {
     data: [4]f32,
+
+    pub fn init(xa: f32, xb: f32, xc: f32, xd: f32) Vec4 {
+        return Vec4{
+            .data = [_]f32{ xa, xb, xc, xd },
+        };
+    }
 };
 
-pub fn vec4(xa: f32, xb: f32, xc: f32, xd: f32) Vec4 {
-    return Vec4{
-        .data = [_]f32{
-            xa,
-            xb,
-            xc,
-            xd,
-        },
-    };
-}
-
-fn testScale() void {
-    @setFnTest(this, true);
-
+test "scale" {
     const m = Mat4x4{
         .data = [_][4]f32{
             [_]f32{ 0.840188, 0.911647, 0.277775, 0.364784 },
@@ -244,9 +234,7 @@ fn testScale() void {
     assert_matrix_eq(answer, expected);
 }
 
-fn testTranslate() void {
-    @setFnTest(this, true);
-
+test "translate" {
     const m = Mat4x4{
         .data = [_][4]f32{
             [_]f32{ 0.840188, 0.911647, 0.277775, 0.364784 },
@@ -267,10 +255,8 @@ fn testTranslate() void {
     assert_matrix_eq(answer, expected);
 }
 
-fn testOrtho() void {
-    @setFnTest(this, true);
-
-    const m = mat4x4_ortho(0.840188, 0.394383, 0.783099, 0.79844);
+test "ortho" {
+    const m = Mat4x4.ortho(0.840188, 0.394383, 0.783099, 0.79844);
 
     const expected = Mat4x4{
         .data = [_][4]f32{
@@ -284,12 +270,12 @@ fn testOrtho() void {
     assert_matrix_eq(m, expected);
 }
 
-fn assertFEq(left: f32, right: f32) void {
+fn assert_f_eq(left: f32, right: f32) void {
     const diff = c.fabsf(left - right);
     assert(diff < 0.01);
 }
 
-fn assertMatrixEq(left: Mat4x4, right: Mat4x4) void {
+fn assert_matrix_eq(left: Mat4x4, right: Mat4x4) void {
     assert_f_eq(left.data[0][0], right.data[0][0]);
     assert_f_eq(left.data[0][1], right.data[0][1]);
     assert_f_eq(left.data[0][2], right.data[0][2]);
@@ -311,9 +297,7 @@ fn assertMatrixEq(left: Mat4x4, right: Mat4x4) void {
     assert_f_eq(left.data[3][3], right.data[3][3]);
 }
 
-fn testMult() void {
-    @setFnTest(this, true);
-
+test "mult" {
     const m1 = Mat4x4{
         .data = [_][4]f32{
             [_]f32{ 0.635712, 0.717297, 0.141603, 0.606969 },
@@ -342,9 +326,7 @@ fn testMult() void {
     assert_matrix_eq(tmp, answer);
 }
 
-fn testRotate() void {
-    @setFnTest(this, true);
-
+test "rotate" {
     const m1 = Mat4x4{
         .data = [_][4]f32{
             [_]f32{ 0.840188, 0.911647, 0.277775, 0.364784 },
@@ -355,7 +337,7 @@ fn testRotate() void {
     };
     const angle = 0.635712;
 
-    const axis = vec3(0.606969, 0.141603, 0.717297);
+    const axis = Vec3.init(0.606969, 0.141603, 0.717297);
 
     const expected = Mat4x4{
         .data = [_][4]f32{

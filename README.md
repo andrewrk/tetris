@@ -16,6 +16,7 @@ A simple tetris clone written in
  * Up Arrow - Rotate piece clockwise.
  * Shift - Rotate piece counter clockwise.
  * Space - Drop piece immediately.
+ * Left Ctrl - Hold piece.
  * R - Start new game.
  * P - Pause and unpause game.
  * Escape - Quit.
@@ -31,3 +32,10 @@ A simple tetris clone written in
 ```
 zig build play
 ```
+
+## Building on windows using vcpkg
+
+* Install vcpkg https://github.com/microsoft/vcpkg
+* Install dependencies using `x64-windows` triplet
+* Use the flags `-Dwindows -Dvcpkg` when building the project
+
