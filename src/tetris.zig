@@ -1,6 +1,5 @@
 const std = @import("std");
 const assert = std.debug.assert;
-const bufPrint = std.fmt.bufPrint;
 const math = std.math;
 const pieces = @import("pieces.zig");
 const Piece = pieces.Piece;
@@ -133,7 +132,8 @@ pub const Tetris = struct {
         }
         {
             var score_text_buf: [20]u8 = undefined;
-            const score_text = bufPrint(score_text_buf[0..], "{}", .{t.score}) catch unreachable;
+            const len = @intCast(usize, c.sprintf(&score_text_buf, "%d", t.score));
+            const score_text = score_text_buf[0..len];
             const score_label_width = font_char_width * @intCast(i32, score_text.len);
             g.drawText(t, score_text, score_left + score_width / 2 - @divExact(score_label_width, 2), score_top + score_height / 2, 1.0);
         }
@@ -144,7 +144,8 @@ pub const Tetris = struct {
         }
         {
             var text_buf: [20]u8 = undefined;
-            const text = bufPrint(text_buf[0..], "{}", .{t.level}) catch unreachable;
+            const len = @intCast(usize, c.sprintf(&text_buf, "%d", t.level));
+            const text = text_buf[0..len];
             const text_width = font_char_width * @intCast(i32, text.len);
             g.drawText(t, text, level_display_left + level_display_width / 2 - @divExact(text_width, 2), level_display_top + level_display_height / 2, 1.0);
         }
