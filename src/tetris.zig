@@ -1,6 +1,5 @@
 const std = @import("std");
 const assert = std.debug.assert;
-const math = std.math;
 const pieces = @import("pieces.zig");
 const Piece = pieces.Piece;
 const c = @import("c.zig");
@@ -214,7 +213,7 @@ pub const Tetris = struct {
             } else {
                 const rate = 8; // oscillations per sec
                 const amplitude = 4; // pixels
-                const offset = @floatCast(f32, amplitude * -math.sin(2.0 * PI * t.screen_shake_elapsed * rate));
+                const offset = @floatCast(f32, amplitude * -c.sin(2.0 * PI * t.screen_shake_elapsed * rate));
                 t.projection = Mat4x4.ortho(
                     0.0,
                     @intToFloat(f32, t.framebuffer_width),
