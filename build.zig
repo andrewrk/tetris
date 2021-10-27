@@ -19,7 +19,7 @@ pub fn build(b: *Builder) void {
     }
 
     if (vcpkg) {
-        exe.addVcpkgPaths(.static) catch @panic("Cannot add vcpkg paths.");
+        exe.addVcpkgPaths(.Static) catch @panic("Cannot add vcpkg paths.");
     }
 
     exe.addIncludeDir("stb_image-2.22");
