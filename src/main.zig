@@ -145,7 +145,7 @@ pub fn main2() !void {
     c.glPixelStorei(c.GL_UNPACK_ALIGNMENT, 1);
 
     c.glViewport(0, 0, t.framebuffer_width, t.framebuffer_height);
-    c.glfwSetWindowUserPointer(window, @ptrCast(*c_void, t));
+    c.glfwSetWindowUserPointer(window, @ptrCast(*anyopaque, t));
 
     debug_gl.assertNoError();
 
