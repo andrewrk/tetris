@@ -133,7 +133,8 @@ pub fn main2() !void {
     font.init(font_png, Tetris.font_char_width, Tetris.font_char_height) catch @panic("unable to read assets");
     defer font.deinit();
 
-    c.srand(@truncate(c_uint, @bitCast(c_ulong, c.time(null))));
+    const TimePrimitiveType = comptime if (@sizeOf(c_ulong) == 8) c_ulong else c_ulonglong;
+    c.srand(@truncate(c_uint, @bitCast(TimePrimitiveType, c.time(null))));
 
     t.resetProjection();
 

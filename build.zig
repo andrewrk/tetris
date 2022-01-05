@@ -1,5 +1,6 @@
 const std = @import("std");
 const Builder = std.build.Builder;
+const Linkage = std.build.LibExeObjStep.Linkage;
 
 pub fn build(b: *Builder) void {
     const mode = b.standardReleaseOptions();
@@ -19,13 +20,15 @@ pub fn build(b: *Builder) void {
     }
 
     if (vcpkg) {
-        exe.addVcpkgPaths(.static) catch @panic("Cannot add vcpkg paths.");
+        const linkage: Linkage = if (windows) .dynamic else .static;
+        exe.addVcpkgPaths(linkage) catch @panic("Cannot add vcpkg paths.");
     }
 
     exe.addIncludeDir("stb_image-2.22");
 
     exe.linkSystemLibrary("c");
-    exe.linkSystemLibrary("glfw");
+    const glfwLibName = if (windows) "glfw3dll" else "glfw";
+    exe.linkSystemLibrary(glfwLibName);
     exe.linkSystemLibrary("epoxy");
     exe.install();
 
