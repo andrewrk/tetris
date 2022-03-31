@@ -83,7 +83,7 @@ fn keyCallback(
 
 var tetris_state: Tetris = undefined;
 
-const font_png = @embedFile("../assets/font.png");
+const font_png = @embedFile("assets/font.png");
 
 pub fn main() void {
     main2() catch c.abort();
