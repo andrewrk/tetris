@@ -200,7 +200,7 @@ pub fn drawParticle(t: *Tetris, p: Tetris.Particle) void {
 }
 
 pub fn drawText(t: *Tetris, text: []const u8, left: i32, top: i32, size: f32) void {
-    for (text) |col, i| {
+    for (text, 0..) |col, i| {
         if (col <= '~') {
             const char_left = @intToFloat(f32, left) + @intToFloat(f32, i * Tetris.font_char_width) * size;
             const model = Mat4x4.identity.translate(char_left, @intToFloat(f32, top), 0.0).scale(size, size, 0.0);

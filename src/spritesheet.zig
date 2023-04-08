@@ -77,7 +77,7 @@ pub const Spritesheet = struct {
         c.glGenBuffers(@intCast(c.GLint, s.tex_coord_buffers.len), s.tex_coord_buffers.ptr);
         errdefer c.glDeleteBuffers(@intCast(c.GLint, s.tex_coord_buffers.len), &s.tex_coord_buffers[0]);
 
-        for (s.tex_coord_buffers) |tex_coord_buffer, i| {
+        for (s.tex_coord_buffers, 0..) |tex_coord_buffer, i| {
             const upside_down_row = i / col_count;
             const col = i % col_count;
             const row = row_count - upside_down_row - 1;

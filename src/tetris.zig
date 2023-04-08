@@ -96,8 +96,8 @@ pub const Tetris = struct {
                 }
             }
 
-            for (t.grid) |row, y| {
-                for (row) |cell, x| {
+            for (t.grid, 0..) |row, y| {
+                for (row, 0..) |cell, x| {
                     switch (cell) {
                         Cell.Color => |color| {
                             const cell_left = board_left + @intCast(i32, x) * cell_size;
@@ -172,8 +172,8 @@ pub const Tetris = struct {
     }
 
     fn drawPieceWithColor(t: *Tetris, comptime g: type, piece: Piece, left: i32, top: i32, rot: usize, color: Vec4) void {
-        for (piece.layout[rot]) |row, y| {
-            for (row) |is_filled, x| {
+        for (piece.layout[rot], 0..) |row, y| {
+            for (row, 0..) |is_filled, x| {
                 if (!is_filled) continue;
                 const abs_x = @intToFloat(f32, left + @intCast(i32, x) * cell_size);
                 const abs_y = @intToFloat(f32, top + @intCast(i32, y) * cell_size);
@@ -278,7 +278,7 @@ pub const Tetris = struct {
             var all_empty = true;
             var all_filled = true;
             const bottom_y = grid_height - 1;
-            for (t.grid[bottom_y]) |_, x| {
+            for (t.grid[bottom_y], 0..) |_, x| {
                 const filled = randBoolean();
                 if (filled) {
                     const index = randIntRangeLessThan(usize, 0, pieces.pieces.len);
@@ -419,8 +419,8 @@ pub const Tetris = struct {
     fn lockPiece(t: *Tetris) void {
         t.score += 1;
 
-        for (t.cur_piece.layout[t.cur_piece_rot]) |row, y| {
-            for (row) |is_filled, x| {
+        for (t.cur_piece.layout[t.cur_piece_rot], 0..) |row, y| {
+            for (row, 0..) |is_filled, x| {
                 if (!is_filled) {
                     continue;
                 }
@@ -433,7 +433,7 @@ pub const Tetris = struct {
         }
 
         // find lines once and spawn explosions
-        for (t.grid) |row, y| {
+        for (t.grid, 0..) |row, y| {
             _ = row;
             var all_filled = true;
             for (t.grid[y]) |cell| {
@@ -447,7 +447,7 @@ pub const Tetris = struct {
                 }
             }
             if (all_filled) {
-                for (t.grid[y]) |cell, x| {
+                for (t.grid[y], 0..) |cell, x| {
                     const color = switch (cell) {
                         Cell.Empty => continue,
                         Cell.Color => |col| col,
@@ -523,8 +523,8 @@ pub const Tetris = struct {
     }
 
     fn pieceWouldCollide(t: *Tetris, piece: Piece, grid_x: i32, grid_y: i32, rot: usize) bool {
-        for (piece.layout[rot]) |row, y| {
-            for (row) |is_filled, x| {
+        for (piece.layout[rot], 0..) |row, y| {
+            for (row, 0..) |is_filled, x| {
                 if (!is_filled) {
                     continue;
                 }
@@ -553,7 +553,7 @@ pub const Tetris = struct {
         const rand_val = randIntRangeLessThan(i32, 0, upper_bound);
         var this_piece_upper_bound: i32 = 0;
         var any_zero = false;
-        for (t.piece_pool) |count, piece_index| {
+        for (t.piece_pool, 0..) |count, piece_index| {
             this_piece_upper_bound += count;
             if (rand_val < this_piece_upper_bound) {
                 t.next_piece = &pieces.pieces[piece_index];
@@ -567,7 +567,7 @@ pub const Tetris = struct {
 
         // if any of the pieces are 0, add 1 to all of them
         if (any_zero) {
-            for (t.piece_pool) |_, i| {
+            for (t.piece_pool, 0..) |_, i| {
                 t.piece_pool[i] += 1;
             }
         }
@@ -582,8 +582,8 @@ pub const Tetris = struct {
     };
 
     fn pieceWouldCollideWithWalls(piece: Piece, grid_x: i32, grid_y: i32, rot: usize) Wall {
-        for (piece.layout[rot]) |row, y| {
-            for (row) |is_filled, x| {
+        for (piece.layout[rot], 0..) |row, y| {
+            for (row, 0..) |is_filled, x| {
                 if (!is_filled) {
                     continue;
                 }
@@ -607,8 +607,8 @@ pub const Tetris = struct {
         t.game_over = true;
 
         // turn every piece into a falling object
-        for (t.grid) |row, y| {
-            for (row) |cell, x| {
+        for (t.grid, 0..) |row, y| {
+            for (row, 0..) |cell, x| {
                 const color = switch (cell) {
                     Cell.Empty => continue,
                     Cell.Color => |col| col,
@@ -661,12 +661,12 @@ pub const Tetris = struct {
     }
 
     fn clearParticles(t: *Tetris) void {
-        for (t.particles) |*p| {
+        for (&t.particles) |*p| {
             p.* = null;
         }
         t.next_particle_index = 0;
 
-        for (t.falling_blocks) |*fb| {
+        for (&t.falling_blocks) |*fb| {
             fb.* = null;
         }
         t.next_falling_block_index = 0;
@@ -819,7 +819,7 @@ fn randFloat(comptime T: type) T {
 
 fn randInt(comptime T: type) T {
     var rand_bytes: [@sizeOf(T)]u8 = undefined;
-    for (rand_bytes) |*byte| {
+    for (&rand_bytes) |*byte| {
         byte.* = @truncate(u8, @bitCast(c_uint, c.rand()));
     }
     return @bitCast(T, rand_bytes);
