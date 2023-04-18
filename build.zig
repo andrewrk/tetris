@@ -18,10 +18,11 @@ pub fn build(b: *Build) void {
     exe.linkSystemLibrary("c");
     exe.linkSystemLibrary("glfw");
     exe.linkSystemLibrary("epoxy");
-    exe.install();
+
+    b.installArtifact(exe);
 
     const play = b.step("play", "Play the game");
-    const run = exe.run();
+    const run = b.addRunArtifact(exe);
     run.step.dependOn(b.getInstallStep());
     play.dependOn(&run.step);
 }
