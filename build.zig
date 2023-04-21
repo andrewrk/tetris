@@ -12,16 +12,18 @@ pub fn build(b: *Build) void {
         .target = target,
     });
     exe.addCSourceFile("stb_image-2.22/stb_image_impl.c", &[_][]const u8{"-std=c99"});
+    //exe.use_llvm = false;
+    //exe.use_lld = false;
 
     exe.addIncludePath("stb_image-2.22");
 
     exe.linkSystemLibrary("c");
     exe.linkSystemLibrary("glfw");
     exe.linkSystemLibrary("epoxy");
-    exe.install();
+    b.installArtifact(exe);
 
     const play = b.step("play", "Play the game");
-    const run = exe.run();
+    const run = b.addRunArtifact(exe);
     run.step.dependOn(b.getInstallStep());
     play.dependOn(&run.step);
 }
