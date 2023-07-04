@@ -172,8 +172,8 @@ pub const ShaderProgram = struct {
 
         var error_size: c.GLint = undefined;
         c.glGetProgramiv(sp.program_id, c.GL_INFO_LOG_LENGTH, &error_size);
-        const message = c.malloc(@intCast(c_ulong, error_size)) orelse return error.OutOfMemory;
-        c.glGetProgramInfoLog(sp.program_id, error_size, &error_size, @ptrCast([*:0]u8, message));
+        const message = c.malloc(@intCast(error_size)) orelse return error.OutOfMemory;
+        c.glGetProgramInfoLog(sp.program_id, error_size, &error_size, @ptrCast(message));
         _ = c.printf("Error linking shader program: %s\n", message);
         c.abort();
     }
@@ -198,7 +198,7 @@ pub const ShaderProgram = struct {
 fn initGlShader(source: []const u8, name: [*:0]const u8, kind: c.GLenum) !c.GLuint {
     const shader_id = c.glCreateShader(kind);
     const source_ptr: ?[*]const u8 = source.ptr;
-    const source_len = @intCast(c.GLint, source.len);
+    const source_len: c.GLint = @intCast(source.len);
     c.glShaderSource(shader_id, 1, &source_ptr, &source_len);
     c.glCompileShader(shader_id);
 
@@ -209,8 +209,8 @@ fn initGlShader(source: []const u8, name: [*:0]const u8, kind: c.GLenum) !c.GLui
     var error_size: c.GLint = undefined;
     c.glGetShaderiv(shader_id, c.GL_INFO_LOG_LENGTH, &error_size);
 
-    const message = c.malloc(@intCast(c_ulong, error_size)) orelse return error.OutOfMemory;
-    c.glGetShaderInfoLog(shader_id, error_size, &error_size, @ptrCast([*:0]u8, message));
+    const message = c.malloc(@intCast(error_size)) orelse return error.OutOfMemory;
+    c.glGetShaderInfoLog(shader_id, error_size, &error_size, @ptrCast(message));
     _ = c.printf("Error compiling %s shader:\n%s\n", name, message);
     c.abort();
 }

@@ -16,24 +16,24 @@ pub const PngImage = struct {
         var width: c_int = undefined;
         var height: c_int = undefined;
 
-        if (c.stbi_info_from_memory(compressed_bytes.ptr, @intCast(c_int, compressed_bytes.len), &width, &height, null) == 0) {
+        if (c.stbi_info_from_memory(compressed_bytes.ptr, @intCast(compressed_bytes.len), &width, &height, null) == 0) {
             return error.NotPngFile;
         }
 
         if (width <= 0 or height <= 0) return error.NoPixels;
-        pi.width = @intCast(u32, width);
-        pi.height = @intCast(u32, height);
+        pi.width = @intCast(width);
+        pi.height = @intCast(height);
 
         // Not validating channel_count because it gets auto-converted to 4
 
-        if (c.stbi_is_16_bit_from_memory(compressed_bytes.ptr, @intCast(c_int, compressed_bytes.len)) != 0) {
+        if (c.stbi_is_16_bit_from_memory(compressed_bytes.ptr, @intCast(compressed_bytes.len)) != 0) {
             return error.InvalidFormat;
         }
         const bits_per_channel = 8;
         const channel_count = 4;
 
         c.stbi_set_flip_vertically_on_load(1);
-        const image_data = c.stbi_load_from_memory(compressed_bytes.ptr, @intCast(c_int, compressed_bytes.len), &width, &height, null, channel_count);
+        const image_data = c.stbi_load_from_memory(compressed_bytes.ptr, @intCast(compressed_bytes.len), &width, &height, null, channel_count);
 
         if (image_data == null) return error.NoMem;
 

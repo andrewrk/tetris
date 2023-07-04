@@ -3,12 +3,7 @@
 A simple tetris clone written in
 [zig programming language](https://github.com/andrewrk/zig).
 
-[YouTube Demo](https://www.youtube.com/watch?v=AiintPutWrE).
-
-
 ![](http://i.imgur.com/umuNndz.png)
-
-[Windows 64-bit build](http://superjoe.s3.amazonaws.com/temp/tetris.zip)
 
 ## Controls
 
@@ -32,10 +27,3 @@ A simple tetris clone written in
 ```
 zig build play
 ```
-
-## Building on windows using vcpkg
-
-* Install vcpkg https://github.com/microsoft/vcpkg
-* Install dependencies using `x64-windows` triplet
-* Use the flags `-Dwindows -Dvcpkg` when building the project
-

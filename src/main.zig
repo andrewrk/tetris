@@ -36,7 +36,7 @@ fn keyCallback(
 ) callconv(.C) void {
     _ = mods;
     _ = scancode;
-    const t = @ptrCast(*Tetris, @alignCast(@alignOf(Tetris), c.glfwGetWindowUserPointer(win).?));
+    const t: *Tetris = @ptrCast(@alignCast(c.glfwGetWindowUserPointer(win).?));
     const first_delay = 0.2;
 
     if (action == c.GLFW_PRESS) {
@@ -133,7 +133,7 @@ pub fn main2() !void {
     font.init(font_png, Tetris.font_char_width, Tetris.font_char_height) catch @panic("unable to read assets");
     defer font.deinit();
 
-    c.srand(@truncate(c_uint, @bitCast(c_ulong, c.time(null))));
+    c.srand(@truncate(@as(c_ulong, @bitCast(c.time(null)))));
 
     t.resetProjection();
 
@@ -145,7 +145,7 @@ pub fn main2() !void {
     c.glPixelStorei(c.GL_UNPACK_ALIGNMENT, 1);
 
     c.glViewport(0, 0, t.framebuffer_width, t.framebuffer_height);
-    c.glfwSetWindowUserPointer(window, @ptrCast(*anyopaque, t));
+    c.glfwSetWindowUserPointer(window, t);
 
     debug_gl.assertNoError();
 
@@ -177,8 +177,8 @@ pub fn fillRectMvp(color: Vec4, mvp: Mat4x4) void {
     all_shaders.primitive.setUniformMat4x4(all_shaders.primitive_uniform_mvp, mvp);
 
     c.glBindBuffer(c.GL_ARRAY_BUFFER, static_geometry.rect_2d_vertex_buffer);
-    c.glEnableVertexAttribArray(@intCast(c.GLuint, all_shaders.primitive_attrib_position));
-    c.glVertexAttribPointer(@intCast(c.GLuint, all_shaders.primitive_attrib_position), 3, c.GL_FLOAT, c.GL_FALSE, 0, null);
+    c.glEnableVertexAttribArray(@intCast(all_shaders.primitive_attrib_position));
+    c.glVertexAttribPointer(@intCast(all_shaders.primitive_attrib_position), 3, c.GL_FLOAT, c.GL_FALSE, 0, null);
 
     c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 4);
 }
@@ -193,8 +193,8 @@ pub fn drawParticle(t: *Tetris, p: Tetris.Particle) void {
     all_shaders.primitive.setUniformMat4x4(all_shaders.primitive_uniform_mvp, mvp);
 
     c.glBindBuffer(c.GL_ARRAY_BUFFER, static_geometry.triangle_2d_vertex_buffer);
-    c.glEnableVertexAttribArray(@intCast(c.GLuint, all_shaders.primitive_attrib_position));
-    c.glVertexAttribPointer(@intCast(c.GLuint, all_shaders.primitive_attrib_position), 3, c.GL_FLOAT, c.GL_FALSE, 0, null);
+    c.glEnableVertexAttribArray(@intCast(all_shaders.primitive_attrib_position));
+    c.glVertexAttribPointer(@intCast(all_shaders.primitive_attrib_position), 3, c.GL_FLOAT, c.GL_FALSE, 0, null);
 
     c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 3);
 }
@@ -202,8 +202,8 @@ pub fn drawParticle(t: *Tetris, p: Tetris.Particle) void {
 pub fn drawText(t: *Tetris, text: []const u8, left: i32, top: i32, size: f32) void {
     for (text, 0..) |col, i| {
         if (col <= '~') {
-            const char_left = @intToFloat(f32, left) + @intToFloat(f32, i * Tetris.font_char_width) * size;
-            const model = Mat4x4.identity.translate(char_left, @intToFloat(f32, top), 0.0).scale(size, size, 0.0);
+            const char_left = @as(f32, @floatFromInt(left)) + @as(f32, @floatFromInt(i * Tetris.font_char_width)) * size;
+            const model = Mat4x4.identity.translate(char_left, @floatFromInt(top), 0.0).scale(size, size, 0.0);
             const mvp = t.projection.mult(model);
 
             font.draw(all_shaders, col, mvp);
