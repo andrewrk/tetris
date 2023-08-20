@@ -43,22 +43,22 @@ fn keyCallback(
         switch (key) {
             c.GLFW_KEY_ESCAPE => c.glfwSetWindowShouldClose(win, c.GL_TRUE),
             c.GLFW_KEY_SPACE => t.userDropCurPiece(),
-            c.GLFW_KEY_DOWN => {
+            c.GLFW_KEY_DOWN, c.GLFW_KEY_S => {
                 t.down_key_held = true;
                 t.down_move_time = c.glfwGetTime() + first_delay;
                 t.userCurPieceFall();
             },
-            c.GLFW_KEY_LEFT => {
+            c.GLFW_KEY_LEFT, c.GLFW_KEY_A => {
                 t.left_key_held = true;
                 t.left_move_time = c.glfwGetTime() + first_delay;
                 t.userMoveCurPiece(-1);
             },
-            c.GLFW_KEY_RIGHT => {
+            c.GLFW_KEY_RIGHT, c.GLFW_KEY_D => {
                 t.right_key_held = true;
                 t.right_move_time = c.glfwGetTime() + first_delay;
                 t.userMoveCurPiece(1);
             },
-            c.GLFW_KEY_UP => t.userRotateCurPiece(1),
+            c.GLFW_KEY_UP, c.GLFW_KEY_W => t.userRotateCurPiece(1),
             c.GLFW_KEY_LEFT_SHIFT, c.GLFW_KEY_RIGHT_SHIFT => t.userRotateCurPiece(-1),
             c.GLFW_KEY_R => t.restartGame(),
             c.GLFW_KEY_P => t.userTogglePause(),
@@ -67,13 +67,13 @@ fn keyCallback(
         }
     } else if (action == c.GLFW_RELEASE) {
         switch (key) {
-            c.GLFW_KEY_DOWN => {
+            c.GLFW_KEY_DOWN, c.GLFW_KEY_S => {
                 t.down_key_held = false;
             },
-            c.GLFW_KEY_LEFT => {
+            c.GLFW_KEY_LEFT, c.GLFW_KEY_A => {
                 t.left_key_held = false;
             },
-            c.GLFW_KEY_RIGHT => {
+            c.GLFW_KEY_RIGHT, c.GLFW_KEY_D => {
                 t.right_key_held = false;
             },
             else => {},
