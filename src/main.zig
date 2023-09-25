@@ -83,7 +83,7 @@ fn keyCallback(
 
 var tetris_state: Tetris = undefined;
 
-const font_png = @embedFile("assets/font.png");
+const font_bmp = @embedFile("assets/font.bmp");
 
 pub fn main() void {
     main2() catch c.abort();
@@ -130,7 +130,7 @@ pub fn main2() !void {
     static_geometry = StaticGeometry.create();
     defer static_geometry.destroy();
 
-    font.init(font_png, Tetris.font_char_width, Tetris.font_char_height) catch @panic("unable to read assets");
+    font.init(font_bmp, Tetris.font_char_width, Tetris.font_char_height) catch @panic("unable to read assets");
     defer font.deinit();
 
     c.srand(@truncate(@as(c_ulong, @bitCast(c.time(null)))));

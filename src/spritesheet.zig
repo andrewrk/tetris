@@ -2,10 +2,10 @@ const std = @import("std");
 const c = @import("c.zig");
 const AllShaders = @import("all_shaders.zig").AllShaders;
 const Mat4x4 = @import("math3d.zig").Mat4x4;
-const PngImage = @import("png.zig").PngImage;
+const Bmp = @import("Bmp.zig");
 
 pub const Spritesheet = struct {
-    img: PngImage,
+    bmp: Bmp,
     count: usize,
     texture_id: c.GLuint,
     vertex_buffer: c.GLuint,
@@ -30,10 +30,10 @@ pub const Spritesheet = struct {
         c.glDrawArrays(c.GL_TRIANGLE_STRIP, 0, 4);
     }
 
-    pub fn init(s: *Spritesheet, compressed_bytes: []const u8, w: usize, h: usize) !void {
-        s.img = try PngImage.create(compressed_bytes);
-        const col_count = s.img.width / w;
-        const row_count = s.img.height / h;
+    pub fn init(s: *Spritesheet, bmp_bytes: []const u8, w: usize, h: usize) !void {
+        s.bmp = Bmp.create(bmp_bytes);
+        const col_count = s.bmp.width / w;
+        const row_count = s.bmp.height / h;
         s.count = col_count * row_count;
 
         c.glGenTextures(1, &s.texture_id);
@@ -49,12 +49,12 @@ pub const Spritesheet = struct {
             c.GL_TEXTURE_2D,
             0,
             c.GL_RGBA,
-            @intCast(s.img.width),
-            @intCast(s.img.height),
+            @intCast(s.bmp.width),
+            @intCast(s.bmp.height),
             0,
             c.GL_RGBA,
             c.GL_UNSIGNED_BYTE,
-            &s.img.raw[0],
+            &s.bmp.raw[0],
         );
 
         c.glGenBuffers(1, &s.vertex_buffer);
@@ -85,8 +85,8 @@ pub const Spritesheet = struct {
             const x: f32 = @floatFromInt(col * w);
             const y: f32 = @floatFromInt(row * h);
 
-            const img_w: f32 = @floatFromInt(s.img.width);
-            const img_h: f32 = @floatFromInt(s.img.height);
+            const img_w: f32 = @floatFromInt(s.bmp.width);
+            const img_h: f32 = @floatFromInt(s.bmp.height);
             const tex_coords = [_][2]c.GLfloat{
                 [_]c.GLfloat{
                     x / img_w,
@@ -116,8 +116,6 @@ pub const Spritesheet = struct {
         //c_allocator.free(s.tex_coord_buffers);
         c.glDeleteBuffers(1, &s.vertex_buffer);
         c.glDeleteTextures(1, &s.texture_id);
-
-        s.img.destroy();
     }
 };
 

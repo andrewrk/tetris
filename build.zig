@@ -5,22 +5,18 @@ pub fn build(b: *Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    const use_llvm = b.option(bool, "use-llvm", "use the LLVM backend");
+
     const exe = b.addExecutable(.{
         .name = "tetris",
         .root_source_file = .{ .path = "src/main.zig" },
         .optimize = optimize,
         .target = target,
     });
-    exe.addCSourceFile(.{
-        .file = Build.LazyPath.relative("stb_image-2.22/stb_image_impl.c"),
-        .flags = &[_][]const u8{"-std=c99"},
-    });
-    //exe.use_llvm = false;
-    //exe.use_lld = false;
+    exe.use_llvm = use_llvm;
+    exe.use_lld = use_llvm;
 
-    exe.addIncludePath(Build.LazyPath.relative("stb_image-2.22"));
-
-    exe.linkSystemLibrary("c");
+    exe.linkLibC();
     exe.linkSystemLibrary("glfw");
     exe.linkSystemLibrary("epoxy");
     b.installArtifact(exe);
