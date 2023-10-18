@@ -9,7 +9,7 @@ pub fn assertNoError() void {
     if (builtin.mode != .ReleaseFast) {
         const err = c.glGetError();
         if (err != c.GL_NO_ERROR) {
-            _ = c.printf("GL error: %s\n", err);
+            _ = c.printf("GL error: %d\n", err);
             c.abort();
         }
     }
