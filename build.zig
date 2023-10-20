@@ -15,9 +15,6 @@ pub fn build(b: *Build) void {
     });
     exe.use_llvm = use_llvm;
     exe.use_lld = use_llvm;
-    if (use_llvm == false) {
-        exe.pie = true;
-    }
 
     exe.linkLibC();
     exe.linkSystemLibrary("glfw");
