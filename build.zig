@@ -5,7 +5,8 @@ pub fn build(b: *Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const use_llvm = b.option(bool, "use-llvm", "use the LLVM backend");
+    const use_llvm = b.option(bool, "use-llvm", "use the LLVM backend") orelse
+        !(target.getCpu().arch == .x86_64 and target.getObjectFormat() == .elf);
 
     const exe = b.addExecutable(.{
         .name = "tetris",
