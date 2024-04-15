@@ -14,8 +14,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest]
-        # os: [ubuntu-latest, macos-14] # TODO: fix glfw paths with macOS
+        os: [ubuntu-latest, macos-13]
         version: [0.11.0, '']
       fail-fast: false
     runs-on: ${{ matrix.os }}
@@ -28,6 +27,10 @@ jobs:
             sudo apt install libglfw3-dev libepoxy-dev
           else
             brew install glfw libepoxy
+            # find /usr/local/Cellar/glfw
+            ln -s /usr/local/Cellar/glfw/3.4/lib/libglfw.dylib /usr/local/Cellar/libepoxy/1.5.10/lib/libglfw.dylib
+            ln -s /usr/local/Cellar/glfw/3.4/include/GLFW /usr/local/Cellar/libepoxy/1.5.10/include/GLFW
+            # find /usr/local/Cellar/libepoxy
           fi
       - uses: actions/checkout@v4
       - name: Build
