@@ -10,9 +10,9 @@ pub fn build(b: *std.Build) void {
         .root_source_file = .{ .path = "src/main.zig" },
         .optimize = optimize,
         .target = target,
+        .use_llvm = use_llvm,
+        .use_lld = use_llvm
     });
-    exe.use_llvm = use_llvm;
-    exe.use_lld = use_llvm;
 
     exe.linkLibC();
     exe.linkSystemLibrary("glfw");
