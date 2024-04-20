@@ -11,7 +11,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .target = target,
         .use_llvm = use_llvm,
-        .use_lld = use_llvm
+        .use_lld = use_llvm,
     });
 
     exe.linkLibC();
