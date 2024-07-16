@@ -5,6 +5,12 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
     const use_llvm = b.option(bool, "use-llvm", "use the LLVM backend");
 
+    const translate_c = b.addTranslateC(.{
+        .root_source_file = b.path("src/c.h"),
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+    });
     const exe = b.addExecutable(.{
         .name = "tetris",
         .root_source_file = b.path("src/main.zig"),
@@ -13,10 +19,10 @@ pub fn build(b: *std.Build) void {
         .use_llvm = use_llvm,
         .use_lld = use_llvm,
     });
-
-    exe.linkLibC();
+    exe.root_module.addImport("c", translate_c.createModule());
     exe.linkSystemLibrary("glfw");
     exe.linkSystemLibrary("epoxy");
+
     b.installArtifact(exe);
 
     const play = b.step("play", "Play the game");
