@@ -19,9 +19,10 @@ pub fn build(b: *std.Build) void {
         .use_llvm = use_llvm,
         .use_lld = use_llvm,
     });
-    exe.root_module.addImport("c", translate_c.createModule());
-    exe.linkSystemLibrary("glfw");
-    exe.linkSystemLibrary("epoxy");
+    const c_module = translate_c.createModule();
+    c_module.linkSystemLibrary("glfw", .{});
+    c_module.linkSystemLibrary("epoxy", .{});
+    exe.root_module.addImport("c", c_module);
 
     b.installArtifact(exe);
 
