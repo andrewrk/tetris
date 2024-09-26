@@ -1,4 +1,4 @@
-pub usingnamespace @cImport({
+pub const c = @cImport({
     @cInclude("stdio.h");
     @cInclude("math.h");
     @cInclude("time.h");

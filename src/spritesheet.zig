@@ -1,5 +1,5 @@
 const std = @import("std");
-const c = @import("c.zig");
+const c = @import("c.zig").c;
 const AllShaders = @import("all_shaders.zig").AllShaders;
 const Mat4x4 = @import("math3d.zig").Mat4x4;
 const Bmp = @import("Bmp.zig");
