@@ -1,4 +1,4 @@
-const c = @import("c.zig").c;
+const c = @import("c");
 
 pub const StaticGeometry = struct {
     rect_2d_vertex_buffer: c.GLuint,

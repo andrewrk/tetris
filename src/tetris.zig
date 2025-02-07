@@ -2,7 +2,7 @@ const std = @import("std");
 const assert = std.debug.assert;
 const pieces = @import("pieces.zig");
 const Piece = pieces.Piece;
-const c = @import("c.zig").c;
+const c = @import("c");
 
 const lock_delay: f64 = 0.4;
 
