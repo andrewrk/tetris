@@ -1,7 +1,6 @@
 # Tetris 
 
-A simple tetris clone written in
-[zig programming language](https://github.com/andrewrk/zig).
+A simple Tetris clone written in [Zig](https://ziglang.org/).
 
 ![](http://i.imgur.com/umuNndz.png)
 
@@ -18,7 +17,7 @@ A simple tetris clone written in
 
 ## Dependencies
 
- * [Zig](https://ziglang.org/)
+ * [Zig compiler](https://ziglang.org/) - version 0.16.0 or newer
  * [libepoxy](https://github.com/anholt/libepoxy)
  * [GLFW](http://www.glfw.org/)
 

@@ -1,16 +1,19 @@
 const std = @import("std");
+const Translator = @import("translate_c").Translator;
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const translate_c = b.addTranslateC(.{
-        .root_source_file = b.path("src/c.h"),
+    const translate_c = b.dependency("translate_c", .{});
+
+    const translator: Translator = .init(translate_c, .{
+        .c_source_file = b.path("src/c.h"),
         .target = target,
         .optimize = optimize,
     });
-    translate_c.linkSystemLibrary("glfw", .{});
-    translate_c.linkSystemLibrary("epoxy", .{});
+    translator.linkSystemLibrary("glfw3", .{});
+    translator.linkSystemLibrary("epoxy", .{});
 
     const exe = b.addExecutable(.{
         .name = "tetris",
@@ -21,7 +24,7 @@ pub fn build(b: *std.Build) void {
             .imports = &.{
                 .{
                     .name = "c",
-                    .module = translate_c.createModule(),
+                    .module = translator.mod,
                 },
             },
         }),
