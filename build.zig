@@ -11,9 +11,11 @@ pub fn build(b: *std.Build) void {
         .c_source_file = b.path("src/c.h"),
         .target = target,
         .optimize = optimize,
+        .link_system_libs = &.{
+            .{ .name = "glfw" },
+            .{ .name = "epoxy" },
+        },
     });
-    translator.linkSystemLibrary("glfw3", .{});
-    translator.linkSystemLibrary("epoxy", .{});
 
     const exe = b.addExecutable(.{
         .name = "tetris",
