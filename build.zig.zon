@@ -2,11 +2,11 @@
     .name = .tetris,
     .version = "0.0.0",
     .fingerprint = 0xbeb86dd4542d8092, // Changing this has security and trust implications.
-    .minimum_zig_version = "0.17.0-dev.601+0ff175b69",
+    .minimum_zig_version = "0.17.0-dev.657+2faf8debf",
     .dependencies = .{
         .translate_c = .{
-            .url = "git+https://codeberg.org/ziglang/translate-c#227bc6f2e87aa37709593c4172b859f971c34c7f",
-            .hash = "translate_c-0.0.0-Q_BUWgEPBwBzo0h1yjbP1F_uIAVEZav_N80EfqMrs7-_",
+            .url = "git+https://codeberg.org/ziglang/translate-c#208e09734fc712dd5500a155963294909f6aa17a",
+            .hash = "translate_c-0.0.0-Q_BUWoEPBwB-xydoDwKm08QUI4uhaLKepIFHJOLxWMll",
         },
     },
     .paths = .{
