@@ -17,7 +17,7 @@ A simple Tetris clone written in [Zig](https://ziglang.org/).
 
 ## Dependencies
 
- * [Zig compiler](https://ziglang.org/) - version 0.16.0 or newer
+ * [Zig compiler](https://ziglang.org/) - minimum version 0.17.0-dev.657+2faf8debf (see `build.zig.zon`)
  * [libepoxy](https://github.com/anholt/libepoxy)
  * [GLFW](http://www.glfw.org/)
 
